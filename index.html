@@ -1,11 +1,611 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="google-site-verification" content="8qTPfxaWZr3Utd41Q9rcD61dBhCvwINivYjw-dFKpm8" />
-  <title>My Website</title>
+	<meta name="google-site-verification" content="8qTPfxaWZr3Utd41Q9rcD61dBhCvwINivYjw-dFKpm8" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Itzsos Labs</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<style>
+	/* ===== TERMINAL ===== */
+
+#terminalBox{
+  background:#000;
+  border:2px solid #00ffdd;
+  max-width:800px;
+  margin:30px auto;
+  padding:15px;
+  border-radius:8px;
+  font-family:monospace;
+  color:#00ff00;
+  box-shadow:0 0 20px #00ffdd;
+}
+
+#terminalOutput{
+  min-height:220px;
+  max-height:320px;
+  overflow-y:auto;
+  margin-bottom:10px;
+  line-height:1.5;
+}
+
+.terminalInput{
+  display:flex;
+  align-items:center;
+}
+
+.terminalInput span{
+  color:#00ff00;
+  margin-right:6px;
+}
+
+#command{
+  background:black;
+  border:none;
+  color:#00ff00;
+  width:100%;
+  outline:none;
+  font-family:monospace;
+  font-size:15px;
+}
+
+/* ===== GLOBAL ===== */
+body{
+  margin:0;
+  font-family:"Fira Code",monospace;
+  background:#0f111a;
+  color:#00ffdd;
+}
+
+/* ===== NAVBAR ===== */
+nav{
+  background:#111422;
+  border-bottom:1px solid #00ffdd;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 40px;
+  position:sticky;
+  top:0;
+  z-index:1000;
+}
+
+nav h2{
+  color:#ff6600;
+}
+
+nav a{
+  color:#00ffdd;
+  margin-left:20px;
+  font-weight:bold;
+}
+
+nav a:hover{
+  color:#ff6600;
+}
+
+/* ===== HERO ===== */
+.hero{
+  text-align:center;
+  padding:100px 20px;
+}
+
+/* ===== LOGO ===== */
+#logo{
+  margin-bottom:20px;
+  animation:pulse 2s infinite;
+}
+
+@keyframes pulse{
+  0%{filter:drop-shadow(0 0 5px #00ffdd);}
+  50%{filter:drop-shadow(0 0 20px #ff6600);}
+  100%{filter:drop-shadow(0 0 5px #00ffdd);}
+}
+
+.hero h1{
+  font-size:3rem;
+  color:#ff6600;
+  text-shadow:0 0 10px #ff6600;
+}
+
+.hero p{
+  font-size:1.3rem;
+}
+
+/* ===== BUTTON ===== */
+.btn{
+  padding:12px 25px;
+  background:#ff6600;
+  color:#0f111a;
+  text-decoration:none;
+  font-weight:bold;
+  border-radius:5px;
+  box-shadow:0 0 10px #ff6600;
+  display:inline-block;
+  margin-top:20px;
+  cursor:pointer;
+  border:none;
+}
+
+.btn:hover{
+  background:#00ffdd;
+  box-shadow:0 0 15px #00ffdd;
+}
+
+/* ===== SECTIONS ===== */
+section{
+  padding:70px 40px;
+}
+
+/* ===== LOGIN ===== */
+#loginBox{
+  background:#111422;
+  border:1px solid #00ffdd;
+  width:320px;
+  margin:40px auto;
+  padding:25px;
+  border-radius:10px;
+  text-align:center;
+}
+
+#loginBox input{
+  width:90%;
+  padding:10px;
+  margin:10px 0;
+  background:#0f111a;
+  border:1px solid #00ffdd;
+  color:white;
+}
+
+/* ===== CARDS ===== */
+.cards{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:20px;
+}
+
+.card{
+  background:#111422;
+  border:1px solid #00ffdd;
+  width:260px;
+  padding:20px;
+  border-radius:10px;
+  text-align:center;
+  transition:0.3s;
+}
+
+.card:hover{
+  box-shadow:0 0 25px #00ffdd;
+  transform:translateY(-5px);
+}
+
+.level{
+  padding:5px 10px;
+  border-radius:5px;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.easy{background:green;color:white;}
+.medium{background:orange;color:black;}
+.hard{background:red;color:white;}
+
+/* ===== SCORE ===== */
+#scoreBox{
+  text-align:center;
+  font-size:1.2rem;
+  margin:20px 0;
+  color:#ff6600;
+}
+
+/* ===== FOOTER ===== */
+footer{
+  background:#111422;
+  text-align:center;
+  padding:25px;
+  border-top:1px solid #00ffdd;
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+
+  nav{
+    flex-direction:column;
+    text-align:center;
+  }
+
+  .cards{
+    flex-direction:column;
+  }
+
+  section{
+    padding:40px 20px;
+  }
+
+  .hero h1{
+    font-size:2rem;
+  }
+}
+
+
+</style>
 </head>
+
 <body>
-  <h1 color="red">Welcome to Itzsos Website</h1>
-  <p>   This is my first GitHub website 🚀</p>
+
+<!-- NAVBAR -->
+<nav>
+  <h2>Itzsos Labs</h2>
+
+  <div>
+    <a href="#home">Home</a>
+    <a href="#login">Login</a>
+    <a href="#challenges">Challenges</a>
+    <a href="#skills">Skills</a>
+    <a href="#contact">Contact</a>
+  </div>
+</nav>
+
+<!-- HOME -->
+<section id="home" class="hero">
+
+<!-- CUSTOM LOGO -->
+<svg id="logo" width="260" height="180" viewBox="0 0 260 180">
+
+  <!-- Shield -->
+  <path d="M50 20 L210 20 L230 60 L130 160 L30 60 Z"
+        stroke="#00ffdd" fill="none" stroke-width="3"/>
+
+  <!-- Eagle Wings -->
+  <path d="M40 70 Q130 10 220 70"
+        stroke="#ff6600" fill="none" stroke-width="3"/>
+
+  <!-- Lock -->
+  <rect x="110" y="70" width="40" height="35"
+        stroke="#00ffdd" fill="none" stroke-width="2"/>
+
+  <path d="M120 70 Q130 50 140 70"
+        stroke="#00ffdd" fill="none" stroke-width="2"/>
+
+  <!-- Brand -->
+  <text x="85" y="145" fill="#00ffdd" font-size="24">
+    Itz~sos
+  </text>
+
+</svg>
+
+<h1>Itzsos Cyber Labs</h1>
+
+<p>Train. Hack. Master.</p>
+
+<a href="#challenges" class="btn">Start Training</a>
+
+</section>
+<!-- TERMINAL -->
+<section id="terminal">
+
+  <h2 align="center">Live Hacker Terminal</h2>
+
+  <div id="terminalBox">
+
+    <div id="terminalOutput"></div>
+
+    <div class="terminalInput">
+      <span>$</span>
+      <input 
+        id="command"
+        placeholder="type: help"
+        autocomplete="off"
+        onkeydown="runCommand(event)"
+      >
+    </div>
+
+  </div>
+
+</section>
+
+<!-- LOGIN -->
+<section id="login">
+
+<div id="loginBox"></div>
+
+</section>
+
+<!-- CHALLENGES -->
+<section id="challenges">
+
+<h2 align="center">Cyber Challenges</h2>
+
+<div id="scoreBox"></div>
+
+<div class="cards">
+
+<div class="card">
+<h3>Logic Exploit</h3>
+<p>Break weak conditions</p>
+<span class="level easy">Easy</span><br><br>
+<button class="btn" onclick="complete('logic')">Complete</button>
+</div>
+
+<div class="card">
+<h3>Password Attack</h3>
+<p>Simulated brute force</p>
+<span class="level medium">Medium</span><br><br>
+<button class="btn" onclick="complete('pass')">Complete</button>
+</div>
+
+<div class="card">
+<h3>Crypto Breaker</h3>
+<p>Decode encrypted file</p>
+<span class="level hard">Hard</span><br><br>
+<button class="btn" onclick="complete('crypto')">Complete</button>
+</div>
+
+</div>
+
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+
+<h2>My Skills</h2>
+
+<ul>
+  <li>C++ Programming</li>
+  <li>Web Development</li>
+  <li>Cyber Security</li>
+  <li>CTF Solving</li>
+  <li>Linux & Networking</li>
+</ul>
+
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+
+<h2>Contact</h2>
+
+<p>Email: itzsos@email.com</p>
+
+<p>
+<a href="#"><i class="fab fa-github"></i> GitHub</a> |
+<a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a>
+</p>
+
+</section>
+
+<!-- FOOTER -->
+<footer>
+
+Â© 2026 Itzsos Labs  
+<br>
+Built with ðŸ’» Passion
+
+</footer>
+
+
+<!-- JAVASCRIPT -->
+<script>
+
+/* LOGIN */
+
+function showLogin(){
+
+let user = localStorage.getItem("user");
+let box = document.getElementById("loginBox");
+
+if(user){
+
+box.innerHTML = `
+<h3>Welcome, ${user}</h3>
+<button class="btn" onclick="logout()">Logout</button>
+`;
+
+}else{
+
+box.innerHTML = `
+<h3>Login</h3>
+<input id="username" placeholder="Username">
+<button class="btn" onclick="login()">Login</button>
+`;
+
+}
+
+}
+
+function login(){
+
+let user = document.getElementById("username").value;
+
+if(user==""){
+  alert("Enter username");
+  return;
+}
+
+localStorage.setItem("user",user);
+
+showLogin();
+updateScore();
+
+}
+
+function logout(){
+
+localStorage.clear();
+
+showLogin();
+updateScore();
+
+}
+
+/* CHALLENGES */
+
+function complete(id){
+
+if(!localStorage.getItem("user")){
+  alert("Please login first!");
+  return;
+}
+
+localStorage.setItem("done_"+id,"yes");
+
+alert("Challenge Completed!");
+
+updateScore();
+
+}
+
+/* SCORE */
+
+function updateScore(){
+
+let score = 0;
+
+for(let i in localStorage){
+  if(i.startsWith("done_")) score++;
+}
+
+document.getElementById("scoreBox").innerText =
+"Your Score: " + score + " / 3 Completed";
+
+}
+
+/* INIT */
+
+showLogin();
+updateScore();
+
+
+</script>
+<script>
+// ===== HACKER TERMINAL SYSTEM (FIXED) =====
+
+const output = document.getElementById("terminalOutput");
+
+let typingQueue = [];
+let typing = false;
+
+/* Queue typing system */
+function typeText(text, speed = 25){
+
+  typingQueue.push({text, speed});
+
+  if(!typing){
+    processQueue();
+  }
+}
+
+function processQueue(){
+
+  if(typingQueue.length === 0){
+    typing = false;
+    return;
+  }
+
+  typing = true;
+
+  let item = typingQueue.shift();
+  let text = item.text;
+  let speed = item.speed;
+
+  let i = 0;
+
+  function typingEffect(){
+
+    if(i < text.length){
+
+      output.innerHTML += text.charAt(i);
+      i++;
+
+      output.scrollTop = output.scrollHeight;
+
+      setTimeout(typingEffect, speed);
+
+    }else{
+
+      output.innerHTML += "<br>";
+      setTimeout(processQueue, 200);
+
+    }
+
+  }
+
+  typingEffect();
+}
+
+/* Print instantly */
+function printLine(text){
+  output.innerHTML += text + "<br>";
+  output.scrollTop = output.scrollHeight;
+}
+
+/* Welcome */
+typeText("Itzsos Terminal v1.0");
+typeText("Secure Connection Established...");
+typeText("Type 'help' to see commands.");
+
+/* Run commands */
+function runCommand(e){
+
+  if(e.key !== "Enter") return;
+
+  let cmd = e.target.value.trim().toLowerCase();
+
+  if(cmd === "") return;
+
+  printLine("$ " + cmd);
+
+  if(cmd === "help"){
+    typeText("Available Commands:");
+    typeText(" help    - show commands");
+    typeText(" whoami  - show user");
+    typeText(" status  - system info");
+    typeText(" scan    - port scan");
+    typeText(" hack    - attack target");
+    typeText(" clear   - clear screen");
+  }
+
+  else if(cmd === "whoami"){
+    let user = localStorage.getItem("user") || "guest";
+    typeText("User: " + user);
+  }
+
+  else if(cmd === "status"){
+    typeText("Server: ONLINE");
+    typeText("Firewall: ACTIVE");
+    typeText("Encryption: ENABLED");
+  }
+
+  else if(cmd === "scan"){
+    typeText("Scanning ports...");
+    typeText("22/tcp OPEN (SSH)");
+    typeText("80/tcp OPEN (HTTP)");
+    typeText("443/tcp OPEN (HTTPS)");
+    typeText("Scan completed.");
+  }
+
+  else if(cmd === "hack"){
+    typeText("Initializing exploit...");
+    typeText("Injecting payload...");
+    typeText("Escalating privileges...");
+    typeText("ACCESS GRANTED ✅");
+  }
+
+  else if(cmd === "clear"){
+    output.innerHTML = "";
+  }
+
+  else{
+    typeText("Command not found: " + cmd);
+  }
+
+  e.target.value = "";
+}
+</script>
+
 </body>
 </html>
