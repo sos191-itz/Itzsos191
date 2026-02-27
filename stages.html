@@ -353,6 +353,42 @@ ${r.date}
 }
 
 </script>
+<script type="module">
+
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+} from
+"https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+
+/* FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  authDomain: "itzsos-labs.firebaseapp.com",
+  projectId: "itzsos-labs",
+  storageBucket: "itzsos-labs.firebasestorage.app",
+  messagingSenderId: "1012826517121",
+  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
+};
+
+/* INIT */
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+/* PROTECT PAGE */
+onAuthStateChanged(auth, (user) => {
+
+  if (!user) {
+    // NOT LOGGED IN → GO BACK
+    window.location.href = "index.html";
+  }
+
+});
+
+</script>
 
 </body>
 </html>
