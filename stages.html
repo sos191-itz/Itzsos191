@@ -4,11 +4,13 @@
 <title>Itzsos Labs | Cyber Arena</title>
 
 <style>
+/* HIDE PAGE UNTIL AUTH */
 body{
 background:#0f111a;
 color:#00ffdd;
 font-family:monospace;
 margin:0;
+display:none;
 }
 
 header{
@@ -194,7 +196,7 @@ answer:"password"
 {
 title:"Stage 4 - Reverse",
 text:"Reverse: SOSTZI",
-answer:"ITZTOS"
+answer:"IZTSOS"
 }
 
 ];
@@ -218,11 +220,8 @@ function load(){
 
 if(level > stages.length){
 
-document.getElementById("stageTitle").innerText =
-"🏆 All Levels Cleared";
-
-document.getElementById("stageText").innerText =
-"Go fight the Boss 😈";
+stageTitle.innerText = "🏆 All Levels Cleared";
+stageText.innerText = "Go fight the Boss 😈";
 
 return;
 }
@@ -353,6 +352,9 @@ ${r.date}
 }
 
 </script>
+
+
+<!-- FIREBASE PROTECTION -->
 <script type="module">
 
 import { initializeApp } from
@@ -364,7 +366,8 @@ import {
 } from
 "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
-/* FIREBASE CONFIG */
+
+/* CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -374,16 +377,24 @@ const firebaseConfig = {
   appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
 };
 
+
 /* INIT */
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-/* PROTECT PAGE */
+
+/* PROTECT */
 onAuthStateChanged(auth, (user) => {
 
   if (!user) {
-    // NOT LOGGED IN → GO BACK
+
     window.location.href = "index.html";
+
+  } else {
+
+    /* SHOW PAGE */
+    document.body.style.display = "block";
+
   }
 
 });
