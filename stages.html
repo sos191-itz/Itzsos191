@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Itzsos Labs | Cyber Arena</title>
+
+<style>
+body{
+background:#0f111a;
+color:#00ffdd;
+font-family:monospace;
+margin:0;
+}
+
+header{
+background:#111422;
+padding:15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+border-bottom:1px solid #00ffdd;
+}
+
+nav button{
+background:#ff6600;
+border:none;
+padding:6px 12px;
+font-weight:bold;
+cursor:pointer;
+margin-left:5px;
+}
+
+nav button:hover{background:#00ffdd;}
+
+section{display:none;padding:20px;}
+
+.active{display:block;}
+
+.box{
+background:#111422;
+border:1px solid #00ffdd;
+max-width:400px;
+margin:30px auto;
+padding:20px;
+border-radius:10px;
+text-align:center;
+}
+
+input{
+width:90%;
+padding:8px;
+margin:10px;
+background:black;
+color:white;
+border:1px solid #00ffdd;
+}
+
+button.main{
+background:#ff6600;
+border:none;
+padding:8px 15px;
+font-weight:bold;
+cursor:pointer;
+}
+
+button.main:hover{background:#00ffdd;}
+
+.card{
+background:#111422;
+border:1px solid #00ffdd;
+padding:15px;
+margin:10px auto;
+max-width:350px;
+border-radius:8px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h2>🧠 Itzsos Cyber Arena</h2>
+
+<nav>
+<button onclick="openTab('play')">Play</button>
+<button onclick="openTab('profile')">Profile</button>
+<button onclick="openTab('boss')">Boss</button>
+<button onclick="openTab('leader')">Ranks</button>
+</nav>
+</header>
+
+
+<!-- PLAY -->
+<section id="play" class="active">
+
+<div class="box">
+
+<h3 id="stageTitle"></h3>
+<p id="stageText"></p>
+
+<input id="answer" placeholder="Enter Flag">
+
+<br>
+
+<button class="main" onclick="check()">Submit</button>
+
+<p id="result"></p>
+
+</div>
+
+</section>
+
+
+<!-- PROFILE -->
+<section id="profile">
+
+<div class="box">
+
+<h3>👤 Hacker Profile</h3>
+
+<p>Level: <span id="pLevel"></span></p>
+<p>XP: <span id="pXP"></span></p>
+
+<button class="main" onclick="reset()">Reset Progress</button>
+
+</div>
+
+</section>
+
+
+<!-- BOSS -->
+<section id="boss">
+
+<div class="box">
+
+<h3>🔥 Final Boss</h3>
+
+<p>Decrypt this:</p>
+
+<p><b>01001001 01010100 01011010 01010011 01001111 01010011</b></p>
+
+<input id="bossAns" placeholder="Answer">
+
+<button class="main" onclick="bossFight()">Attack</button>
+
+<p id="bossResult"></p>
+
+</div>
+
+</section>
+
+
+<!-- LEADER -->
+<section id="leader">
+
+<div class="box">
+
+<h3>🏆 Local Ranking</h3>
+
+<div id="rankList"></div>
+
+</div>
+
+</section>
+
+
+<script>
+
+/* DATA */
+let level = Number(localStorage.getItem("level")) || 1;
+let xp = Number(localStorage.getItem("xp")) || 0;
+
+
+/* STAGES */
+const stages = [
+
+{
+title:"Stage 1 - View Source",
+text:"Find hidden message in HTML",
+answer:"ITZSOS-START"
+},
+
+{
+title:"Stage 2 - Base64",
+text:"Decode: SVRaU09TLVBSTw==",
+answer:"ITZSOS-PRO"
+},
+
+{
+title:"Stage 3 - MD5",
+text:"5f4dcc3b5aa765d61d8327deb882cf99",
+answer:"password"
+},
+
+{
+title:"Stage 4 - Reverse",
+text:"Reverse: SOSTZI",
+answer:"ITZTOS"
+}
+
+];
+
+
+/* UI */
+function openTab(id){
+
+document.querySelectorAll("section")
+.forEach(s=>s.classList.remove("active"));
+
+document.getElementById(id).classList.add("active");
+
+if(id==="profile") loadProfile();
+if(id==="leader") loadRanks();
+}
+
+
+/* LOAD STAGE */
+function load(){
+
+if(level > stages.length){
+
+document.getElementById("stageTitle").innerText =
+"🏆 All Levels Cleared";
+
+document.getElementById("stageText").innerText =
+"Go fight the Boss 😈";
+
+return;
+}
+
+let s = stages[level-1];
+
+stageTitle.innerText = "Level "+level+": "+s.title;
+stageText.innerText = s.text;
+
+answer.value="";
+result.innerText="";
+}
+
+load();
+
+
+/* CHECK */
+function check(){
+
+let ans = answer.value.trim();
+let s = stages[level-1];
+
+if(ans === s.answer){
+
+xp+=100;
+level++;
+
+save();
+
+result.innerText="✅ Correct +100XP";
+
+setTimeout(load,800);
+
+}else{
+
+result.innerText="❌ Wrong";
+
+}
+
+}
+
+
+/* SAVE */
+function save(){
+
+localStorage.setItem("level",level);
+localStorage.setItem("xp",xp);
+
+}
+
+
+/* PROFILE */
+function loadProfile(){
+
+pLevel.innerText = level;
+pXP.innerText = xp;
+
+}
+
+
+/* RESET */
+function reset(){
+
+if(confirm("Reset progress?")){
+
+localStorage.clear();
+location.reload();
+
+}
+
+}
+
+
+/* BOSS */
+function bossFight(){
+
+let ans = bossAns.value;
+
+if(ans==="ITZSOS"){
+
+xp+=500;
+save();
+
+bossResult.innerText="🔥 BOSS DEFEATED +500XP";
+
+}else{
+
+bossResult.innerText="❌ Failed";
+
+}
+
+}
+
+
+/* RANK */
+function loadRanks(){
+
+let list = document.getElementById("rankList");
+
+let data = JSON.parse(
+localStorage.getItem("rank")
+) || [];
+
+data.push({
+xp:xp,
+date:new Date().toLocaleDateString()
+});
+
+data.sort((a,b)=>b.xp-a.xp);
+
+data = data.slice(0,5);
+
+localStorage.setItem("rank",JSON.stringify(data));
+
+list.innerHTML="";
+
+data.forEach((r,i)=>{
+
+list.innerHTML += `
+<div class="card">
+#${i+1} — ${r.xp} XP<br>
+${r.date}
+</div>
+`;
+
+});
+
+}
+
+</script>
+
+</body>
+</html>
