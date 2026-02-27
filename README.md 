@@ -1,0 +1,41 @@
+# Itzsos Labs | Cyber Arena
+
+Welcome to **Itzsos Labs**, a web-based hacking training platform for beginners and enthusiasts. Practice cybersecurity challenges in stages and level up as you progress.
+
+## Features
+
+- 🔹 **Stage-based Challenges**: Learn hacking concepts step-by-step.
+- 🔹 **Interactive UI**: Enter flags to complete stages.
+- 🔹 **User Progress Tracking**: Levels and XP are saved in your browser.
+- 🔹 **Final Boss Stage**: Test your skills on a big challenge.
+- 🔹 **Local Leaderboard**: Track your scores and compare with others.
+- 🔹 **Firebase Authentication**: Login required to access stages.
+
+## Pages
+
+- `index.html` — Main page and login/register.
+- `stages.html` — Stage-based hacking game.
+- `README.md` — This file.
+
+## How to Play
+
+1. Register an account on the main page.
+2. Log in to access the **Cyber Arena**.
+3. Complete stages by finding hidden messages, decoding challenges, or solving puzzles.
+4. Level up and earn XP.
+5. Fight the **Final Boss** when all stages are completed.
+6. Track your progress on your profile and leaderboard.
+
+## Technologies Used
+
+- HTML, CSS, JavaScript
+- Firebase Authentication
+- GitHub Pages (hosting)
+
+## Live Demo
+
+[Click here to play](https://sos191-itz.github.io/Itzsos191/)
+
+## License
+
+This project is for educational purposes only. Do not use for illegal activities.
