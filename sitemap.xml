@@ -1,12 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
+  <!-- Home Page -->
   <url>
     <loc>https://sos191-itz.github.io/Itzsos191/</loc>
+    <lastmod>2026-02-27</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
   </url>
 
+  <!-- Stages Page -->
   <url>
     <loc>https://sos191-itz.github.io/Itzsos191/stages.html</loc>
+    <lastmod>2026-02-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
+
+  <!-- Add more pages here if you add new stages or info pages -->
+  <!-- Example:
+  <url>
+    <loc>https://sos191-itz.github.io/Itzsos191/about.html</loc>
+    <lastmod>2026-02-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  -->
 
 </urlset>
