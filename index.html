@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="google-site-verification" content="8qTPfxaWZr3Utd41Q9rcD61dBhCvwINivYjw-dFKpm8" />
+<meta name="google-site-verification" content="8qTPfxaWZr3Utd41Q9rcD61dBhCvwINivYjw-dFKpm8" />
 
 <title>Itzsos Labs</title>
 
@@ -134,8 +134,6 @@ footer{
 
 </style>
 </head>
-
-
 <body>
 
 <!-- NAV -->
@@ -148,100 +146,66 @@ footer{
 </div>
 </nav>
 
-
 <!-- HOME -->
 <section class="hero" id="home">
-
 <h1>Itzsos Cyber Labs</h1>
-
 <p>Train • Hack • Master</p>
-
 <button class="btn" onclick="location.href='#login'">Start</button>
-
 </section>
-
 
 <!-- LOGIN -->
 <section id="login">
-
 <div id="loginBox">
-
 <h3>User Account</h3>
 
-<input id="email" type="email" placeholder="Email">
-
-<input id="password" type="password" placeholder="Password">
-
+<input id="phone" type="text" placeholder="Phone number (+27...)">
 <br>
-
-<button class="btn" id="registerBtn">Register</button>
-
-<button class="btn" id="loginBtn">Login</button>
-
-<button class="btn" id="resetBtn">Reset Password</button>
-
+<div id="recaptcha-container"></div>
+<br>
+<button class="btn" id="sendOtpBtn">Send OTP</button>
+<br>
+<input id="otp" type="text" placeholder="Enter OTP">
+<br>
+<button class="btn" id="verifyOtpBtn">Verify OTP</button>
+<br>
 <button class="btn" id="logoutBtn">Logout</button>
 
 <p id="status">Not logged in</p>
-
 </div>
-
 </section>
-
 
 <!-- CHALLENGES -->
 <section id="challenges">
-
 <h2 align="center">Challenges</h2>
-
 <div class="cards">
-
 <div class="card">
 <h3>Password Crack</h3>
 <p>Beginner</p>
 </div>
-
 <div class="card">
 <h3>Crypto Decode</h3>
 <p>Medium</p>
 </div>
-
 <div class="card">
 <h3>System Exploit</h3>
 <p>Hard</p>
 </div>
-
 </div>
-
 </section>
-
 
 <!-- FOOTER -->
 <footer>
-
 © 2026 Itzsos Labs<br>
-Built with 💻 Passion
-
+Built with ❤️ Passion
 </footer>
-
 
 <!-- FIREBASE AUTH -->
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  sendPasswordResetEmail
-} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 /* CONFIG */
-
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -251,111 +215,70 @@ const firebaseConfig = {
   appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
 };
 
-
 /* INIT */
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-
 /* ELEMENTS */
-
-const email = document.getElementById("email");
-const password = document.getElementById("password");
-
-const registerBtn = document.getElementById("registerBtn");
-const loginBtn = document.getElementById("loginBtn");
-const resetBtn = document.getElementById("resetBtn");
+const phone = document.getElementById("phone");
+const otp = document.getElementById("otp");
+const sendOtpBtn = document.getElementById("sendOtpBtn");
+const verifyOtpBtn = document.getElementById("verifyOtpBtn");
 const logoutBtn = document.getElementById("logoutBtn");
-
 const status = document.getElementById("status");
 
+let confirmationResult;
 
-/* REGISTER */
+/* RECAPTCHA */
+window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
+  'size': 'invisible',
+  'callback': (response) => {
+    // reCAPTCHA solved
+  }
+}, auth);
 
-registerBtn.addEventListener("click", ()=>{
-
-  createUserWithEmailAndPassword(
-    auth,
-    email.value,
-    password.value
-  )
-
-  .then(()=>{
-    status.textContent="Registered ✅";
+/* SEND OTP */
+sendOtpBtn.addEventListener("click", () => {
+  const appVerifier = window.recaptchaVerifier;
+  signInWithPhoneNumber(auth, phone.value, appVerifier)
+  .then((result) => {
+    confirmationResult = result;
+    status.textContent = "OTP sent 📧";
   })
-
-  .catch(e=>{
-    status.textContent=e.message;
+  .catch((error) => {
+    status.textContent = error.message;
   });
-
 });
 
-
-/* LOGIN */
-
-loginBtn.addEventListener("click", ()=>{
-
-  signInWithEmailAndPassword(
-    auth,
-    email.value,
-    password.value
-  )
-
-  .then(()=>{
-    status.textContent="Logged In 🔓";
-  })
-
-  .catch(e=>{
-    status.textContent=e.message;
-  });
-
-});
-
-
-/* LOGOUT */
-
-logoutBtn.addEventListener("click", ()=>{
-
-  signOut(auth).then(()=>{
-    status.textContent="Logged Out 👋";
-  });
-
-});
-
-
-/* RESET PASSWORD */
-
-resetBtn.addEventListener("click", ()=>{
-
-  if(email.value===""){
-    status.textContent="Enter email first ❗";
+/* VERIFY OTP */
+verifyOtpBtn.addEventListener("click", () => {
+  if(!confirmationResult){
+    status.textContent = "Send OTP first";
     return;
   }
-
-  sendPasswordResetEmail(auth,email.value)
-
-  .then(()=>{
-    status.textContent="Reset link sent 📧";
+  confirmationResult.confirm(otp.value)
+  .then((result) => {
+    status.textContent = "Logged in ✅";
   })
-
-  .catch(e=>{
-    status.textContent=e.message;
+  .catch((error) => {
+    status.textContent = error.message;
   });
-
 });
 
+/* LOGOUT */
+logoutBtn.addEventListener("click", () => {
+  signOut(auth).then(() => {
+    status.textContent = "Logged out ✅";
+  });
+});
 
 /* AUTH STATE */
-
-onAuthStateChanged(auth,user=>{
-
+onAuthStateChanged(auth, user => {
   if(user){
-    status.textContent="Welcome "+user.email;
+    status.textContent = "Welcome "+(user.phoneNumber || user.email);
   }else{
-    status.textContent="Not logged in";
+    status.textContent = "Not logged in";
   }
-
 });
 
 </script>
