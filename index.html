@@ -1,11 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="google-site-verification" content="8qTPfxaWZr3Utd41Q9rcD61dBhCvwINivYjw-dFKpm8" />
 <title>Itzsos Labs</title>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
 <style>
 body{margin:0;font-family:monospace;background:#0f111a;color:#00ffdd;}
 nav{background:#111422;border-bottom:1px solid #00ffdd;display:flex;justify-content:space-between;align-items:center;padding:15px 30px;position:sticky;top:0;}
@@ -14,18 +14,15 @@ nav a{color:#00ffdd;margin-left:15px;text-decoration:none;font-weight:bold;}
 nav a:hover{color:#ff6600;}
 .hero{text-align:center;padding:80px 20px;}
 .hero h1{font-size:2.8rem;color:#ff6600;}
-.hero p{font-size:1.2rem;}
 .btn{padding:10px 22px;background:#ff6600;color:black;border:none;border-radius:5px;font-weight:bold;cursor:pointer;margin:5px;}
 .btn:hover{background:#00ffdd;}
 #loginBox{background:#111422;border:1px solid #00ffdd;width:320px;margin:40px auto;padding:25px;border-radius:10px;text-align:center;}
 #loginBox input{width:90%;padding:10px;margin:10px 0;background:black;border:1px solid #00ffdd;color:white;}
 #status{margin-top:10px;color:#ff6600;}
-.cards{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;}
-.card{background:#111422;border:1px solid #00ffdd;width:240px;padding:20px;border-radius:10px;text-align:center;}
-.card:hover{box-shadow:0 0 20px #00ffdd;}
 footer{background:#111422;text-align:center;padding:20px;border-top:1px solid #00ffdd;margin-top:50px;}
 </style>
 </head>
+
 <body>
 
 <nav>
@@ -33,44 +30,44 @@ footer{background:#111422;text-align:center;padding:20px;border-top:1px solid #0
 <div>
 <a href="#home">Home</a>
 <a href="#login">Login</a>
-<a href="#challenges">Challenges</a>
 </div>
 </nav>
 
 <section class="hero" id="home">
 <h1>Itzsos Cyber Labs</h1>
-<p>Train • Hack • Master</p>
 <button class="btn" onclick="location.href='#login'">Start</button>
 </section>
 
 <section id="login">
 <div id="loginBox">
+
 <h3>User Account</h3>
+
 <input id="email" type="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
+
 <br>
+
 <button class="btn" id="registerBtn">Register</button>
 <button class="btn" id="loginBtn">Login</button>
-<button class="btn" id="resetBtn">Reset Password</button>
-<button class="btn" id="resendBtn">Resend Verification</button>
+<button class="btn" id="resetBtn">Reset</button>
 <button class="btn" id="logoutBtn">Logout</button>
+
 <p id="status">Not logged in</p>
+
 </div>
 </section>
 
-<section id="challenges">
-<h2 align="center">Challenges</h2>
-<div class="cards">
-<div class="card"><h3>Password Crack</h3><p>Beginner</p></div>
-<div class="card"><h3>Crypto Decode</h3><p>Medium</p></div>
-<div class="card"><h3>System Exploit</h3><p>Hard</p></div>
-</div>
-</section>
+<footer>© 2026 Itzsos Labs</footer>
 
-<footer>© 2026 Itzsos Labs<br>Built with ♥ Passion</footer>
 
+<!-- FIREBASE SCRIPT -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+
+/* IMPORTS */
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -78,8 +75,12 @@ import {
   signOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
-  sendEmailVerification
-} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+  sendEmailVerification,
+  applyActionCode,
+  confirmPasswordReset
+} from
+"https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+
 
 /* CONFIG */
 const firebaseConfig = {
@@ -88,115 +89,153 @@ const firebaseConfig = {
   projectId: "itzsos-labs",
   storageBucket: "itzsos-labs.firebasestorage.app",
   messagingSenderId: "1012826517121",
-  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780",
-  measurementId: "G-LRDRXX78XC"
+  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
 };
+
 
 /* INIT */
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+
 /* ELEMENTS */
 const email = document.getElementById("email");
 const password = document.getElementById("password");
+const status = document.getElementById("status");
+
 const registerBtn = document.getElementById("registerBtn");
 const loginBtn = document.getElementById("loginBtn");
 const resetBtn = document.getElementById("resetBtn");
-const resendBtn = document.getElementById("resendBtn");
 const logoutBtn = document.getElementById("logoutBtn");
-const status = document.getElementById("status");
+
 
 /* REGISTER */
-registerBtn.addEventListener("click", ()=>{
-  createUserWithEmailAndPassword(auth,email.value,password.value)
-  .then(userCredential=>{
-    const user = userCredential.user;
-    sendEmailVerification(user)
-    .then(()=>{ status.textContent="Registered! Verification email sent 📧"; });
-  })
-  .catch(e=>{ status.textContent=e.message; });
-});
+registerBtn.onclick = ()=>{
+
+createUserWithEmailAndPassword(auth,email.value,password.value)
+
+.then(res=>{
+
+sendEmailVerification(res.user);
+
+status.textContent="Registered! Check email 📧";
+
+})
+
+.catch(e=>status.textContent=e.message);
+
+};
+
 
 /* LOGIN */
-loginBtn.addEventListener("click", ()=>{
-  signInWithEmailAndPassword(auth,email.value,password.value)
-  .then(userCredential=>{
-    if(userCredential.user.emailVerified){
-      status.textContent="Logged In ✅";
-    }else{
-      status.textContent="Verify your email first 📧";
-      sendEmailVerification(userCredential.user);
-    }
-  })
-  .catch(e=>{ status.textContent=e.message; });
-});
+loginBtn.onclick = ()=>{
 
-/* RESET PASSWORD */
-resetBtn.addEventListener("click", ()=>{
-  if(email.value===""){ status.textContent="Enter email first ❌"; return; }
-  sendPasswordResetEmail(auth,email.value)
-  .then(()=>{ status.textContent="Reset link sent 📧"; })
-  .catch(e=>{ status.textContent=e.message; });
-});
+signInWithEmailAndPassword(auth,email.value,password.value)
 
-/* RESEND VERIFICATION */
-resendBtn.addEventListener("click", ()=>{
-  const user = auth.currentUser;
-  if(user && !user.emailVerified){
-    sendEmailVerification(user)
-    .then(()=>{ status.textContent="Verification email resent 📧"; })
-    .catch(e=>{ status.textContent=e.message; });
-  } else {
-    status.textContent="No unverified user logged in ❌";
-  }
-});
+.then(res=>{
+
+if(res.user.emailVerified){
+
+status.textContent="Logged In ✅";
+
+}else{
+
+status.textContent="Verify Email First 📧";
+
+sendEmailVerification(res.user);
+
+}
+
+})
+
+.catch(e=>status.textContent=e.message);
+
+};
+
+
+/* RESET */
+resetBtn.onclick = ()=>{
+
+if(!email.value){
+
+status.textContent="Enter email first";
+
+return;
+
+}
+
+sendPasswordResetEmail(auth,email.value)
+
+.then(()=>status.textContent="Reset link sent 📧")
+
+.catch(e=>status.textContent=e.message);
+
+};
+
 
 /* LOGOUT */
-logoutBtn.addEventListener("click", ()=>{
-  signOut(auth).then(()=>{ status.textContent="Logged Out ✅"; });
-});
+logoutBtn.onclick = ()=>{
+
+signOut(auth);
+
+status.textContent="Logged out";
+
+};
+
 
 /* AUTH STATE */
 onAuthStateChanged(auth,user=>{
-  if(user){
-    status.textContent=user.emailVerified ? "Welcome "+user.email : "Please verify your email 📧";
-  } else {
-    status.textContent="Not logged in";
-  }
+
+if(user){
+
+status.textContent="Welcome "+user.email;
+
+}else{
+
+status.textContent="Not logged in";
+
+}
+
 });
-// HANDLE EMAIL ACTION LINKS (VERIFY & RESET)
+
+
+/* HANDLE EMAIL LINKS */
 const params = new URLSearchParams(window.location.search);
+
 const mode = params.get("mode");
 const oobCode = params.get("oobCode");
 
-import { applyActionCode, confirmPasswordReset } 
-from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
-// Verify Email
-if (mode === "verifyEmail" && oobCode) {
-  applyActionCode(auth, oobCode)
-    .then(() => {
-      alert("✅ Email verified successfully!");
-    })
-    .catch(() => {
-      alert("❌ Email verification failed.");
-    });
+/* VERIFY EMAIL */
+if(mode==="verifyEmail" && oobCode){
+
+applyActionCode(auth,oobCode)
+
+.then(()=>alert("Email verified ✅"))
+
+.catch(()=>alert("Verification failed ❌"));
+
 }
 
-// Reset Password
-if (mode === "resetPassword" && oobCode) {
-  const newPassword = prompt("Enter new password:");
 
-  if (newPassword) {
-    confirmPasswordReset(auth, oobCode, newPassword)
-      .then(() => {
-        alert("✅ Password reset successful!");
-      })
-      .catch(() => {
-        alert("❌ Password reset failed.");
-      });
-  }
+/* RESET PASSWORD */
+if(mode==="resetPassword" && oobCode){
+
+const newPass = prompt("Enter new password:");
+
+if(newPass){
+
+confirmPasswordReset(auth,oobCode,newPass)
+
+.then(()=>alert("Password changed ✅"))
+
+.catch(()=>alert("Reset failed ❌"));
+
 }
+
+}
+
 </script>
+
 </body>
 </html>
