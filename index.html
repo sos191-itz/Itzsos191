@@ -165,5 +165,50 @@ onAuthStateChanged(auth,user=>{
   }
 });
 </script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, applyActionCode, confirmPasswordReset } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  authDomain: "itzsos-labs.firebaseapp.com",
+  projectId: "itzsos-labs",
+  storageBucket: "itzsos-labs.firebasestorage.app",
+  messagingSenderId: "1012826517121",
+  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// Read URL parameters
+const params = new URLSearchParams(window.location.search);
+const mode = params.get("mode");
+const oobCode = params.get("oobCode");
+
+if (mode === "verifyEmail") {
+  applyActionCode(auth, oobCode)
+    .then(() => {
+      alert("✅ Email verified successfully!");
+    })
+    .catch(() => {
+      alert("❌ Verification failed.");
+    });
+}
+
+if (mode === "resetPassword") {
+  const newPassword = prompt("Enter new password:");
+
+  if (newPassword) {
+    confirmPasswordReset(auth, oobCode, newPassword)
+      .then(() => {
+        alert("✅ Password reset successful!");
+      })
+      .catch(() => {
+        alert("❌ Password reset failed.");
+      });
+  }
+}
+</script>
 </body>
 </html>
