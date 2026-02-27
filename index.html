@@ -10,132 +10,156 @@
 <meta name="robots" content="index, follow">
 <meta name="google-site-verification" content="8qTPfxaWZr3Utd41Q9rcD61dBhCvwINivYjw-dFKpm8" />
 
-<!-- Three.js for 3D logo -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
-
 <style>
-body{margin:0;font-family:monospace;background:#0f111a;color:#00ffdd;}
-nav{background:#111422;border-bottom:1px solid #00ffdd;display:flex;justify-content:space-between;align-items:center;padding:15px 30px;position:sticky;top:0;z-index:10;}
-nav h2{color:#ff6600;}
-nav a{color:#00ffdd;margin-left:15px;text-decoration:none;font-weight:bold;}
-nav a:hover{color:#ff6600;}
-.hero{text-align:center;padding:80px 20px;position:relative;}
-.hero h1{font-size:2.8rem;color:#ff6600;z-index:1;position:relative;}
-.btn{padding:10px 22px;background:#ff6600;color:black;border:none;border-radius:5px;font-weight:bold;cursor:pointer;margin:5px;}
-.btn:hover{background:#00ffdd;}
-#loginBox{background:#111422;border:1px solid #00ffdd;width:320px;margin:40px auto;padding:25px;border-radius:10px;text-align:center;}
-#loginBox input{width:90%;padding:10px;margin:10px 0;background:black;border:1px solid #00ffdd;color:white;}
-#status{margin-top:10px;color:#ff6600;}
-footer{background:#111422;text-align:center;padding:20px;border-top:1px solid #00ffdd;margin-top:50px;}
-canvas#logoCanvas{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:300px;height:300px;pointer-events:none;}
+/* BODY & NAV */
+body { margin:0; font-family:monospace; background:#0f111a; color:#00ffdd; }
+nav { background:#111422; border-bottom:1px solid #00ffdd; display:flex; justify-content:space-between; align-items:center; padding:15px 30px; position:sticky; top:0; }
+nav h2 { color:#ff6600; }
+nav a { color:#00ffdd; margin-left:15px; text-decoration:none; font-weight:bold; }
+nav a:hover { color:#ff6600; }
+
+/* HERO SECTION */
+.hero { text-align:center; padding:80px 20px; }
+
+/* BUTTONS */
+.btn { padding:10px 22px; background:#ff6600; color:black; border:none; border-radius:5px; font-weight:bold; cursor:pointer; margin:5px; }
+.btn:hover { background:#00ffdd; }
+
+/* LOGIN BOX */
+#loginBox { background:#111422; border:1px solid #00ffdd; width:320px; margin:40px auto; padding:25px; border-radius:10px; text-align:center; }
+#loginBox input { width:90%; padding:10px; margin:10px 0; background:black; border:1px solid #00ffdd; color:white; }
+#status { margin-top:10px; color:#ff6600; }
+
+/* FOOTER */
+footer { background:#111422; text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-top:50px; }
+
+/* ENHANCED 3D LOGO */
+.logo-3d-container {
+  position: relative;
+  width: 350px;
+  height: 350px;
+  margin: 50px auto;
+  perspective: 1000px;
+}
+.logo-3d-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: monospace;
+  font-size: 3rem;
+  font-weight: bold;
+  background: linear-gradient(90deg, #ff6600, #00ffdd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 5px #ff6600, 0 0 10px #00ffdd, 0 0 20px #ff6600;
+  transition: transform 0.1s ease;
+  z-index: 10;
+  pointer-events: none;
+}
+.globe {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #00ffdd, #111422);
+  transform: translate(-50%, -50%);
+  animation: rotateGlobe 20s linear infinite;
+  box-shadow: 0 0 30px #00ffdd, 0 0 60px #ff6600;
+  z-index: 5;
+}
+.rings {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  border: 2px solid #00ffdd;
+  animation: rotateRings 12s linear infinite;
+  transform: translate(-50%, -50%) rotateX(45deg);
+  box-shadow: 0 0 20px #00ffdd, 0 0 40px #ff6600;
+  z-index: 4;
+}
+.particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+.particles span {
+  position: absolute;
+  background: #00ffdd;
+  border-radius: 50%;
+  animation: float 5s linear infinite;
+}
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+@keyframes rotateGlobe {
+  0% { transform: translate(-50%, -50%) rotateX(0deg) rotateY(0deg); }
+  100% { transform: translate(-50%, -50%) rotateX(360deg) rotateY(360deg); }
+}
+@keyframes rotateRings {
+  0% { transform: translate(-50%, -50%) rotateX(45deg) rotateZ(0deg); }
+  100% { transform: translate(-50%, -50%) rotateX(45deg) rotateZ(360deg); }
+}
 </style>
 </head>
 
 <body>
 
+<!-- NAVIGATION -->
 <nav>
-<h2>Itzsos Labs</h2>
-<div>
-<a href="#home">Home</a>
-<a href="#login">Login</a>
-</div>
+  <h2>Itzsos Labs</h2>
+  <div>
+    <a href="#home">Home</a>
+    <a href="#login">Login</a>
+  </div>
 </nav>
 
+<!-- HERO / LOGO -->
 <section class="hero" id="home">
-<canvas id="logoCanvas"></canvas>
-<h1>Itzsos Cyber Labs</h1>
-<button class="btn" onclick="location.href='https://sos191-itz.github.io/Itzsos191/stages.html'">Start Training</button>
+  <div class="logo-3d-container">
+    <div class="logo-3d-text">Itz~sos</div>
+    <div class="globe"></div>
+    <div class="rings"></div>
+    <div class="particles"></div>
+  </div>
+
+  <button class="btn" onclick="location.href='https://sos191-itz.github.io/Itzsos191/stages.html'">
+    Start Training
+  </button>
 </section>
 
+<!-- LOGIN SECTION -->
 <section id="login">
-<div id="loginBox">
-
-<h3>User Account</h3>
-
-<input id="email" type="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
-
-<br>
-
-<button class="btn" id="registerBtn">Register</button>
-<button class="btn" id="loginBtn">Login</button>
-<button class="btn" id="resetBtn">Reset</button>
-<button class="btn" id="logoutBtn">Logout</button>
-
-<p id="status">Not logged in</p>
-
-</div>
+  <div id="loginBox">
+    <h3>User Account</h3>
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <br>
+    <button class="btn" id="registerBtn">Register</button>
+    <button class="btn" id="loginBtn">Login</button>
+    <button class="btn" id="resetBtn">Reset</button>
+    <button class="btn" id="logoutBtn">Logout</button>
+    <p id="status">Not logged in</p>
+  </div>
 </section>
 
+<!-- FOOTER -->
 <footer>© 2026 Itzsos Labs</footer>
-
-<!-- 3D Logo Script -->
-<script>
-const canvas = document.getElementById('logoCanvas');
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
-camera.position.z = 5;
-
-const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
-renderer.setSize(300,300);
-
-// Text geometry
-const loader = new THREE.FontLoader();
-loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font){
-  const geometry = new THREE.TextGeometry('Itz~sos', {
-    font: font,
-    size: 1,
-    height: 0.3,
-    curveSegments: 12,
-    bevelEnabled: true,
-    bevelThickness: 0.05,
-    bevelSize: 0.05,
-    bevelSegments: 5
-  });
-  const material = new THREE.MeshStandardMaterial({color:0xff6600, metalness:0.7, roughness:0.2});
-  const textMesh = new THREE.Mesh(geometry, material);
-  textMesh.rotation.x = 0.2;
-  scene.add(textMesh);
-
-  // Lights
-  const light1 = new THREE.PointLight(0xffffff, 1);
-  light1.position.set(5,5,5);
-  scene.add(light1);
-  const light2 = new THREE.PointLight(0x00ffdd, 0.5);
-  light2.position.set(-5,-5,5);
-  scene.add(light2);
-
-  function animate(){
-    requestAnimationFrame(animate);
-    textMesh.rotation.y += 0.01;
-    renderer.render(scene,camera);
-  }
-  animate();
-});
-</script>
 
 <!-- FIREBASE SCRIPT -->
 <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, sendEmailVerification, applyActionCode, confirmPasswordReset } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
-/* IMPORTS */
-import { initializeApp } from
-"https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  sendPasswordResetEmail,
-  sendEmailVerification,
-  applyActionCode,
-  confirmPasswordReset
-} from
-"https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-
-
-/* CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -145,13 +169,9 @@ const firebaseConfig = {
   appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
 };
 
-
-/* INIT */
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-
-/* ELEMENTS */
 const email = document.getElementById("email");
 const password = document.getElementById("password");
 const status = document.getElementById("status");
@@ -161,133 +181,110 @@ const loginBtn = document.getElementById("loginBtn");
 const resetBtn = document.getElementById("resetBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
-
-/* REGISTER */
 registerBtn.onclick = ()=>{
-
-createUserWithEmailAndPassword(auth,email.value,password.value)
-
-.then(res=>{
-
-sendEmailVerification(res.user);
-
-status.textContent="Registered! Check email 📧";
-
-})
-
-.catch(e=>status.textContent=e.message);
-
+  createUserWithEmailAndPassword(auth,email.value,password.value)
+  .then(res=>{
+    sendEmailVerification(res.user);
+    status.textContent="Registered! Check email 📧";
+  })
+  .catch(e=>status.textContent=e.message);
 };
 
-
-/* LOGIN */
 loginBtn.onclick = ()=>{
-
-signInWithEmailAndPassword(auth,email.value,password.value)
-
-.then(res=>{
-
-if(res.user.emailVerified){
-
-status.textContent="Logged In ✅";
-
-}else{
-
-status.textContent="Verify Email First 📧";
-
-sendEmailVerification(res.user);
-
-}
-
-})
-
-.catch(e=>status.textContent=e.message);
-
+  signInWithEmailAndPassword(auth,email.value,password.value)
+  .then(res=>{
+    if(res.user.emailVerified){
+      status.textContent="Logged In ✅";
+    } else {
+      status.textContent="Verify Email First 📧";
+      sendEmailVerification(res.user);
+    }
+  })
+  .catch(e=>status.textContent=e.message);
 };
 
-
-/* RESET */
 resetBtn.onclick = ()=>{
-
-if(!email.value){
-
-status.textContent="Enter email first";
-
-return;
-
-}
-
-sendPasswordResetEmail(auth,email.value)
-
-.then(()=>status.textContent="Reset link sent 📧")
-
-.catch(e=>status.textContent=e.message);
-
+  if(!email.value){
+    status.textContent="Enter email first";
+    return;
+  }
+  sendPasswordResetEmail(auth,email.value)
+  .then(()=>status.textContent="Reset link sent 📧")
+  .catch(e=>status.textContent=e.message);
 };
 
-
-/* LOGOUT */
 logoutBtn.onclick = ()=>{
-
-signOut(auth);
-
-status.textContent="Logged out";
-
+  signOut(auth);
+  status.textContent="Logged out";
 };
 
-
-/* AUTH STATE */
 onAuthStateChanged(auth,user=>{
-
-if(user){
-
-status.textContent="Welcome "+user.email;
-
-}else{
-
-status.textContent="Not logged in";
-
-}
-
+  if(user){
+    status.textContent="Welcome "+user.email;
+  } else {
+    status.textContent="Not logged in";
+  }
 });
 
-
-/* HANDLE EMAIL LINKS */
 const params = new URLSearchParams(window.location.search);
-
 const mode = params.get("mode");
 const oobCode = params.get("oobCode");
 
-
-/* VERIFY EMAIL */
 if(mode==="verifyEmail" && oobCode){
-
-applyActionCode(auth,oobCode)
-
-.then(()=>alert("Email verified ✅"))
-
-.catch(()=>alert("Verification failed ❌"));
-
+  applyActionCode(auth,oobCode)
+  .then(()=>alert("Email verified ✅"))
+  .catch(()=>alert("Verification failed ❌"));
 }
 
-
-/* RESET PASSWORD */
 if(mode==="resetPassword" && oobCode){
+  const newPass = prompt("Enter new password:");
+  if(newPass){
+    confirmPasswordReset(auth,oobCode,newPass)
+    .then(()=>alert("Password changed ✅"))
+    .catch(()=>alert("Reset failed ❌"));
+  }
+}
+</script>
 
-const newPass = prompt("Enter new password:");
-
-if(newPass){
-
-confirmPasswordReset(auth,oobCode,newPass)
-
-.then(()=>alert("Password changed ✅"))
-
-.catch(()=>alert("Reset failed ❌"));
-
+<!-- 3D LOGO SCRIPT -->
+<script>
+// CREATE PARTICLES
+const particleContainer = document.querySelector('.particles');
+for(let i=0;i<70;i++){
+  const span = document.createElement('span');
+  const size = Math.random() * 4 + 2;
+  span.style.width = `${size}px`;
+  span.style.height = `${size}px`;
+  span.style.top = `${Math.random()*100}%`;
+  span.style.left = `${Math.random()*100}%`;
+  span.style.animationDuration = `${Math.random()*3 + 3}s`;
+  particleContainer.appendChild(span);
 }
 
-}
+// MOUSE INTERACTIVE 3D LOGO
+const logoContainer = document.querySelector('.logo-3d-container');
+const logoText = document.querySelector('.logo-3d-text');
+const globe = document.querySelector('.globe');
+const rings = document.querySelector('.rings');
 
+logoContainer.addEventListener('mousemove', (e)=>{
+  const rect = logoContainer.getBoundingClientRect();
+  const x = e.clientX - rect.left - rect.width/2;
+  const y = e.clientY - rect.top - rect.height/2;
+
+  const rotX = y / rect.height * 20;
+  const rotY = x / rect.width * 20;
+
+  logoText.style.transform = `translate(-50%, -50%) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+  globe.style.transform = `translate(-50%, -50%) rotateY(${rotY + 360}deg) rotateX(${rotX + 360}deg)`;
+  rings.style.transform = `translate(-50%, -50%) rotateX(45deg) rotateZ(${rotY}deg)`;
+});
+
+logoContainer.addEventListener('mouseleave', ()=>{
+  logoText.style.transform = 'translate(-50%, -50%) rotateX(0deg) rotateY(0deg)';
+  globe.style.transform = 'translate(-50%, -50%) rotateX(0deg) rotateY(0deg)';
+  rings.style.transform = 'translate(-50%, -50%) rotateX(45deg) rotateZ(0deg)';
+});
 </script>
 
 </body>
