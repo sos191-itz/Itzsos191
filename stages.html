@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="google-site-verification" content="8qTPfxaWZr3Utd41Q9rcD61dBhCvwINivYjw-dFKpm8" />
 <title>Itzsos Labs | Cyber Arena</title>
+
 <style>
 /* ================= GLOBAL ================= */
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -13,7 +14,7 @@ body{background:#070b14;color:#00ffdd;font-family:monospace;display:none;animati
 
 /* ================= HEADER ================= */
 header{background:#0f1625;padding:15px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #00ffdd;box-shadow:0 0 20px #00ffdd44;}
-header h2{animation:pulse 2s infinite;font-size:1.6em;}
+header h2{animation:pulse 2s infinite;}
 @keyframes pulse{0%{text-shadow:0 0 5px #00ffdd;}50%{text-shadow:0 0 20px #00ffdd;}100%{text-shadow:0 0 5px #00ffdd;}}
 
 /* ================= NAV ================= */
@@ -40,155 +41,127 @@ button.main:hover{background:#00ffdd;box-shadow:0 0 15px #00ffdd;}
 #xpBar{width:100%;background:#111;height:15px;border-radius:10px;overflow:hidden;margin:10px 0;}
 #xpFill{height:100%;width:0%;background:linear-gradient(90deg,#00ffdd,#ff6600);transition:0.8s;}
 
-/* ================= CARDS ================= */
-.card{background:#0f1625;border:1px solid #00ffdd;padding:15px;margin:10px auto;border-radius:8px;max-width:350px;}
-
 /* ================= LEVEL-UP EFFECT ================= */
 @keyframes levelUp{0%{transform:scale(1);}50%{transform:scale(1.2);color:#ff6600;}100%{transform:scale(1);color:#00ffdd;}}
 .level-up{animation:levelUp 1s ease;}
 
-/* ================= PROFILE ART ================= */
-#profileAvatar{
-  width:120px; height:120px;
-  margin:0 auto 15px;
-  border-radius:50%;
-  background:radial-gradient(circle at 30% 30%, #00ffdd, #0f1625 70%);
-  box-shadow:0 0 20px #00ffdd, 0 0 40px #ff6600 inset;
-  display:flex; justify-content:center; align-items:center;
-  font-size:50px; color:#ff6600;
-  font-weight:bold;
-}
-#profileBox p{margin:5px 0;}
+/* ================= PROFILE ANIMATION ================= */
+#avatar{width:120px;height:120px;border-radius:50%;border:3px solid #00ffdd;margin:20px auto;animation:avatarPulse 2s infinite;}
+@keyframes avatarPulse{0%{box-shadow:0 0 10px #00ffdd;}50%{box-shadow:0 0 25px #ff6600;}100%{box-shadow:0 0 10px #00ffdd;}}
 </style>
 </head>
+
 <body>
 <header>
-<h2>🧠 Itzsos Cyber Arena</h2>
-<nav>
-<button onclick="openTab('play')">Play</button>
-<button onclick="openTab('profile')">Profile</button>
-<button onclick="openTab('boss')">Boss</button>
-<button onclick="openTab('leader')">Ranks</button>
-</nav>
+  <h2>🧠 Itzsos Cyber Arena</h2>
+  <nav>
+    <button onclick="openTab('play')">Play</button>
+    <button onclick="openTab('profile')">Profile</button>
+    <button onclick="openTab('boss')">Boss</button>
+    <button onclick="openTab('leader')">Ranks</button>
+  </nav>
 </header>
 
 <!-- ================= PLAY ================= -->
 <section id="play" class="active">
-<div class="box">
-<h3 id="stageTitle"></h3>
-<p id="stageText"></p>
-<input id="answer" placeholder="Enter Flag">
-<button class="main" onclick="check()">Submit</button>
-<p id="result"></p>
-</div>
+  <div class="box">
+    <h3 id="stageTitle"></h3>
+    <p id="stageText"></p>
+    <input id="answer" placeholder="Enter Flag">
+    <button class="main" onclick="check()">Submit</button>
+    <button class="main" onclick="showHint()">Hint</button>
+    <p id="hintText" style="color:#ff6600;margin-top:8px;"></p>
+    <p id="result"></p>
+  </div>
 </section>
 
 <!-- ================= PROFILE ================= -->
 <section id="profile">
-<div class="box" id="profileBox">
-  <div id="profileAvatar">A</div>
-  <h3 style="color:#00ffdd; margin-bottom:10px;">Hacker Profile</h3>
-  <p>Level: <span id="pLevel"></span></p>
-  <p>XP: <span id="pXP"></span></p>
-  <div id="xpBar"><div id="xpFill"></div></div>
-  <button class="main" onclick="reset()">Reset</button>
-</div>
+  <div class="box">
+    <h3>👤 Hacker Profile</h3>
+    <img id="avatar" src="" alt="Avatar">
+    <p>Level: <span id="pLevel"></span></p>
+    <p>XP: <span id="pXP"></span></p>
+    <div id="xpBar"><div id="xpFill"></div></div>
+    <button class="main" onclick="reset()">Reset</button>
+  </div>
 </section>
 
 <!-- ================= BOSS ================= -->
 <section id="boss">
-<div class="box">
-<h3>🔥 Final Boss</h3>
-<p>Decrypt:</p>
-<b>01001001 01010100 01011010 01010011 01001111 01010011</b>
-<input id="bossAns" placeholder="Answer">
-<button class="main" onclick="bossFight()">Attack</button>
-<p id="bossResult"></p>
-</div>
+  <div class="box">
+    <h3>🔥 Final Boss</h3>
+    <p>Decrypt:</p>
+    <b>01001001 01010100 01011010 01010011 01001111 01010011</b>
+    <input id="bossAns" placeholder="Answer">
+    <button class="main" onclick="bossFight()">Attack</button>
+    <p id="bossResult"></p>
+  </div>
 </section>
 
 <!-- ================= LEADER ================= -->
 <section id="leader">
-<div class="box">
-<h3>🏆 Rankings</h3>
-<div id="rankList"></div>
-</div>
+  <div class="box">
+    <h3>🏆 Rankings</h3>
+    <div id="rankList"></div>
+  </div>
 </section>
 
 <script type="module">
-// Firebase imports
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
   projectId: "itzsos-labs"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Auth
-onAuthStateChanged(auth, async (user)=>{
+let currentUser = null;
+let stages = [];
+let level = 1;
+let xp = 0;
+let currentStage = null;
+
+// ========== AUTH CHECK ==========
+onAuthStateChanged(auth, async (user) => {
   if(!user || !user.emailVerified){
-    alert('Login First!');
+    alert('Login First! Verify Email!');
     window.location.href='index.html';
-  }else{
+  } else {
     document.body.style.display='block';
+    currentUser = user;
     await loadUserData(user.uid);
-    load();
+    loadStage();
+    loadProfile();
   }
 });
 
-// ================= GAME DATA =================
-let level = 1;
-let xp = 0;
-
-// 20 stages
-const stages = [
-{title:"Stage 1", text:"Find hidden HTML message", answer:"ITZSOS-START"},
-{title:"Stage 2", text:"Decode Base64: SVRaU09TLVBSTw==", answer:"ITZSOS-PRO"},
-{title:"Stage 3", text:"MD5 hash: 5f4dcc3b5aa765d61d8327deb882cf99", answer:"password"},
-{title:"Stage 4", text:"Reverse: SOSTZI", answer:"IZTSOS"},
-{title:"Stage 5", text:"Simple cipher: UVWXYZ", answer:"ABCDEF"},
-{title:"Stage 6", text:"Binary: 01001001", answer:"I"},
-{title:"Stage 7", text:"ROT13: VGHPV", answer:"GUCIB"},
-{title:"Stage 8", text:"Hex: 49 54 5A 53", answer:"ITZS"},
-{title:"Stage 9", text:"Caesar shift +3: LOR", answer:"IOR"},
-{title:"Stage 10", text:"Find the flag in JS code", answer:"FLAG-10"},
-{title:"Stage 11", text:"Base64 decode: RkFMRy0xMQ==", answer:"FLAG-11"},
-{title:"Stage 12", text:"Reverse text: 21-GALF", answer:"FLAG-12"},
-{title:"Stage 13", text:"Simple substitution cipher", answer:"FLAG-13"},
-{title:"Stage 14", text:"Hidden comment in HTML", answer:"FLAG-14"},
-{title:"Stage 15", text:"Binary to ASCII: 01000110 01001100", answer:"FL"},
-{title:"Stage 16", text:"ROT13 decode: SYN13", answer:"FLAG16"},
-{title:"Stage 17", text:"Hex decode: 464c4147", answer:"FLAG"},
-{title:"Stage 18", text:"Find the hidden console log", answer:"FLAG18"},
-{title:"Stage 19", text:"Steganography challenge", answer:"FLAG19"},
-{title:"Stage 20", text:"Final challenge", answer:"ITZSOS-END"}
-];
-
-// ================= FIRESTORE LOAD/ SAVE =================
+// ========== LOAD USER DATA ==========
 async function loadUserData(uid){
   const docRef = doc(db, 'users', uid);
   const docSnap = await getDoc(docRef);
   if(docSnap.exists()){
     level = docSnap.data().level;
     xp = docSnap.data().xp;
-  }else{
+  } else {
     await setDoc(docRef, {level:1, xp:0});
   }
 }
-async function saveUserData(){
-  const user = auth.currentUser;
-  if(user){
-    await setDoc(doc(db,'users',user.uid), {level,xp});
-  }
+
+// ========== LOAD STAGES ==========
+async function loadStagesFromFirestore(){
+  const stagesRef = collection(db,'stages');
+  const snapshot = await getDocs(stagesRef);
+  stages = snapshot.docs.map(d => ({id:d.id, ...d.data()}));
 }
 
-// ================= UI FUNCTIONS =================
+// ========== OPEN TAB ==========
 function openTab(id){
   document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -196,78 +169,98 @@ function openTab(id){
   if(id==='leader') loadRanks();
 }
 
-function load(){
+// ========== LOAD STAGE ==========
+async function loadStage(){
+  if(stages.length===0) await loadStagesFromFirestore();
   if(level>stages.length){
     stageTitle.innerText='🏆 All Levels Cleared';
     stageText.innerText='Go fight the Boss 😈';
     return;
   }
-  let s=stages[level-1];
-  stageTitle.innerText=`Level ${level}: ${s.title}`;
-  stageText.innerText=s.text;
+  currentStage = stages[level-1];
+  stageTitle.innerText=`Level ${level}: ${currentStage.title}`;
+  stageText.innerText = currentStage.description;
   answer.value='';
   result.innerText='';
+  hintText.innerText='';
 }
 
+// ========== SHOW HINT ==========
+function showHint(){
+  if(currentStage?.hint){
+    hintText.innerText = currentStage.hint;
+  }
+}
+
+// ========== CHECK ANSWER ==========
 async function check(){
-  let ans = answer.value.trim();
-  let s = stages[level-1];
-  if(ans === s.answer){
-    xp+=100;
+  const ans = answer.value.trim();
+  if(!currentStage) return;
+  const stageDoc = await getDoc(doc(db,'stages',currentStage.id));
+  if(ans === stageDoc.data().answer){
+    xp += 100;
     level++;
     result.innerText='✅ Correct +100XP';
     stageTitle.classList.add('level-up');
-    setTimeout(()=>{stageTitle.classList.remove('level-up');},1000);
+    setTimeout(()=>stageTitle.classList.remove('level-up'),1000);
     animateXP();
     await saveUserData();
-    setTimeout(load,700);
-  }else{
+    setTimeout(loadStage,700);
+  } else {
     result.innerText='❌ Wrong';
   }
 }
 
+// ========== PROFILE ==========
 function loadProfile(){
-  pLevel.innerText=level;
-  pXP.innerText=xp;
+  pLevel.innerText = level;
+  pXP.innerText = xp;
+  // Unique avatar using DiceBear
+  avatar.src = `https://avatars.dicebear.com/api/identicon/${currentUser.uid}.svg`;
   animateXP();
 }
 
 function animateXP(){
-  let percent=(xp%500)/500*100;
-  xpFill.style.width=percent+'%';
+  const percent = (xp % 500)/500*100;
+  xpFill.style.width = percent+'%';
 }
 
+// ========== SAVE USER ==========
+async function saveUserData(){
+  if(!currentUser) return;
+  await setDoc(doc(db,'users',currentUser.uid), {level, xp});
+}
+
+// ========== RESET ==========
 async function reset(){
   if(confirm('Reset Progress?')){
-    const user = auth.currentUser;
-    if(user){
-      level=1; xp=0;
-      await saveUserData();
-      location.reload();
-    }
+    level=1; xp=0;
+    await saveUserData();
+    loadStage();
+    loadProfile();
   }
 }
 
+// ========== BOSS FIGHT ==========
 async function bossFight(){
   if(bossAns.value==='ITZSOS'){
     xp+=500;
     await saveUserData();
     bossResult.innerText='🔥 BOSS DEFEATED!';
     animateXP();
-  }else{
-    bossResult.innerText='❌ Failed';
-  }
+  } else bossResult.innerText='❌ Failed';
 }
 
+// ========== LEADERBOARD ==========
 async function loadRanks(){
   let list = document.getElementById('rankList');
   const q = query(collection(db,'users'), orderBy('xp','desc'), limit(5));
-  const querySnapshot = await getDocs(q);
+  const snapshot = await getDocs(q);
   list.innerHTML='';
   let i=1;
-  querySnapshot.forEach(doc => {
-    let data = doc.data();
-    list.innerHTML+=`<div class="card">#${i} — ${data.xp} XP<br>${doc.id}</div>`;
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    list.innerHTML += `<div class="box">#${i} — ${data.xp} XP<br>${doc.id}</div>`;
     i++;
   });
 }
