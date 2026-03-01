@@ -1,93 +1,69 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="google-site-verification" content="8qTPfxaWZr3Utd41Q9rcD61dBhCvwINivYjw-dFKpm8" />
-<meta name="description" content="Itzsos Labs - Learn hacking through fun challenges, levels, and a cyber arena. Train, hack, and master your skills!">
-<meta name="keywords" content="Itzsos Labs, hacking challenges, cybersecurity, cyber games, capture the flag, CTF">
-<meta name="author" content="Itzsos">
-<meta name="robots" content="index, follow">
 <title>Itzsos Labs | Cyber Arena</title>
-
-
 <style>
-/* HIDE PAGE UNTIL AUTH */
-body{
-background:#0f111a;
-color:#00ffdd;
-font-family:monospace;
-margin:0;
-display:none;
-}
+/* ================= GLOBAL ================= */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#070b14;color:#00ffdd;font-family:monospace;display:none;animation:fadeIn 1.5s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
 
-header{
-background:#111422;
-padding:15px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-border-bottom:1px solid #00ffdd;
-}
+/* ================= HEADER ================= */
+header{background:#0f1625;padding:15px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #00ffdd;box-shadow:0 0 20px #00ffdd44;}
+header h2{animation:pulse 2s infinite;font-size:1.6em;}
+@keyframes pulse{0%{text-shadow:0 0 5px #00ffdd;}50%{text-shadow:0 0 20px #00ffdd;}100%{text-shadow:0 0 5px #00ffdd;}}
 
-nav button{
-background:#ff6600;
-border:none;
-padding:6px 12px;
-font-weight:bold;
-cursor:pointer;
-margin-left:5px;
-}
+/* ================= NAV ================= */
+nav button{background:#ff6600;border:none;padding:8px 15px;margin-left:5px;font-weight:bold;cursor:pointer;border-radius:5px;transition:0.3s;}
+nav button:hover{background:#00ffdd;transform:scale(1.1);box-shadow:0 0 15px #00ffdd;}
 
-nav button:hover{background:#00ffdd;}
-
-section{display:none;padding:20px;}
-
+/* ================= SECTIONS ================= */
+section{display:none;padding:30px;animation:slide 0.7s ease;}
+@keyframes slide{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
 .active{display:block;}
 
-.box{
-background:#111422;
-border:1px solid #00ffdd;
-max-width:400px;
-margin:30px auto;
-padding:20px;
-border-radius:10px;
-text-align:center;
-}
+/* ================= BOX ================= */
+.box{background:#0f1625;border:2px solid #00ffdd;max-width:450px;margin:40px auto;padding:25px;border-radius:15px;text-align:center;box-shadow:0 0 25px #00ffdd33;transition:0.4s;}
+.box:hover{transform:scale(1.02);}
 
-input{
-width:90%;
-padding:8px;
-margin:10px;
-background:black;
-color:white;
-border:1px solid #00ffdd;
-}
+/* ================= INPUT ================= */
+input{width:90%;padding:10px;margin:12px;background:black;color:white;border:1px solid #00ffdd;border-radius:5px;}
 
-button.main{
-background:#ff6600;
-border:none;
-padding:8px 15px;
-font-weight:bold;
-cursor:pointer;
-}
+/* ================= BUTTON ================= */
+button.main{background:#ff6600;border:none;padding:10px 20px;font-weight:bold;cursor:pointer;border-radius:6px;transition:0.3s;}
+button.main:hover{background:#00ffdd;box-shadow:0 0 15px #00ffdd;}
 
-button.main:hover{background:#00ffdd;}
+/* ================= XP BAR ================= */
+#xpBar{width:100%;background:#111;height:15px;border-radius:10px;overflow:hidden;margin:10px 0;}
+#xpFill{height:100%;width:0%;background:linear-gradient(90deg,#00ffdd,#ff6600);transition:0.8s;}
 
-.card{
-background:#111422;
-border:1px solid #00ffdd;
-padding:15px;
-margin:10px auto;
-max-width:350px;
-border-radius:8px;
+/* ================= CARDS ================= */
+.card{background:#0f1625;border:1px solid #00ffdd;padding:15px;margin:10px auto;border-radius:8px;max-width:350px;}
+
+/* ================= LEVEL-UP EFFECT ================= */
+@keyframes levelUp{0%{transform:scale(1);}50%{transform:scale(1.2);color:#ff6600;}100%{transform:scale(1);color:#00ffdd;}}
+.level-up{animation:levelUp 1s ease;}
+
+/* ================= PROFILE ART ================= */
+#profileAvatar{
+  width:120px; height:120px;
+  margin:0 auto 15px;
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, #00ffdd, #0f1625 70%);
+  box-shadow:0 0 20px #00ffdd, 0 0 40px #ff6600 inset;
+  display:flex; justify-content:center; align-items:center;
+  font-size:50px; color:#ff6600;
+  font-weight:bold;
 }
+#profileBox p{margin:5px 0;}
 </style>
 </head>
-
 <body>
-
 <header>
 <h2>🧠 Itzsos Cyber Arena</h2>
-
 <nav>
 <button onclick="openTab('play')">Play</button>
 <button onclick="openTab('profile')">Profile</button>
@@ -96,318 +72,205 @@ border-radius:8px;
 </nav>
 </header>
 
-
-<!-- PLAY -->
+<!-- ================= PLAY ================= -->
 <section id="play" class="active">
-
 <div class="box">
-
 <h3 id="stageTitle"></h3>
 <p id="stageText"></p>
-
 <input id="answer" placeholder="Enter Flag">
-
-<br>
-
 <button class="main" onclick="check()">Submit</button>
-
 <p id="result"></p>
-
 </div>
-
 </section>
 
-
-<!-- PROFILE -->
+<!-- ================= PROFILE ================= -->
 <section id="profile">
-
-<div class="box">
-
-<h3>👤 Hacker Profile</h3>
-
-<p>Level: <span id="pLevel"></span></p>
-<p>XP: <span id="pXP"></span></p>
-
-<button class="main" onclick="reset()">Reset Progress</button>
-
+<div class="box" id="profileBox">
+  <div id="profileAvatar">A</div>
+  <h3 style="color:#00ffdd; margin-bottom:10px;">Hacker Profile</h3>
+  <p>Level: <span id="pLevel"></span></p>
+  <p>XP: <span id="pXP"></span></p>
+  <div id="xpBar"><div id="xpFill"></div></div>
+  <button class="main" onclick="reset()">Reset</button>
 </div>
-
 </section>
 
-
-<!-- BOSS -->
+<!-- ================= BOSS ================= -->
 <section id="boss">
-
 <div class="box">
-
 <h3>🔥 Final Boss</h3>
-
-<p>Decrypt this:</p>
-
-<p><b>01001001 01010100 01011010 01010011 01001111 01010011</b></p>
-
+<p>Decrypt:</p>
+<b>01001001 01010100 01011010 01010011 01001111 01010011</b>
 <input id="bossAns" placeholder="Answer">
-
 <button class="main" onclick="bossFight()">Attack</button>
-
 <p id="bossResult"></p>
-
 </div>
-
 </section>
 
-
-<!-- LEADER -->
+<!-- ================= LEADER ================= -->
 <section id="leader">
-
 <div class="box">
-
-<h3>🏆 Local Ranking</h3>
-
+<h3>🏆 Rankings</h3>
 <div id="rankList"></div>
-
 </div>
-
 </section>
 
-
-<script>
-
-/* DATA */
-let level = Number(localStorage.getItem("level")) || 1;
-let xp = Number(localStorage.getItem("xp")) || 0;
-
-
-/* STAGES */
-const stages = [
-
-{
-title:"Stage 1 - View Source",
-text:"Find hidden message in HTML",
-answer:"ITZSOS-START"
-},
-
-{
-title:"Stage 2 - Base64",
-text:"Decode: SVRaU09TLVBSTw==",
-answer:"ITZSOS-PRO"
-},
-
-{
-title:"Stage 3 - MD5",
-text:"5f4dcc3b5aa765d61d8327deb882cf99",
-answer:"password"
-},
-
-{
-title:"Stage 4 - Reverse",
-text:"Reverse: SOSTZI",
-answer:"IZTSOS"
-}
-
-];
-
-
-/* UI */
-function openTab(id){
-
-document.querySelectorAll("section")
-.forEach(s=>s.classList.remove("active"));
-
-document.getElementById(id).classList.add("active");
-
-if(id==="profile") loadProfile();
-if(id==="leader") loadRanks();
-}
-
-
-/* LOAD STAGE */
-function load(){
-
-if(level > stages.length){
-
-stageTitle.innerText = "🏆 All Levels Cleared";
-stageText.innerText = "Go fight the Boss 😈";
-
-return;
-}
-
-let s = stages[level-1];
-
-stageTitle.innerText = "Level "+level+": "+s.title;
-stageText.innerText = s.text;
-
-answer.value="";
-result.innerText="";
-}
-
-load();
-
-
-/* CHECK */
-function check(){
-
-let ans = answer.value.trim();
-let s = stages[level-1];
-
-if(ans === s.answer){
-
-xp+=100;
-level++;
-
-save();
-
-result.innerText="✅ Correct +100XP";
-
-setTimeout(load,800);
-
-}else{
-
-result.innerText="❌ Wrong";
-
-}
-
-}
-
-
-/* SAVE */
-function save(){
-
-localStorage.setItem("level",level);
-localStorage.setItem("xp",xp);
-
-}
-
-
-/* PROFILE */
-function loadProfile(){
-
-pLevel.innerText = level;
-pXP.innerText = xp;
-
-}
-
-
-/* RESET */
-function reset(){
-
-if(confirm("Reset progress?")){
-
-localStorage.clear();
-location.reload();
-
-}
-
-}
-
-
-/* BOSS */
-function bossFight(){
-
-let ans = bossAns.value;
-
-if(ans==="ITZSOS"){
-
-xp+=500;
-save();
-
-bossResult.innerText="🔥 BOSS DEFEATED +500XP";
-
-}else{
-
-bossResult.innerText="❌ Failed";
-
-}
-
-}
-
-
-/* RANK */
-function loadRanks(){
-
-let list = document.getElementById("rankList");
-
-let data = JSON.parse(
-localStorage.getItem("rank")
-) || [];
-
-data.push({
-xp:xp,
-date:new Date().toLocaleDateString()
-});
-
-data.sort((a,b)=>b.xp-a.xp);
-
-data = data.slice(0,5);
-
-localStorage.setItem("rank",JSON.stringify(data));
-
-list.innerHTML="";
-
-data.forEach((r,i)=>{
-
-list.innerHTML += `
-<div class="card">
-#${i+1} — ${r.xp} XP<br>
-${r.date}
-</div>
-`;
-
-});
-
-}
-
-</script>
-
-
-<!-- FIREBASE PROTECTION -->
 <script type="module">
+// Firebase imports
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
 
-import { initializeApp } from
-"https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-
-import {
-  getAuth,
-  onAuthStateChanged
-} from
-"https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-
-
-/* CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
-  projectId: "itzsos-labs",
-  storageBucket: "itzsos-labs.firebasestorage.app",
-  messagingSenderId: "1012826517121",
-  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
+  projectId: "itzsos-labs"
 };
-
-
-/* INIT */
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
-
-/* PROTECT */
-/* PROTECT */
-onAuthStateChanged(auth, (user) => {
-
-  if (!user || !user.emailVerified) {
-
-    alert("❌ Please login and verify your email first!");
-    window.location.href = "index.html";
-
-  } else {
-
-    /* SHOW PAGE */
-    document.body.style.display = "block";
-
+// Auth
+onAuthStateChanged(auth, async (user)=>{
+  if(!user || !user.emailVerified){
+    alert('Login First!');
+    window.location.href='index.html';
+  }else{
+    document.body.style.display='block';
+    await loadUserData(user.uid);
+    load();
   }
-
 });
 
-</script>
+// ================= GAME DATA =================
+let level = 1;
+let xp = 0;
 
+// 20 stages
+const stages = [
+{title:"Stage 1", text:"Find hidden HTML message", answer:"ITZSOS-START"},
+{title:"Stage 2", text:"Decode Base64: SVRaU09TLVBSTw==", answer:"ITZSOS-PRO"},
+{title:"Stage 3", text:"MD5 hash: 5f4dcc3b5aa765d61d8327deb882cf99", answer:"password"},
+{title:"Stage 4", text:"Reverse: SOSTZI", answer:"IZTSOS"},
+{title:"Stage 5", text:"Simple cipher: UVWXYZ", answer:"ABCDEF"},
+{title:"Stage 6", text:"Binary: 01001001", answer:"I"},
+{title:"Stage 7", text:"ROT13: VGHPV", answer:"GUCIB"},
+{title:"Stage 8", text:"Hex: 49 54 5A 53", answer:"ITZS"},
+{title:"Stage 9", text:"Caesar shift +3: LOR", answer:"IOR"},
+{title:"Stage 10", text:"Find the flag in JS code", answer:"FLAG-10"},
+{title:"Stage 11", text:"Base64 decode: RkFMRy0xMQ==", answer:"FLAG-11"},
+{title:"Stage 12", text:"Reverse text: 21-GALF", answer:"FLAG-12"},
+{title:"Stage 13", text:"Simple substitution cipher", answer:"FLAG-13"},
+{title:"Stage 14", text:"Hidden comment in HTML", answer:"FLAG-14"},
+{title:"Stage 15", text:"Binary to ASCII: 01000110 01001100", answer:"FL"},
+{title:"Stage 16", text:"ROT13 decode: SYN13", answer:"FLAG16"},
+{title:"Stage 17", text:"Hex decode: 464c4147", answer:"FLAG"},
+{title:"Stage 18", text:"Find the hidden console log", answer:"FLAG18"},
+{title:"Stage 19", text:"Steganography challenge", answer:"FLAG19"},
+{title:"Stage 20", text:"Final challenge", answer:"ITZSOS-END"}
+];
+
+// ================= FIRESTORE LOAD/ SAVE =================
+async function loadUserData(uid){
+  const docRef = doc(db, 'users', uid);
+  const docSnap = await getDoc(docRef);
+  if(docSnap.exists()){
+    level = docSnap.data().level;
+    xp = docSnap.data().xp;
+  }else{
+    await setDoc(docRef, {level:1, xp:0});
+  }
+}
+async function saveUserData(){
+  const user = auth.currentUser;
+  if(user){
+    await setDoc(doc(db,'users',user.uid), {level,xp});
+  }
+}
+
+// ================= UI FUNCTIONS =================
+function openTab(id){
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='profile') loadProfile();
+  if(id==='leader') loadRanks();
+}
+
+function load(){
+  if(level>stages.length){
+    stageTitle.innerText='🏆 All Levels Cleared';
+    stageText.innerText='Go fight the Boss 😈';
+    return;
+  }
+  let s=stages[level-1];
+  stageTitle.innerText=`Level ${level}: ${s.title}`;
+  stageText.innerText=s.text;
+  answer.value='';
+  result.innerText='';
+}
+
+async function check(){
+  let ans = answer.value.trim();
+  let s = stages[level-1];
+  if(ans === s.answer){
+    xp+=100;
+    level++;
+    result.innerText='✅ Correct +100XP';
+    stageTitle.classList.add('level-up');
+    setTimeout(()=>{stageTitle.classList.remove('level-up');},1000);
+    animateXP();
+    await saveUserData();
+    setTimeout(load,700);
+  }else{
+    result.innerText='❌ Wrong';
+  }
+}
+
+function loadProfile(){
+  pLevel.innerText=level;
+  pXP.innerText=xp;
+  animateXP();
+}
+
+function animateXP(){
+  let percent=(xp%500)/500*100;
+  xpFill.style.width=percent+'%';
+}
+
+async function reset(){
+  if(confirm('Reset Progress?')){
+    const user = auth.currentUser;
+    if(user){
+      level=1; xp=0;
+      await saveUserData();
+      location.reload();
+    }
+  }
+}
+
+async function bossFight(){
+  if(bossAns.value==='ITZSOS'){
+    xp+=500;
+    await saveUserData();
+    bossResult.innerText='🔥 BOSS DEFEATED!';
+    animateXP();
+  }else{
+    bossResult.innerText='❌ Failed';
+  }
+}
+
+async function loadRanks(){
+  let list = document.getElementById('rankList');
+  const q = query(collection(db,'users'), orderBy('xp','desc'), limit(5));
+  const querySnapshot = await getDocs(q);
+  list.innerHTML='';
+  let i=1;
+  querySnapshot.forEach(doc => {
+    let data = doc.data();
+    list.innerHTML+=`<div class="card">#${i} — ${data.xp} XP<br>${doc.id}</div>`;
+    i++;
+  });
+}
+</script>
 </body>
 </html>
