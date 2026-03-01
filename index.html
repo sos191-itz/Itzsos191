@@ -362,16 +362,7 @@ const resetBtn = document.getElementById("resetBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const startBtn = document.getElementById("startBtn");
 
-startBtn.onclick = () => {
-  const user = auth.currentUser;
 
-  if (user && user.emailVerified) {
-    window.location.href = "stages.html";
-  } else {
-    alert("❌ Please login and verify your email first!");
-    location.href = "#login";
-  }
-};
 
 registerBtn.onclick = ()=>{
   createUserWithEmailAndPassword(auth,email.value,password.value)
@@ -414,13 +405,37 @@ logoutBtn.onclick = ()=>{
   status.textContent="Logged out";
 };
 
-onAuthStateChanged(auth,user=>{
-  if(user){
-    status.textContent="Welcome "+user.email;
+let currentUser = null;
+
+// Track login state
+onAuthStateChanged(auth, user => {
+  currentUser = user;
+
+  if (user) {
+    status.textContent = "Welcome " + user.email;
   } else {
-    status.textContent="Not logged in";
+    status.textContent = "Not logged in";
   }
 });
+
+// Start button control
+startBtn.onclick = () => {
+
+  if (!currentUser) {
+    alert("❌ Please login first!");
+    location.href = "#login";
+    return;
+  }
+
+  if (!currentUser.emailVerified) {
+    alert("❌ Verify your email first!");
+    sendEmailVerification(currentUser);
+    return;
+  }
+
+  // Go to stages
+  window.location.href = "stages.html";
+};
 
 const params = new URLSearchParams(window.location.search);
 const mode = params.get("mode");
