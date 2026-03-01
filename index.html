@@ -375,11 +375,17 @@ loginBtn.onclick = ()=>{
   .then(res=>{
     if(res.user.emailVerified){
       status.textContent="Logged In ✅";
+
+      // 👉 Redirect to stages
+      window.location.href = "stages.html";
+
     } else {
       status.textContent="Verify Email First 📧";
       sendEmailVerification(res.user);
     }
   })
+  .catch(e=>status.textContent=e.message);
+};
   .catch(e=>status.textContent=e.message);
 };
 
