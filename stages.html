@@ -97,15 +97,16 @@ const firebaseConfig = {
   authDomain: "itzsos-labs.firebaseapp.com",
   projectId: "itzsos-labs"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser = null;
-let stages = [];
+let currentStage = null;
 let level = 1;
 let xp = 0;
-let currentStage = null;
+let stages = [];
 
 // ===== AUTH CHECK =====
 onAuthStateChanged(auth, async (user) => {
@@ -115,32 +116,31 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
   currentUser = user;
-  await loadUserData(user.uid);
-  await loadStagesFromFirestore();
+  await loadUser();
+  await loadStages();
   document.body.style.display='block';
   loadStage();
   loadProfile();
 });
 
 // ===== LOAD USER =====
-async function loadUserData(uid){
-  const docRef = doc(db,'users',uid);
-  const docSnap = await getDoc(docRef);
-  if(docSnap.exists()){
-    level = docSnap.data().level || 1;
-    xp = docSnap.data().xp || 0;
+async function loadUser(){
+  const userRef = doc(db,'users',currentUser.uid);
+  const userSnap = await getDoc(userRef);
+  if(userSnap.exists()){
+    level = userSnap.data().level || 1;
+    xp = userSnap.data().xp || 0;
   } else {
-    await setDoc(docRef,{level:1,xp:0});
+    await setDoc(userRef,{level:1,xp:0});
     level = 1; xp = 0;
   }
 }
 
 // ===== LOAD STAGES =====
-async function loadStagesFromFirestore(){
+async function loadStages(){
   const stagesRef = collection(db,'stages');
-  const q = query(stagesRef, orderBy('title'));
-  const snapshot = await getDocs(q);
-  stages = snapshot.docs.map(d=>({id:d.id, ...d.data()}));
+  const snapshot = await getDocs(stagesRef);
+  stages = snapshot.docs.sort((a,b)=>a.data().title.localeCompare(b.data().title)).map(d=>({id:d.id,...d.data()}));
 }
 
 // ===== OPEN TAB =====
@@ -167,45 +167,49 @@ function loadStage(){
 
 // ===== SHOW HINT =====
 function showHint(){
-  if(!currentStage) return;
-  hintText.innerText = currentStage.hint || 'No hint available!';
+  if(currentStage){
+    hintText.innerText = currentStage.hint || 'No hint available';
+  }
 }
 
 // ===== CHECK ANSWER =====
 async function check(){
   if(!currentStage) return;
   const ans = answer.value.trim();
-  if(ans.toLowerCase() === currentStage.answer.toLowerCase()){
+  if(ans === currentStage.answer){
     xp += currentStage.xp || 100;
     level++;
-    result.innerText=`✅ Correct +${currentStage.xp || 100} XP`;
-    stageTitle.classList.add('level-up'); setTimeout(()=>stageTitle.classList.remove('level-up'),1000);
+    result.innerText = `✅ Correct +${currentStage.xp || 100} XP`;
+    stageTitle.classList.add('level-up'); 
+    setTimeout(()=>stageTitle.classList.remove('level-up'),1000);
     animateXP();
     confettiEffect();
-    if(currentUser) await updateDoc(doc(db,'users',currentUser.uid),{level,xp});
+    await updateDoc(doc(db,'users',currentUser.uid),{level,xp});
     loadProfile();
     setTimeout(loadStage,700);
-  } else result.innerText='❌ Wrong';
+  } else {
+    result.innerText='❌ Wrong';
+  }
 }
 
 // ===== PROFILE =====
 function loadProfile(){
-  if(!currentUser) return;
-  pLevel.innerText=level;
-  pXP.innerText=xp;
-  avatar.src=`https://avatars.dicebear.com/api/identicon/${currentUser.uid}.svg`;
+  pLevel.innerText = level;
+  pXP.innerText = xp;
+  avatar.src = `https://avatars.dicebear.com/api/identicon/${currentUser.uid}.svg`;
   animateXP();
 }
+
 function animateXP(){
-  const percent=(xp%500)/500*100;
-  xpFill.style.width=percent+'%';
+  const percent = (xp % 500)/500*100;
+  xpFill.style.width = percent+'%';
 }
 
 // ===== RESET =====
 async function reset(){
   if(confirm('Reset Progress?')){
-    level=1; xp=0;
-    if(currentUser) await updateDoc(doc(db,'users',currentUser.uid),{level,xp});
+    level = 1; xp = 0;
+    await updateDoc(doc(db,'users',currentUser.uid),{level,xp});
     loadProfile();
     loadStage();
   }
@@ -213,7 +217,7 @@ async function reset(){
 
 // ===== BOSS FIGHT =====
 async function bossFight(){
-  if(bossAns.value.trim().toLowerCase() === 'itzsos'){
+  if(bossAns.value.trim() === 'ITZSOS'){
     xp += 500;
     await updateDoc(doc(db,'users',currentUser.uid),{level,xp});
     bossResult.innerText='🔥 BOSS DEFEATED!';
@@ -225,13 +229,13 @@ async function bossFight(){
 
 // ===== LEADERBOARD =====
 async function loadRanks(){
-  let list = document.getElementById('rankList');
-  const q = query(collection(db,'users'), orderBy('xp','desc'), limit(5));
+  const list = document.getElementById('rankList');
+  const q = query(collection(db,'users'),orderBy('xp','desc'),limit(5));
   const snapshot = await getDocs(q);
   list.innerHTML='';
   let i=1;
   snapshot.forEach(doc=>{
-    const data=doc.data();
+    const data = doc.data();
     list.innerHTML += `<div class="box">#${i} — ${data.xp} XP<br>${doc.id}</div>`;
     i++;
   });
@@ -239,9 +243,36 @@ async function loadRanks(){
 
 // ===== CONFETTI =====
 function confettiEffect(){
-  const canvas=document.getElementById('confetti'); const ctx=canvas.getContext('2d'); canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-  let particles=[]; for(let i=0;i<150;i++){ particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,dx:(Math.random()-0.5)*5,dy:(Math.random()-2)*5,size:Math.random()*4+2,color:`hsl(${Math.random()*360},100%,50%)`}); }
-  let frames=0; function render(){ ctx.clearRect(0,0,canvas.width,canvas.height); particles.forEach(p=>{ ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill(); p.x+=p.dx; p.y+=p.dy; if(p.y>canvas.height){p.y=0;p.x=Math.random()*canvas.width;} }); frames++; if(frames<150) requestAnimationFrame(render); } render();
+  const canvas = document.getElementById('confetti'); 
+  const ctx = canvas.getContext('2d'); 
+  canvas.width = window.innerWidth; 
+  canvas.height = window.innerHeight;
+  let particles = [];
+  for(let i=0;i<150;i++){
+    particles.push({
+      x: Math.random()*canvas.width,
+      y: Math.random()*canvas.height,
+      dx: (Math.random()-0.5)*5,
+      dy: (Math.random()-2)*5,
+      size: Math.random()*4+2,
+      color: `hsl(${Math.random()*360},100%,50%)`
+    });
+  }
+  let frames=0;
+  function render(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p=>{
+      ctx.fillStyle=p.color;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+      ctx.fill();
+      p.x+=p.dx; p.y+=p.dy;
+      if(p.y>canvas.height){p.y=0; p.x=Math.random()*canvas.width;}
+    });
+    frames++;
+    if(frames<150) requestAnimationFrame(render);
+  }
+  render();
 }
 </script>
 </body>
