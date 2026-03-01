@@ -137,6 +137,7 @@ onAuthStateChanged(auth, async (user) => {
     document.body.style.display='block';
     currentUser = user;
     await loadUserData(user.uid);
+    await loadStagesFromFirestore();
     loadStage();
     loadProfile();
   }
@@ -157,7 +158,8 @@ async function loadUserData(uid){
 // ========== LOAD STAGES ==========
 async function loadStagesFromFirestore(){
   const stagesRef = collection(db,'stages');
-  const snapshot = await getDocs(stagesRef);
+  const q = query(stagesRef, orderBy('title')); // Stage1 -> Stage20
+  const snapshot = await getDocs(q);
   stages = snapshot.docs.map(d => ({id:d.id, ...d.data()}));
 }
 
@@ -171,15 +173,14 @@ function openTab(id){
 
 // ========== LOAD STAGE ==========
 async function loadStage(){
-  if(stages.length===0) await loadStagesFromFirestore();
   if(level>stages.length){
     stageTitle.innerText='🏆 All Levels Cleared';
     stageText.innerText='Go fight the Boss 😈';
     return;
   }
   currentStage = stages[level-1];
-  stageTitle.innerText=`Level ${level}: ${currentStage.title}`;
-  stageText.innerText = currentStage.description;
+  stageTitle.innerText = `Level ${level}: ${currentStage.title}`;
+  stageText.innerText = currentStage.text;
   answer.value='';
   result.innerText='';
   hintText.innerText='';
@@ -198,9 +199,9 @@ async function check(){
   if(!currentStage) return;
   const stageDoc = await getDoc(doc(db,'stages',currentStage.id));
   if(ans === stageDoc.data().answer){
-    xp += 100;
+    xp += stageDoc.data().xp;
     level++;
-    result.innerText='✅ Correct +100XP';
+    result.innerText='✅ Correct +'+stageDoc.data().xp+' XP';
     stageTitle.classList.add('level-up');
     setTimeout(()=>stageTitle.classList.remove('level-up'),1000);
     animateXP();
@@ -215,7 +216,6 @@ async function check(){
 function loadProfile(){
   pLevel.innerText = level;
   pXP.innerText = xp;
-  // Unique avatar using DiceBear
   avatar.src = `https://avatars.dicebear.com/api/identicon/${currentUser.uid}.svg`;
   animateXP();
 }
