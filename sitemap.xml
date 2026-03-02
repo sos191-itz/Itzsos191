@@ -1,124 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Itzsos Labs | Stages</title>
-<meta name="description" content="Itzsos Labs - Learn hacking through fun challenges, levels, and a cyber arena. Train, hack, and master your skills!">
-<meta name="keywords" content="Itzsos Labs, hacking challenges, cybersecurity, cyber games, capture the flag, CTF">
-<meta name="author" content="Itzsos">
-<meta name="robots" content="index, follow">
-<meta name="google-site-verification" content="8qTPfxaWZr3Utd41Q9rcD61dBhCvwINivYjw-dFKpm8" />
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
 
-<style>
-body { font-family: monospace; background: #0f111a; color: #00ffdd; margin:0; padding:0; }
-header { background:#111422; padding:20px; text-align:center; border-bottom:1px solid #00ffdd; }
-h1 { color:#ff6600; }
-main { max-width:600px; margin:30px auto; padding:20px; }
-#stage-container { border:1px solid #00ffdd; padding:20px; margin-bottom:15px; border-radius:10px; }
-button { padding:10px 20px; margin:5px; border:none; border-radius:5px; cursor:pointer; background:#ff6600; color:black; font-weight:bold; }
-button:hover { background:#00ffdd; }
-input { padding:8px; width:70%; border-radius:5px; border:1px solid #00ffdd; background:black; color:white; }
-#feedback { margin-top:10px; font-weight:bold; }
-</style>
-</head>
+  <url>
+    <loc>https://sos191-itz.github.io/Itzsos191/</loc>
+    <lastmod>2026-03-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
 
-<body>
-<header>
-  <h1>Itzsos Labs: Cyber Stages</h1>
-</header>
+  <url>
+    <loc>https://sos191-itz.github.io/Itzsos191/stages.html</loc>
+    <lastmod>2026-03-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 
-<main>
-  <div id="stage-container">Loading stages...</div>
-  <div>
-    <button id="show-hint">Show Hint</button>
-    <p id="hint-text"></p>
-  </div>
-  <div>
-    <input type="text" id="answer-input" placeholder="Enter your answer">
-    <button id="submit-answer">Submit</button>
-    <p id="feedback"></p>
-  </div>
-</main>
-
-<!-- FIREBASE -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
-
-// ==== FIREBASE CONFIG FROM YOUR PAGE ====
-const firebaseConfig = {
-  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
-  authDomain: "itzsos-labs.firebaseapp.com",
-  projectId: "itzsos-labs",
-  storageBucket: "itzsos-labs.firebasestorage.app",
-  messagingSenderId: "1012826517121",
-  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// ==== DOM ELEMENTS ====
-const stageContainer = document.getElementById('stage-container');
-const hintText = document.getElementById('hint-text');
-const answerInput = document.getElementById('answer-input');
-const feedback = document.getElementById('feedback');
-const showHintBtn = document.getElementById('show-hint');
-
-let stagesData = [];
-let currentStage = 0;
-
-// ==== LOAD STAGES ====
-async function loadStages() {
-  const q = query(collection(db, 'stages'), orderBy('stageNumber'));
-  const snapshot = await getDocs(q);
-  snapshot.forEach(docSnap => {
-    stagesData.push({ id: docSnap.id, ...docSnap.data() });
-  });
-  loadStage(currentStage);
-}
-
-function loadStage(index){
-  if(index >= stagesData.length){
-    stageContainer.innerHTML = "<h2>🎉 Congratulations! All stages completed!</h2>";
-    hintText.textContent = "";
-    feedback.textContent = "";
-    answerInput.style.display = "none";
-    showHintBtn.style.display = "none";
-    return;
-  }
-  const stage = stagesData[index];
-  stageContainer.innerHTML = `<h2>Stage ${stage.stageNumber}</h2><p>${stage.description}</p>`;
-  hintText.textContent = "";
-  feedback.textContent = "";
-  answerInput.value = "";
-}
-
-showHintBtn.addEventListener('click', () => {
-  hintText.textContent = stagesData[currentStage].hint || "No hint available.";
-});
-
-document.getElementById('submit-answer').addEventListener('click', async () => {
-  const stage = stagesData[currentStage];
-  const answer = answerInput.value.trim();
-  if(!answer) return;
-
-  const docRef = doc(db, 'stages', stage.id);
-  const docSnap = await getDoc(docRef);
-
-  if(docSnap.exists() && docSnap.data().answer.toLowerCase() === answer.toLowerCase()){
-    feedback.textContent = "✅ Correct! Next stage loading...";
-    currentStage++;
-    setTimeout(()=>loadStage(currentStage), 800);
-  } else {
-    feedback.textContent = "❌ Incorrect, try again!";
-  }
-});
-
-// INIT
-loadStages();
-</script>
-
-</body>
-</html>
+</urlset>
