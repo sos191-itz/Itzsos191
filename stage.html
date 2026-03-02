@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stages | Itzsos Labs</title>
+<title>Stage | Itzsos Labs</title>
 
 <style>
 body {
@@ -33,43 +33,26 @@ nav button {
 }
 
 .container {
-  max-width:1100px;
+  max-width:800px;
   margin:40px auto;
   padding:20px;
-}
-
-#userBox {
-  margin-bottom:30px;
-  padding:15px;
   background:#111422;
   border:1px solid #00ffdd;
-  border-radius:8px;
-}
-
-.stage-grid {
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-  gap:20px;
-}
-
-.stage-card {
-  background:#111422;
-  border:1px solid #00ffdd;
-  padding:20px;
   border-radius:10px;
-  transition:0.3s;
 }
 
-.stage-card:hover {
-  transform:scale(1.05);
-  border-color:#ff6600;
+h2 { color:#ff6600; }
+
+input {
+  width:100%;
+  padding:10px;
+  margin-top:15px;
+  background:black;
+  border:1px solid #00ffdd;
+  color:white;
 }
 
-.stage-card h3 {
-  color:#ff6600;
-}
-
-.stage-card button {
+button.submit {
   margin-top:10px;
   padding:8px 12px;
   background:#00ffdd;
@@ -78,15 +61,9 @@ nav button {
   font-weight:bold;
 }
 
-.solved {
-  border-color:lightgreen !important;
-}
-
-footer {
-  text-align:center;
-  padding:20px;
-  border-top:1px solid #00ffdd;
-  margin-top:40px;
+#result {
+  margin-top:15px;
+  font-weight:bold;
 }
 </style>
 </head>
@@ -94,31 +71,25 @@ footer {
 <body>
 
 <nav>
-  <h2>Itzsos Labs - Stages</h2>
-  <button id="logoutBtn">Logout</button>
+  <h2>Itzsos Labs - Stage</h2>
+  <button onclick="window.location.href='stages.html'">Back</button>
 </nav>
 
 <div class="container">
+  <h2 id="stageTitle">Loading...</h2>
+  <p id="stageText"></p>
 
-  <div id="userBox">
-    <div id="userEmail">Loading user...</div>
-    <div id="userXP">XP: 0</div>
-  </div>
+  <input type="text" id="flagInput" placeholder="Enter flag">
+  <button class="submit" id="submitBtn">Submit</button>
 
-  <div class="stage-grid" id="stageContainer">
-    <!-- Stages load here -->
-  </div>
-
+  <div id="result"></div>
 </div>
-
-<footer>© 2026 Itzsos Labs</footer>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* YOUR FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -132,12 +103,12 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const stageContainer = document.getElementById("stageContainer");
-const userEmail = document.getElementById("userEmail");
-const userXP = document.getElementById("userXP");
-const logoutBtn = document.getElementById("logoutBtn");
+const params = new URLSearchParams(window.location.search);
+const stageId = params.get("id");
 
-/* AUTH CHECK */
+let correctAnswer = null;
+let stageXP = 0;
+
 onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
@@ -145,83 +116,45 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  if (!user.emailVerified) {
-    alert("Verify your email first!");
-    window.location.href = "index.html";
+  const stageRef = doc(db, "stages", stageId);
+  const stageSnap = await getDoc(stageRef);
+
+  if (!stageSnap.exists()) {
+    document.getElementById("stageTitle").textContent = "Stage not found";
     return;
   }
 
-  userEmail.innerHTML = "👤 Logged in as: <strong>" + user.email + "</strong>";
+  const data = stageSnap.data();
 
-  await loadUserData(user);
-  await loadStages(user);
+  document.getElementById("stageTitle").textContent = data.title;
+  document.getElementById("stageText").textContent = data.text;
+
+  correctAnswer = data.answer;
+  stageXP = data.xp || 0;
 });
 
-/* LOAD USER DATA */
-async function loadUserData(user) {
+document.getElementById("submitBtn").onclick = async () => {
 
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
+  const user = auth.currentUser;
+  if (!user) return;
 
-  if (userSnap.exists()) {
-    const data = userSnap.data();
-    userXP.textContent = "XP: " + (data.xp || 0);
+  const input = document.getElementById("flagInput").value.trim();
+
+  if (input === correctAnswer) {
+
+    const userRef = doc(db, "users", user.uid);
+
+    await setDoc(userRef, {
+      xp: increment(stageXP)
+    }, { merge: true });
+
+    document.getElementById("result").textContent = "✅ Correct! +" + stageXP + " XP";
+    document.getElementById("result").style.color = "lightgreen";
+
   } else {
-    userXP.textContent = "XP: 0";
+    document.getElementById("result").textContent = "❌ Wrong flag!";
+    document.getElementById("result").style.color = "red";
   }
-}
-
-/* LOAD STAGES */
-async function loadStages(user) {
-
-  const querySnapshot = await getDocs(collection(db, "stages"));
-
-  if (querySnapshot.empty) {
-    stageContainer.innerHTML = "<p>No stages added yet.</p>";
-    return;
-  }
-
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
-  let solvedStages = [];
-
-  if (userSnap.exists()) {
-    solvedStages = userSnap.data().solvedStages || [];
-  }
-
-  querySnapshot.forEach((docSnap) => {
-
-    const data = docSnap.data();
-    const stageId = docSnap.id;
-
-    const card = document.createElement("div");
-    card.classList.add("stage-card");
-
-    if (solvedStages.includes(stageId)) {
-      card.classList.add("solved");
-    }
-
-    card.innerHTML = `
-      <h3>${data.title}</h3>
-      <p>${data.text}</p>
-      <p>XP: ${data.xp}</p>
-      <button onclick="openStage('${stageId}')">Start</button>
-    `;
-
-    stageContainer.appendChild(card);
-  });
-}
-
-/* OPEN STAGE */
-window.openStage = function(id) {
-  window.location.href = "stage.html?id=" + id;
-};
-
-/* LOGOUT */
-logoutBtn.onclick = () => {
-  signOut(auth).then(() => {
-    window.location.href = "index.html";
-  });
 };
 </script>
 
