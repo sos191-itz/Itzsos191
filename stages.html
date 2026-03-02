@@ -1,35 +1,193 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Itzsos Labs Hacking Game</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Itzsos Labs - Cyber Arena Stages</title>
+<style>
+body { margin:0; font-family:monospace; background:#0f111a; color:#00ffdd; }
+nav { background:#111422; border-bottom:1px solid #00ffdd; display:flex; justify-content:space-between; align-items:center; padding:15px 30px; position:sticky; top:0; }
+nav h2 { color:#ff6600; }
+nav a { color:#00ffdd; margin-left:15px; text-decoration:none; font-weight:bold; }
+nav a:hover { color:#ff6600; }
+
+.container { max-width:900px; margin:50px auto; padding:20px; }
+.stage { background:#111422; border:1px solid #00ffdd; border-radius:10px; padding:20px; margin-bottom:20px; }
+.stage h3 { color:#ff6600; margin-top:0; }
+.stage p { color:#ccc; }
+.stage input { padding:8px; width:60%; margin-right:10px; background:black; border:1px solid #00ffdd; color:white; }
+.stage button { padding:8px 12px; margin-top:5px; background:#ff6600; color:black; border:none; border-radius:5px; cursor:pointer; }
+.stage button:hover { background:#00ffdd; }
+
+#profile { text-align:center; margin-bottom:50px; }
+.avatar {
+  display:inline-block;
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  background: linear-gradient(45deg, #ff6600, #00ffdd);
+  animation: spin 6s linear infinite;
+  box-shadow: 0 0 20px #00ffdd, 0 0 40px #ff6600;
+}
+#xpDisplay { color:#ff6600; font-weight:bold; margin-top:10px; }
+
+@keyframes spin { 
+  0% { transform: rotate(0deg); } 
+  100% { transform: rotate(360deg); } 
+}
+
+@media (max-width:768px){
+  .stage input { width:100%; margin-bottom:5px; }
+}
+</style>
 </head>
 <body>
-  <header>
-    <h1>Itzsos Labs: Hacking Challenge</h1>
-    <div id="user-profile">
-      <img id="avatar" src="default-avatar.png" alt="Profile Avatar">
-      <span id="username">Player1</span>
-    </div>
-  </header>
 
-  <main>
-    <div id="stage-container">
-      <!-- Stage content will be loaded here dynamically -->
-    </div>
-    <div id="hint-container">
-      <button id="show-hint">Show Hint</button>
-      <p id="hint-text"></p>
-    </div>
-    <div id="answer-container">
-      <input type="text" id="answer-input" placeholder="Enter your answer">
-      <button id="submit-answer">Submit</button>
-      <p id="feedback"></p>
-    </div>
-  </main>
+<nav>
+  <h2>Itzsos Labs</h2>
+  <div>
+    <a href="index.html">Home</a>
+    <a href="#stagesContainer">Stages</a>
+    <a href="#" id="logoutBtn">Logout</a>
+  </div>
+</nav>
 
-  <script src="stages.js"></script>
+<div class="container">
+  <!-- Profile Section -->
+  <div id="profile">
+    <div class="avatar"></div>
+    <div id="xpDisplay">XP: 0</div>
+    <div id="userEmail"></div>
+  </div>
+
+  <!-- Stages Section -->
+  <div id="stagesContainer"></div>
+</div>
+
+<!-- Firebase Scripts -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, setDoc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  authDomain: "itzsos-labs.firebaseapp.com",
+  projectId: "itzsos-labs",
+  storageBucket: "itzsos-labs.firebasestorage.app",
+  messagingSenderId: "1012826517121",
+  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const stagesContainer = document.getElementById("stagesContainer");
+const xpDisplay = document.getElementById("xpDisplay");
+const userEmailEl = document.getElementById("userEmail");
+const logoutBtn = document.getElementById("logoutBtn");
+
+let currentUser = null;
+let userXP = 0;
+
+// Logout
+logoutBtn.onclick = () => {
+  signOut(auth);
+};
+
+// Check user login state
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    alert("❌ Please login first!");
+    location.href = "index.html";
+    return;
+  }
+  currentUser = user;
+  userEmailEl.textContent = user.email;
+
+  // Load stages
+  await loadStages();
+});
+
+// Load stages dynamically
+async function loadStages() {
+  const stagesCol = collection(db, "stages");
+  const stagesSnapshot = await getDocs(stagesCol);
+
+  // Get user progress XP if exists
+  const userDocRef = doc(db, "users", currentUser.uid);
+  const userDoc = await getDoc(userDocRef);
+  let completedStages = [];
+  if (!userDoc.exists()) {
+    await setDoc(userDocRef, { completed: [], xp: 0 });
+  } else {
+    completedStages = userDoc.data().completed || [];
+    userXP = userDoc.data().xp || 0;
+  }
+  xpDisplay.textContent = "XP: " + userXP;
+
+  stagesContainer.innerHTML = "";
+
+  stagesSnapshot.forEach(stageDoc => {
+    const stage = stageDoc.data();
+    const stageDiv = document.createElement("div");
+    stageDiv.className = "stage";
+
+    stageDiv.innerHTML = `
+      <h3>${stage.title}</h3>
+      <p>${stage.text}</p>
+      <button class="hintBtn">Show Hint</button>
+      <p class="hintText" style="color:#ff6600; display:none;">Hint: ${stage.hint}</p>
+      <input type="text" placeholder="Enter answer"/>
+      <button class="submitBtn">Submit</button>
+      <p class="status"></p>
+    `;
+
+    const hintBtn = stageDiv.querySelector(".hintBtn");
+    const hintText = stageDiv.querySelector(".hintText");
+    hintBtn.onclick = () => {
+      hintText.style.display = "block";
+    };
+
+    const submitBtn = stageDiv.querySelector(".submitBtn");
+    const input = stageDiv.querySelector("input");
+    const status = stageDiv.querySelector(".status");
+
+    // Check if already completed
+    if (completedStages.includes(stageDoc.id)) {
+      stageDiv.style.opacity = 0.6;
+      status.textContent = "✅ Completed";
+      input.disabled = true;
+      submitBtn.disabled = true;
+    }
+
+    submitBtn.onclick = async () => {
+      const answer = input.value.trim();
+      if (!answer) return;
+      if (answer === stage.answer) {
+        status.textContent = "✅ Correct!";
+        input.disabled = true;
+        submitBtn.disabled = true;
+        stageDiv.style.opacity = 0.6;
+
+        // Update Firestore user progress
+        await updateDoc(userDocRef, {
+          completed: arrayUnion(stageDoc.id),
+          xp: userXP + stage.xp
+        });
+        userXP += stage.xp;
+        xpDisplay.textContent = "XP: " + userXP;
+      } else {
+        status.textContent = "❌ Incorrect, try again!";
+      }
+    };
+
+    stagesContainer.appendChild(stageDiv);
+  });
+}
+</script>
+
 </body>
 </html>
