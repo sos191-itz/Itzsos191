@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stages | Itzsos Labs</title>
+
+<style>
+body {
+  margin:0;
+  font-family:monospace;
+  background:#0f111a;
+  color:#00ffdd;
+}
+
+nav {
+  background:#111422;
+  border-bottom:1px solid #00ffdd;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 30px;
+}
+
+nav h2 { color:#ff6600; }
+
+nav button {
+  background:#ff6600;
+  border:none;
+  padding:8px 15px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.container {
+  max-width:1100px;
+  margin:40px auto;
+  padding:20px;
+}
+
+#userBox {
+  margin-bottom:30px;
+  padding:15px;
+  background:#111422;
+  border:1px solid #00ffdd;
+  border-radius:8px;
+}
+
+.stage-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
+}
+
+.stage-card {
+  background:#111422;
+  border:1px solid #00ffdd;
+  padding:20px;
+  border-radius:10px;
+  transition:0.3s;
+}
+
+.stage-card:hover {
+  transform:scale(1.05);
+  border-color:#ff6600;
+}
+
+.stage-card h3 {
+  color:#ff6600;
+}
+
+.stage-card button {
+  margin-top:10px;
+  padding:8px 12px;
+  background:#00ffdd;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.solved {
+  border-color:lightgreen !important;
+}
+
+footer {
+  text-align:center;
+  padding:20px;
+  border-top:1px solid #00ffdd;
+  margin-top:40px;
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <h2>Itzsos Labs - Stages</h2>
+  <button id="logoutBtn">Logout</button>
+</nav>
+
+<div class="container">
+
+  <div id="userBox">
+    <div id="userEmail">Loading user...</div>
+    <div id="userXP">XP: 0</div>
+  </div>
+
+  <div class="stage-grid" id="stageContainer">
+    <!-- Stages load here -->
+  </div>
+
+</div>
+
+<footer>© 2026 Itzsos Labs</footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+/* YOUR FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  authDomain: "itzsos-labs.firebaseapp.com",
+  projectId: "itzsos-labs",
+  storageBucket: "itzsos-labs.firebasestorage.app",
+  messagingSenderId: "1012826517121",
+  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const stageContainer = document.getElementById("stageContainer");
+const userEmail = document.getElementById("userEmail");
+const userXP = document.getElementById("userXP");
+const logoutBtn = document.getElementById("logoutBtn");
+
+/* AUTH CHECK */
+onAuthStateChanged(auth, async (user) => {
+
+  if (!user) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  if (!user.emailVerified) {
+    alert("Verify your email first!");
+    window.location.href = "index.html";
+    return;
+  }
+
+  userEmail.innerHTML = "👤 Logged in as: <strong>" + user.email + "</strong>";
+
+  await loadUserData(user);
+  await loadStages(user);
+});
+
+/* LOAD USER DATA */
+async function loadUserData(user) {
+
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+
+  if (userSnap.exists()) {
+    const data = userSnap.data();
+    userXP.textContent = "XP: " + (data.xp || 0);
+  } else {
+    userXP.textContent = "XP: 0";
+  }
+}
+
+/* LOAD STAGES */
+async function loadStages(user) {
+
+  const querySnapshot = await getDocs(collection(db, "stages"));
+
+  if (querySnapshot.empty) {
+    stageContainer.innerHTML = "<p>No stages added yet.</p>";
+    return;
+  }
+
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+  let solvedStages = [];
+
+  if (userSnap.exists()) {
+    solvedStages = userSnap.data().solvedStages || [];
+  }
+
+  querySnapshot.forEach((docSnap) => {
+
+    const data = docSnap.data();
+    const stageId = docSnap.id;
+
+    const card = document.createElement("div");
+    card.classList.add("stage-card");
+
+    if (solvedStages.includes(stageId)) {
+      card.classList.add("solved");
+    }
+
+    card.innerHTML = `
+      <h3>${data.title}</h3>
+      <p>${data.text}</p>
+      <p>XP: ${data.xp}</p>
+      <button onclick="openStage('${stageId}')">Start</button>
+    `;
+
+    stageContainer.appendChild(card);
+  });
+}
+
+/* OPEN STAGE */
+window.openStage = function(id) {
+  window.location.href = "stage.html?id=" + id;
+};
+
+/* LOGOUT */
+logoutBtn.onclick = () => {
+  signOut(auth).then(() => {
+    window.location.href = "index.html";
+  });
+};
+</script>
+
+</body>
+</html>
