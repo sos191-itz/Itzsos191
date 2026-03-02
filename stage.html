@@ -24,14 +24,6 @@ nav {
 
 nav h2 { color:#ff6600; }
 
-nav button {
-  background:#ff6600;
-  border:none;
-  padding:8px 15px;
-  font-weight:bold;
-  cursor:pointer;
-}
-
 .container {
   max-width:800px;
   margin:40px auto;
@@ -40,8 +32,6 @@ nav button {
   border:1px solid #00ffdd;
   border-radius:10px;
 }
-
-h2 { color:#ff6600; }
 
 input {
   width:100%;
@@ -52,23 +42,20 @@ input {
   color:white;
 }
 
-button.submit {
+button {
   margin-top:10px;
   padding:8px 12px;
-  background:#00ffdd;
-  border:none;
-  cursor:pointer;
   font-weight:bold;
+  cursor:pointer;
+  border:none;
 }
 
-#result {
+.submit { background:#00ffdd; }
+.hintBtn { background:#ff6600; }
+
+#result, #hintBox {
   margin-top:15px;
   font-weight:bold;
-}
-
-#hintBox {
-  margin-top:10px;
-  color:orange;
 }
 </style>
 </head>
@@ -84,17 +71,19 @@ button.submit {
   <h2 id="stageTitle">Loading...</h2>
   <p id="stageText"></p>
 
-  <input type="text" id="flagInput" placeholder="Enter flag">
-  <button class="submit" id="submitBtn">Submit</button>
-  <button id="hintBtn" style="margin-top:10px;background:#ff6600;border:none;padding:8px 12px;cursor:pointer;font-weight:bold;">
-    Show Hint
-  </button>
+  <div id="defaultFlagArea">
+    <input type="text" id="flagInput" placeholder="Enter flag">
+    <button class="submit" id="submitBtn">Submit</button>
+  </div>
+
+  <button class="hintBtn" id="hintBtn">Show Hint</button>
 
   <div id="result"></div>
   <div id="hintBox"></div>
 </div>
 
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { 
@@ -107,6 +96,7 @@ import {
   increment 
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
+/* 🔥 YOUR REAL FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -150,51 +140,83 @@ onAuthStateChanged(auth, async (user) => {
   document.getElementById("stageTitle").textContent = data.title;
   document.getElementById("stageText").textContent = data.text;
 
-/* stage 3 */
-if (stageId === "stage3") {
-
-  document.getElementById("flagInput").style.display = "none";
-  document.getElementById("submitBtn").style.display = "none";
-
-  const container = document.querySelector(".container");
-
-  container.innerHTML += `
-    <h3>Admin Login</h3>
-    <input type="text" id="loginUser" placeholder="Username">
-    <input type="password" id="loginPass" placeholder="Password">
-    <button id="loginBtnSim" class="submit">Login</button>
-    <div id="loginResult"></div>
-  `;
-
-  document.getElementById("loginBtnSim").onclick = async () => {
-
-    const username = document.getElementById("loginUser").value;
-
-    if (username.includes("' OR 1=1")) {
-
-      document.getElementById("loginResult").innerHTML =
-        "🎉 Access Granted!<br>Flag: ITZSOS{sql_bypass_success}";
-      document.getElementById("loginResult").style.color = "lightgreen";
-
-    } else {
-      document.getElementById("loginResult").textContent =
-        "Access Denied.";
-      document.getElementById("loginResult").style.color = "red";
-    }
-
-  };
-
-  return;
-}
   correctAnswer = data.answer;
   stageXP = data.xp || 0;
   stageHint = data.hint || "No hint available";
+
+  const userRef = doc(db, "users", currentUser.uid);
+  const userSnap = await getDoc(userRef);
+
+  let solvedStages = [];
+
+  if (userSnap.exists()) {
+    solvedStages = userSnap.data().solvedStages || [];
+  } else {
+    await setDoc(userRef, { xp: 0, solvedStages: [] });
+  }
+
+  const alreadySolved = solvedStages.includes(stageId);
+
+  /* =========================
+     STAGE 3 - SQL INJECTION
+  ========================== */
+  if (stageId === "stage3") {
+
+    document.getElementById("defaultFlagArea").style.display = "none";
+
+    const container = document.querySelector(".container");
+
+    container.innerHTML += `
+      <h3>Admin Login</h3>
+      <input type="text" id="loginUser" placeholder="Username">
+      <input type="password" id="loginPass" placeholder="Password">
+      <button id="loginBtnSim" class="submit">Login</button>
+      <div id="loginResult"></div>
+    `;
+
+    document.getElementById("loginBtnSim").onclick = async () => {
+
+      if (alreadySolved) {
+        document.getElementById("loginResult").textContent = "⚠️ Already solved!";
+        document.getElementById("loginResult").style.color = "yellow";
+        return;
+      }
+
+      const username = document.getElementById("loginUser").value;
+
+      if (username.includes("' OR 1=1")) {
+
+        document.getElementById("loginResult").innerHTML =
+          "🎉 Access Granted!<br>Flag: ITZSOS{sql_bypass_success}";
+        document.getElementById("loginResult").style.color = "lightgreen";
+
+        await updateDoc(userRef, {
+          solvedStages: arrayUnion(stageId),
+          xp: increment(stageXP)
+        });
+
+      } else {
+        document.getElementById("loginResult").textContent =
+          "Access Denied.";
+        document.getElementById("loginResult").style.color = "red";
+      }
+    };
+
+    return;
+  }
+
 });
 
+/* ======================
+   HINT BUTTON
+====================== */
 document.getElementById("hintBtn").onclick = () => {
   document.getElementById("hintBox").textContent = "💡 Hint: " + stageHint;
 };
 
+/* ======================
+   NORMAL FLAG SUBMIT
+====================== */
 document.getElementById("submitBtn").onclick = async () => {
 
   if (!currentUser) return;
@@ -215,8 +237,6 @@ document.getElementById("submitBtn").onclick = async () => {
 
   if (userSnap.exists()) {
     solvedStages = userSnap.data().solvedStages || [];
-  } else {
-    await setDoc(userRef, { xp: 0, solvedStages: [] });
   }
 
   if (solvedStages.includes(stageId)) {
@@ -230,10 +250,11 @@ document.getElementById("submitBtn").onclick = async () => {
     solvedStages: arrayUnion(stageId)
   });
 
-  document.getElementById("result").textContent = "✅ Correct! +" + stageXP + " XP";
+  document.getElementById("result").textContent =
+    "✅ Correct! +" + stageXP + " XP";
   document.getElementById("result").style.color = "lightgreen";
 };
-</script>
 
+</script>
 </body>
 </html>
