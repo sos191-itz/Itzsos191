@@ -65,6 +65,11 @@ button.submit {
   margin-top:15px;
   font-weight:bold;
 }
+
+#hintBox {
+  margin-top:10px;
+  color:orange;
+}
 </style>
 </head>
 
@@ -81,14 +86,26 @@ button.submit {
 
   <input type="text" id="flagInput" placeholder="Enter flag">
   <button class="submit" id="submitBtn">Submit</button>
+  <button id="hintBtn" style="margin-top:10px;background:#ff6600;border:none;padding:8px 12px;cursor:pointer;font-weight:bold;">
+    Show Hint
+  </button>
 
   <div id="result"></div>
+  <div id="hintBox"></div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { 
+  getFirestore, 
+  doc, 
+  getDoc, 
+  setDoc, 
+  updateDoc, 
+  arrayUnion, 
+  increment 
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
@@ -106,8 +123,10 @@ const db = getFirestore(app);
 const params = new URLSearchParams(window.location.search);
 const stageId = params.get("id");
 
-let correctAnswer = null;
+let correctAnswer = "";
 let stageXP = 0;
+let stageHint = "";
+let currentUser = null;
 
 onAuthStateChanged(auth, async (user) => {
 
@@ -115,6 +134,8 @@ onAuthStateChanged(auth, async (user) => {
     window.location.href = "index.html";
     return;
   }
+
+  currentUser = user;
 
   const stageRef = doc(db, "stages", stageId);
   const stageSnap = await getDoc(stageRef);
@@ -131,30 +152,50 @@ onAuthStateChanged(auth, async (user) => {
 
   correctAnswer = data.answer;
   stageXP = data.xp || 0;
+  stageHint = data.hint || "No hint available";
 });
+
+document.getElementById("hintBtn").onclick = () => {
+  document.getElementById("hintBox").textContent = "💡 Hint: " + stageHint;
+};
 
 document.getElementById("submitBtn").onclick = async () => {
 
-  const user = auth.currentUser;
-  if (!user) return;
+  if (!currentUser) return;
 
-  const input = document.getElementById("flagInput").value.trim();
+  const input = document.getElementById("flagInput").value.trim().toLowerCase();
+  const answer = correctAnswer.trim().toLowerCase();
 
-  if (input === correctAnswer) {
-
-    const userRef = doc(db, "users", user.uid);
-
-    await setDoc(userRef, {
-      xp: increment(stageXP)
-    }, { merge: true });
-
-    document.getElementById("result").textContent = "✅ Correct! +" + stageXP + " XP";
-    document.getElementById("result").style.color = "lightgreen";
-
-  } else {
+  if (input !== answer) {
     document.getElementById("result").textContent = "❌ Wrong flag!";
     document.getElementById("result").style.color = "red";
+    return;
   }
+
+  const userRef = doc(db, "users", currentUser.uid);
+  const userSnap = await getDoc(userRef);
+
+  let solvedStages = [];
+
+  if (userSnap.exists()) {
+    solvedStages = userSnap.data().solvedStages || [];
+  } else {
+    await setDoc(userRef, { xp: 0, solvedStages: [] });
+  }
+
+  if (solvedStages.includes(stageId)) {
+    document.getElementById("result").textContent = "⚠️ Already solved!";
+    document.getElementById("result").style.color = "yellow";
+    return;
+  }
+
+  await updateDoc(userRef, {
+    xp: increment(stageXP),
+    solvedStages: arrayUnion(stageId)
+  });
+
+  document.getElementById("result").textContent = "✅ Correct! +" + stageXP + " XP";
+  document.getElementById("result").style.color = "lightgreen";
 };
 </script>
 
