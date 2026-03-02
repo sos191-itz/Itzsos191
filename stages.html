@@ -38,6 +38,14 @@ nav button {
   padding:20px;
 }
 
+#userBox {
+  margin-bottom:30px;
+  padding:15px;
+  background:#111422;
+  border:1px solid #00ffdd;
+  border-radius:8px;
+}
+
 .stage-grid {
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
@@ -70,9 +78,8 @@ nav button {
   font-weight:bold;
 }
 
-#userInfo {
-  margin:20px 0;
-  color:#ccc;
+.solved {
+  border-color:lightgreen !important;
 }
 
 footer {
@@ -93,10 +100,13 @@ footer {
 
 <div class="container">
 
-  <div id="userInfo">Loading user...</div>
+  <div id="userBox">
+    <div id="userEmail">Loading user...</div>
+    <div id="userXP">XP: 0</div>
+  </div>
 
   <div class="stage-grid" id="stageContainer">
-    <!-- Challenges will load here -->
+    <!-- Stages load here -->
   </div>
 
 </div>
@@ -106,9 +116,9 @@ footer {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* SAME FIREBASE CONFIG */
+/* YOUR FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -123,7 +133,8 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 const stageContainer = document.getElementById("stageContainer");
-const userInfo = document.getElementById("userInfo");
+const userEmail = document.getElementById("userEmail");
+const userXP = document.getElementById("userXP");
 const logoutBtn = document.getElementById("logoutBtn");
 
 /* AUTH CHECK */
@@ -140,39 +151,68 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  userInfo.innerHTML = `👤 Logged in as: <strong>${user.email}</strong>`;
+  userEmail.innerHTML = "👤 Logged in as: <strong>" + user.email + "</strong>";
 
-  loadChallenges();
+  await loadUserData(user);
+  await loadStages(user);
 });
 
-/* LOAD CHALLENGES FROM FIRESTORE */
-async function loadChallenges() {
+/* LOAD USER DATA */
+async function loadUserData(user) {
 
-  const querySnapshot = await getDocs(collection(db, "challenges"));
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+
+  if (userSnap.exists()) {
+    const data = userSnap.data();
+    userXP.textContent = "XP: " + (data.xp || 0);
+  } else {
+    userXP.textContent = "XP: 0";
+  }
+}
+
+/* LOAD STAGES */
+async function loadStages(user) {
+
+  const querySnapshot = await getDocs(collection(db, "stages"));
 
   if (querySnapshot.empty) {
-    stageContainer.innerHTML = "<p>No challenges added yet.</p>";
+    stageContainer.innerHTML = "<p>No stages added yet.</p>";
     return;
   }
 
-  querySnapshot.forEach((doc) => {
-    const data = doc.data();
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+  let solvedStages = [];
+
+  if (userSnap.exists()) {
+    solvedStages = userSnap.data().solvedStages || [];
+  }
+
+  querySnapshot.forEach((docSnap) => {
+
+    const data = docSnap.data();
+    const stageId = docSnap.id;
 
     const card = document.createElement("div");
     card.classList.add("stage-card");
 
+    if (solvedStages.includes(stageId)) {
+      card.classList.add("solved");
+    }
+
     card.innerHTML = `
       <h3>${data.title}</h3>
-      <p>Difficulty: ${data.difficulty}</p>
-      <p>Points: ${data.points}</p>
-      <button onclick="openStage('${doc.id}')">Start</button>
+      <p>${data.text}</p>
+      <p>XP: ${data.xp}</p>
+      <button onclick="openStage('${stageId}')">Start</button>
     `;
 
     stageContainer.appendChild(card);
   });
 }
 
-/* OPEN SINGLE STAGE */
+/* OPEN STAGE */
 window.openStage = function(id) {
   window.location.href = "stage.html?id=" + id;
 };
