@@ -1,279 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="google-site-verification" content="8qTPfxaWZr3Utd41Q9rcD61dBhCvwINivYjw-dFKpm8" />
-<title>Itzsos Labs | Cyber Arena</title>
-
-<style>
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:#070b14;color:#00ffdd;font-family:monospace;display:none;animation:fadeIn 1.5s ease;}
-@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-header{background:#0f1625;padding:15px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #00ffdd;box-shadow:0 0 20px #00ffdd44;}
-header h2{animation:pulse 2s infinite;}
-@keyframes pulse{0%{text-shadow:0 0 5px #00ffdd;}50%{text-shadow:0 0 20px #00ffdd;}100%{text-shadow:0 0 5px #00ffdd;}}
-nav button{background:#ff6600;border:none;padding:8px 15px;margin-left:5px;font-weight:bold;cursor:pointer;border-radius:5px;transition:0.3s;}
-nav button:hover{background:#00ffdd;transform:scale(1.1);box-shadow:0 0 15px #00ffdd;}
-section{display:none;padding:30px;animation:slide 0.7s ease;}
-@keyframes slide{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-.active{display:block;}
-.box{background:#0f1625;border:2px solid #00ffdd;max-width:450px;margin:40px auto;padding:25px;border-radius:15px;text-align:center;box-shadow:0 0 25px #00ffdd33;transition:0.4s;}
-.box:hover{transform:scale(1.02);}
-input{width:90%;padding:10px;margin:12px;background:black;color:white;border:1px solid #00ffdd;border-radius:5px;}
-button.main{background:#ff6600;border:none;padding:10px 20px;font-weight:bold;cursor:pointer;border-radius:6px;transition:0.3s;}
-button.main:hover{background:#00ffdd;box-shadow:0 0 15px #00ffdd;}
-#xpBar{width:100%;background:#111;height:15px;border-radius:10px;overflow:hidden;margin:10px 0;}
-#xpFill{height:100%;width:0%;background:linear-gradient(90deg,#00ffdd,#ff6600);transition:0.8s;}
-@keyframes levelUp{0%{transform:scale(1);}50%{transform:scale(1.3);color:#ff6600;}100%{transform:scale(1);color:#00ffdd;}}
-.level-up{animation:levelUp 1s ease;}
-#avatar{width:120px;height:120px;border-radius:50%;border:3px solid #00ffdd;margin:20px auto;animation:avatarPulse 2s infinite;}
-@keyframes avatarPulse{0%{box-shadow:0 0 10px #00ffdd;}50%{box-shadow:0 0 25px #ff6600;}100%{box-shadow:0 0 10px #00ffdd;}}
-canvas#confetti{position:fixed;pointer-events:none;top:0;left:0;width:100%;height:100%;z-index:9999;}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Itzsos Labs Hacking Game</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
-<header>
-  <h2>🧠 Itzsos Cyber Arena</h2>
-  <nav>
-    <button onclick="openTab('play')">Play</button>
-    <button onclick="openTab('profile')">Profile</button>
-    <button onclick="openTab('boss')">Boss</button>
-    <button onclick="openTab('leader')">Ranks</button>
-  </nav>
-</header>
+  <header>
+    <h1>Itzsos Labs: Hacking Challenge</h1>
+    <div id="user-profile">
+      <img id="avatar" src="default-avatar.png" alt="Profile Avatar">
+      <span id="username">Player1</span>
+    </div>
+  </header>
 
-<section id="play" class="active">
-  <div class="box">
-    <h3 id="stageTitle"></h3>
-    <p id="stageText"></p>
-    <input id="answer" placeholder="Enter Flag">
-    <button class="main" onclick="check()">Submit</button>
-    <button class="main" onclick="showHint()">Hint</button>
-    <p id="hintText" style="color:#ff6600;margin-top:8px;"></p>
-    <p id="result"></p>
-  </div>
-</section>
+  <main>
+    <div id="stage-container">
+      <!-- Stage content will be loaded here dynamically -->
+    </div>
+    <div id="hint-container">
+      <button id="show-hint">Show Hint</button>
+      <p id="hint-text"></p>
+    </div>
+    <div id="answer-container">
+      <input type="text" id="answer-input" placeholder="Enter your answer">
+      <button id="submit-answer">Submit</button>
+      <p id="feedback"></p>
+    </div>
+  </main>
 
-<section id="profile">
-  <div class="box">
-    <h3>👤 Hacker Profile</h3>
-    <img id="avatar" src="" alt="Avatar">
-    <p>Level: <span id="pLevel"></span></p>
-    <p>XP: <span id="pXP"></span></p>
-    <div id="xpBar"><div id="xpFill"></div></div>
-    <button class="main" onclick="reset()">Reset</button>
-  </div>
-</section>
-
-<section id="boss">
-  <div class="box">
-    <h3>🔥 Final Boss</h3>
-    <p>Decrypt:</p>
-    <b>01001001 01010100 01011010 01010011 01001111 01010011</b>
-    <input id="bossAns" placeholder="Answer">
-    <button class="main" onclick="bossFight()">Attack</button>
-    <p id="bossResult"></p>
-  </div>
-</section>
-
-<section id="leader">
-  <div class="box">
-    <h3>🏆 Rankings</h3>
-    <div id="rankList"></div>
-  </div>
-</section>
-
-<canvas id="confetti"></canvas>
-
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js';
-import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
-import { getFirestore, doc, setDoc, updateDoc, getDoc, collection, getDocs, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
-  authDomain: "itzsos-labs.firebaseapp.com",
-  projectId: "itzsos-labs"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-let currentUser = null;
-let currentStage = null;
-let level = 1;
-let xp = 0;
-let stages = [];
-
-// ===== AUTH CHECK =====
-onAuthStateChanged(auth, async (user) => {
-  if(!user || !user.emailVerified){
-    alert('Login First & Verify Email!');
-    window.location.href='index.html';
-    return;
-  }
-  currentUser = user;
-  await loadUser();
-  await loadStages();
-  document.body.style.display='block';
-  loadStage();
-  loadProfile();
-});
-
-// ===== LOAD USER =====
-async function loadUser(){
-  const userRef = doc(db,'users',currentUser.uid);
-  const userSnap = await getDoc(userRef);
-  if(userSnap.exists()){
-    level = userSnap.data().level || 1;
-    xp = userSnap.data().xp || 0;
-  } else {
-    await setDoc(userRef,{level:1,xp:0});
-    level = 1; xp = 0;
-  }
-}
-
-// ===== LOAD STAGES =====
-async function loadStages(){
-  const stagesRef = collection(db,'stages');
-  const snapshot = await getDocs(stagesRef);
-  stages = snapshot.docs.sort((a,b)=>a.data().title.localeCompare(b.data().title)).map(d=>({id:d.id,...d.data()}));
-}
-
-// ===== OPEN TAB =====
-function openTab(id){
-  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  if(id==='profile') loadProfile();
-  if(id==='leader') loadRanks();
-}
-
-// ===== LOAD STAGE =====
-function loadStage(){
-  if(level>stages.length){
-    stageTitle.innerText='🏆 All Levels Cleared';
-    stageText.innerText='Go fight the Boss 😈';
-    answer.value=''; result.innerText=''; hintText.innerText='';
-    return;
-  }
-  currentStage = stages[level-1];
-  stageTitle.innerText = `Level ${level}: ${currentStage.title}`;
-  stageText.innerText = currentStage.text;
-  answer.value=''; result.innerText=''; hintText.innerText='';
-}
-
-// ===== SHOW HINT =====
-function showHint(){
-  if(currentStage){
-    hintText.innerText = currentStage.hint || 'No hint available';
-  }
-}
-
-// ===== CHECK ANSWER =====
-async function check(){
-  if(!currentStage) return;
-  const ans = answer.value.trim();
-  if(ans === currentStage.answer){
-    xp += currentStage.xp || 100;
-    level++;
-    result.innerText = `✅ Correct +${currentStage.xp || 100} XP`;
-    stageTitle.classList.add('level-up'); 
-    setTimeout(()=>stageTitle.classList.remove('level-up'),1000);
-    animateXP();
-    confettiEffect();
-    await updateDoc(doc(db,'users',currentUser.uid),{level,xp});
-    loadProfile();
-    setTimeout(loadStage,700);
-  } else {
-    result.innerText='❌ Wrong';
-  }
-}
-
-// ===== PROFILE =====
-function loadProfile(){
-  pLevel.innerText = level;
-  pXP.innerText = xp;
-  avatar.src = `https://avatars.dicebear.com/api/identicon/${currentUser.uid}.svg`;
-  animateXP();
-}
-
-function animateXP(){
-  const percent = (xp % 500)/500*100;
-  xpFill.style.width = percent+'%';
-}
-
-// ===== RESET =====
-async function reset(){
-  if(confirm('Reset Progress?')){
-    level = 1; xp = 0;
-    await updateDoc(doc(db,'users',currentUser.uid),{level,xp});
-    loadProfile();
-    loadStage();
-  }
-}
-
-// ===== BOSS FIGHT =====
-async function bossFight(){
-  if(bossAns.value.trim() === 'ITZSOS'){
-    xp += 500;
-    await updateDoc(doc(db,'users',currentUser.uid),{level,xp});
-    bossResult.innerText='🔥 BOSS DEFEATED!';
-    animateXP();
-    confettiEffect();
-    loadProfile();
-  } else bossResult.innerText='❌ Failed';
-}
-
-// ===== LEADERBOARD =====
-async function loadRanks(){
-  const list = document.getElementById('rankList');
-  const q = query(collection(db,'users'),orderBy('xp','desc'),limit(5));
-  const snapshot = await getDocs(q);
-  list.innerHTML='';
-  let i=1;
-  snapshot.forEach(doc=>{
-    const data = doc.data();
-    list.innerHTML += `<div class="box">#${i} — ${data.xp} XP<br>${doc.id}</div>`;
-    i++;
-  });
-}
-
-// ===== CONFETTI =====
-function confettiEffect(){
-  const canvas = document.getElementById('confetti'); 
-  const ctx = canvas.getContext('2d'); 
-  canvas.width = window.innerWidth; 
-  canvas.height = window.innerHeight;
-  let particles = [];
-  for(let i=0;i<150;i++){
-    particles.push({
-      x: Math.random()*canvas.width,
-      y: Math.random()*canvas.height,
-      dx: (Math.random()-0.5)*5,
-      dy: (Math.random()-2)*5,
-      size: Math.random()*4+2,
-      color: `hsl(${Math.random()*360},100%,50%)`
-    });
-  }
-  let frames=0;
-  function render(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    particles.forEach(p=>{
-      ctx.fillStyle=p.color;
-      ctx.beginPath();
-      ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
-      ctx.fill();
-      p.x+=p.dx; p.y+=p.dy;
-      if(p.y>canvas.height){p.y=0; p.x=Math.random()*canvas.width;}
-    });
-    frames++;
-    if(frames<150) requestAnimationFrame(render);
-  }
-  render();
-}
-</script>
+  <script src="stages.js"></script>
 </body>
 </html>
