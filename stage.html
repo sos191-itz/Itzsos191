@@ -150,6 +150,42 @@ onAuthStateChanged(auth, async (user) => {
   document.getElementById("stageTitle").textContent = data.title;
   document.getElementById("stageText").textContent = data.text;
 
+/* stage 3 */
+if (stageId === "stage3") {
+
+  document.getElementById("flagInput").style.display = "none";
+  document.getElementById("submitBtn").style.display = "none";
+
+  const container = document.querySelector(".container");
+
+  container.innerHTML += `
+    <h3>Admin Login</h3>
+    <input type="text" id="loginUser" placeholder="Username">
+    <input type="password" id="loginPass" placeholder="Password">
+    <button id="loginBtnSim" class="submit">Login</button>
+    <div id="loginResult"></div>
+  `;
+
+  document.getElementById("loginBtnSim").onclick = async () => {
+
+    const username = document.getElementById("loginUser").value;
+
+    if (username.includes("' OR 1=1")) {
+
+      document.getElementById("loginResult").innerHTML =
+        "🎉 Access Granted!<br>Flag: ITZSOS{sql_bypass_success}";
+      document.getElementById("loginResult").style.color = "lightgreen";
+
+    } else {
+      document.getElementById("loginResult").textContent =
+        "Access Denied.";
+      document.getElementById("loginResult").style.color = "red";
+    }
+
+  };
+
+  return;
+}
   correctAnswer = data.answer;
   stageXP = data.xp || 0;
   stageHint = data.hint || "No hint available";
