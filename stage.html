@@ -23,7 +23,14 @@ nav {
 }
 
 nav h2 { color:#ff6600; }
-nav button { background:#ff6600; border:none; padding:8px 15px; cursor:pointer; font-weight:bold; }
+
+nav button {
+  background:#ff6600;
+  border:none;
+  padding:8px 15px;
+  font-weight:bold;
+  cursor:pointer;
+}
 
 .container {
   max-width:800px;
@@ -54,7 +61,10 @@ button {
 .submit { background:#00ffdd; }
 .hintBtn { background:#ff6600; }
 
-#result, #hintBox { margin-top:15px; font-weight:bold; }
+#result, #hintBox {
+  margin-top:15px;
+  font-weight:bold;
+}
 </style>
 </head>
 
@@ -81,6 +91,7 @@ button {
 </div>
 
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { 
@@ -93,7 +104,7 @@ import {
   increment 
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* 🔥 YOUR REAL FIREBASE KEYS */
+/* 🔑 YOUR FIREBASE KEYS */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -115,9 +126,8 @@ let stageXP = 0;
 let stageHint = "";
 let currentUser = null;
 
-const stageOrder = ["stage1", "stage2", "stage3"]; // add future stages here
-
 onAuthStateChanged(auth, async (user) => {
+
   if (!user) {
     window.location.href = "index.html";
     return;
@@ -130,32 +140,11 @@ onAuthStateChanged(auth, async (user) => {
 
   if (!stageSnap.exists()) {
     document.getElementById("stageTitle").textContent = "Stage not found";
-    document.getElementById("stageText").textContent = "";
-    return;
-  }
-
-  const userRef = doc(db, "users", currentUser.uid);
-  const userSnap = await getDoc(userRef);
-
-  // Initialize solvedStages for new users
-  let solvedStages = [];
-  if (userSnap.exists()) {
-    solvedStages = userSnap.data().solvedStages || [];
-  } else {
-    await setDoc(userRef, { xp: 0, solvedStages: [] });
-  }
-
-  // Sequential stage lock
-  const stageIndex = stageOrder.indexOf(stageId);
-  if (stageIndex > 0 && !solvedStages.includes(stageOrder[stageIndex - 1])) {
-    document.getElementById("stageTitle").textContent = "Locked ❌";
-    document.getElementById("stageText").textContent = "You must complete the previous stage first.";
-    document.getElementById("defaultFlagArea").style.display = "none";
-    document.getElementById("hintBtn").style.display = "none";
     return;
   }
 
   const data = stageSnap.data();
+
   document.getElementById("stageTitle").textContent = data.title;
   document.getElementById("stageText").textContent = data.text;
 
@@ -163,15 +152,27 @@ onAuthStateChanged(auth, async (user) => {
   stageXP = data.xp || 0;
   stageHint = data.hint || "No hint available";
 
+  const userRef = doc(db, "users", currentUser.uid);
+  const userSnap = await getDoc(userRef);
+
+  let solvedStages = [];
+  if (userSnap.exists()) {
+    solvedStages = userSnap.data().solvedStages || [];
+  } else {
+    await setDoc(userRef, { xp: 0, solvedStages: [] });
+  }
+
   const alreadySolved = solvedStages.includes(stageId);
 
   /* =========================
      STAGE 3 - SQL INJECTION
   ========================== */
   if (stageId === "stage3") {
+
     document.getElementById("defaultFlagArea").style.display = "none";
 
     const container = document.querySelector(".container");
+
     container.innerHTML += `
       <h3>Admin Login</h3>
       <input type="text" id="loginUser" placeholder="Username">
@@ -181,6 +182,7 @@ onAuthStateChanged(auth, async (user) => {
     `;
 
     document.getElementById("loginBtnSim").onclick = async () => {
+
       if (alreadySolved) {
         document.getElementById("loginResult").textContent = "⚠️ Already solved!";
         document.getElementById("loginResult").style.color = "yellow";
@@ -190,51 +192,26 @@ onAuthStateChanged(auth, async (user) => {
       const username = document.getElementById("loginUser").value;
 
       if (username.includes("' OR 1=1")) {
+
         document.getElementById("loginResult").innerHTML =
           "🎉 Access Granted!<br>Flag: ITZSOS{sql_bypass_success}";
         document.getElementById("loginResult").style.color = "lightgreen";
 
+        // Update Firestore
         await updateDoc(userRef, {
           solvedStages: arrayUnion(stageId),
           xp: increment(stageXP)
         });
+
       } else {
-        document.getElementById("loginResult").textContent = "Access Denied.";
+        document.getElementById("loginResult").textContent =
+          "Access Denied.";
         document.getElementById("loginResult").style.color = "red";
       }
     };
+
     return;
   }
-
-  /* ======================
-     NORMAL FLAG SUBMIT
-  ====================== */
-  document.getElementById("submitBtn").onclick = async () => {
-    if (!currentUser) return;
-
-    const input = document.getElementById("flagInput").value.trim().toLowerCase();
-    const answer = correctAnswer.trim().toLowerCase();
-
-    if (input !== answer) {
-      document.getElementById("result").textContent = "❌ Wrong flag!";
-      document.getElementById("result").style.color = "red";
-      return;
-    }
-
-    if (alreadySolved) {
-      document.getElementById("result").textContent = "⚠️ Already solved!";
-      document.getElementById("result").style.color = "yellow";
-      return;
-    }
-
-    await updateDoc(userRef, {
-      xp: increment(stageXP),
-      solvedStages: arrayUnion(stageId)
-    });
-
-    document.getElementById("result").textContent = "✅ Correct! +" + stageXP + " XP";
-    document.getElementById("result").style.color = "lightgreen";
-  };
 });
 
 /* ======================
@@ -243,6 +220,48 @@ onAuthStateChanged(auth, async (user) => {
 document.getElementById("hintBtn").onclick = () => {
   document.getElementById("hintBox").textContent = "💡 Hint: " + stageHint;
 };
+
+/* ======================
+   NORMAL FLAG SUBMIT
+====================== */
+document.getElementById("submitBtn").onclick = async () => {
+
+  if (!currentUser) return;
+
+  const input = document.getElementById("flagInput").value.trim().toLowerCase();
+  const answer = correctAnswer.trim().toLowerCase();
+
+  const userRef = doc(db, "users", currentUser.uid);
+  const userSnap = await getDoc(userRef);
+
+  let solvedStages = [];
+  if (userSnap.exists()) {
+    solvedStages = userSnap.data().solvedStages || [];
+  }
+
+  if (solvedStages.includes(stageId)) {
+    document.getElementById("result").textContent = "⚠️ Already solved!";
+    document.getElementById("result").style.color = "yellow";
+    return;
+  }
+
+  if (input !== answer) {
+    document.getElementById("result").textContent = "❌ Wrong flag!";
+    document.getElementById("result").style.color = "red";
+    return;
+  }
+
+  await updateDoc(userRef, {
+    xp: increment(stageXP),
+    solvedStages: arrayUnion(stageId)
+  });
+
+  document.getElementById("result").textContent =
+    "✅ Correct! +" + stageXP + " XP";
+  document.getElementById("result").style.color = "lightgreen";
+};
+
 </script>
+
 </body>
 </html>
