@@ -101,6 +101,11 @@ const db = getFirestore(app);
 const stageId = new URLSearchParams(window.location.search).get("id");
 
 let currentUser = null;
+// ✅ Check localStorage first to skip selection page
+const savedField = localStorage.getItem("selectedField");
+if (savedField) {
+    window.location.href = "stages.html";
+}
 let correctAnswer = "";
 let stageXP = 0;
 let stageHint = "";
