@@ -55,7 +55,6 @@ h1{
   box-shadow:0 0 20px #00ffdd,0 0 30px #ff6600;
 }
 
-/* PARTICLES */
 .particles{
   position:absolute;
   width:100%;
@@ -87,9 +86,17 @@ h1{
 <div class="container">
   <h1>Choose Your Field</h1>
 
-  <button class="btn" onclick="chooseField('programming')">💻 Programming</button>
-  <button class="btn" onclick="chooseField('it')">🖥 IT / Cybersecurity</button>
-  <button class="btn" onclick="chooseField('pentesting')">🕵 Pentesting</button>
+  <button class="btn" onclick="chooseField('programming')">
+    💻 Programming
+  </button>
+
+  <button class="btn" onclick="chooseField('IT')">
+    🖥 IT / Cybersecurity
+  </button>
+
+  <button class="btn" onclick="chooseField('pentesting')">
+    🕵 Pentesting
+  </button>
 
   <div class="particles"></div>
 </div>
@@ -100,6 +107,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebas
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
+/* 🔥 FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -116,7 +124,7 @@ const db = getFirestore(app);
 let currentUser = null;
 
 /* 🔐 AUTH CHECK */
-onAuthStateChanged(auth, async user => {
+onAuthStateChanged(auth, async (user) => {
 
   if(!user || !user.emailVerified){
     window.location.href = "index.html#login";
@@ -128,23 +136,29 @@ onAuthStateChanged(auth, async user => {
   const userRef = doc(db,"users",user.uid);
   const snap = await getDoc(userRef);
 
-  // 🔁 If already selected before → skip this page
+  // If already selected before → skip page
   if(snap.exists() && snap.data().selectedField){
     window.location.href = "stages.html";
   }
 });
 
 /* 🎯 FIELD SELECTION */
-window.chooseField = function(field){
+window.chooseField = async function(field){
 
-  localStorage.setItem("selectedField",field);
+  if(!currentUser){
+    alert("Please wait... loading user.");
+    return;
+  }
 
   const userRef = doc(db,"users",currentUser.uid);
 
-  setDoc(userRef,{ selectedField:field },{ merge:true })
-  .then(()=>{
+  try{
+    await setDoc(userRef,{ selectedField:field },{ merge:true });
     window.location.href="stages.html";
-  });
+  }catch(err){
+    console.error(err);
+    alert("Error saving selection.");
+  }
 };
 
 /* ✨ PARTICLES */
