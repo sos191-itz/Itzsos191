@@ -122,6 +122,11 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser = null;
+// ✅ Check localStorage first to skip selection page
+const savedField = localStorage.getItem("selectedField");
+if (savedField) {
+    window.location.href = "stages.html";
+}
 
 /* 🔐 AUTH CHECK */
 onAuthStateChanged(auth, async (user) => {
@@ -161,6 +166,24 @@ window.chooseField = async function(field){
   }
 };
 
+window.chooseField = async function(field){
+  if(!currentUser){
+    alert("Please wait... loading user.");
+    return;
+  }
+
+  // Save in localStorage to skip next time
+  localStorage.setItem("selectedField", field);
+
+  const userRef = doc(db,"users",currentUser.uid);
+  try{
+    await setDoc(userRef,{ selectedField:field },{ merge:true });
+    window.location.href="stages.html";
+  }catch(err){
+    console.error(err);
+    alert("Error saving selection.");
+  }
+};
 /* ✨ PARTICLES */
 const particleContainer=document.querySelector('.particles');
 for(let i=0;i<70;i++){
