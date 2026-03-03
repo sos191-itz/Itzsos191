@@ -373,22 +373,18 @@ registerBtn.onclick = ()=>{
   .catch(e=>status.textContent=e.message);
 };
 
-loginBtn.onclick = ()=>{
-  signInWithEmailAndPassword(auth,email.value,password.value)
-  .then(res=>{
-    if(res.user.emailVerified){
-
-      status.textContent="Logged In ✅";
-      window.location.href = "stages.html";
-
-    } else {
-
-      status.textContent="Verify Email First 📧";
-      sendEmailVerification(res.user);
-
-    }
-  })
-  .catch(e=>status.textContent=e.message);
+loginBtn.onclick = () => {
+  signInWithEmailAndPassword(auth, email.value, password.value)
+    .then(res => {
+      if (res.user.emailVerified) {
+        status.textContent = "Logged In ✅";
+        // Do NOT redirect here. User clicks Start Training to go next
+      } else {
+        status.textContent = "Verify Email First 📧";
+        sendEmailVerification(res.user);
+      }
+    })
+    .catch(e => status.textContent = e.message);
 };
 resetBtn.onclick = ()=>{
   if(!email.value){
@@ -420,10 +416,9 @@ onAuthStateChanged(auth, user => {
 
 // Start button control
 startBtn.onclick = () => {
-
   if (!currentUser) {
     alert("❌ Please login first!");
-    location.href = "#login";
+    location.href = "#login"; // scroll to login box
     return;
   }
 
@@ -433,7 +428,7 @@ startBtn.onclick = () => {
     return;
   }
 
-  // Go to stages
+  // ✅ Logged in and verified — go to selection.html
   window.location.href = "selection.html";
 };
 
