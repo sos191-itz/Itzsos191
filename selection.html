@@ -4,100 +4,101 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Itzsos Labs | Select Your Field</title>
-<meta name="description" content="Choose your field: Programming, IT/Cybersecurity, Pentesting.">
+
 <style>
-  /* BASIC RESET */
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: monospace; background:#0f111a; color:#00ffdd; overflow-x:hidden; }
+*{margin:0;padding:0;box-sizing:border-box;}
 
-  /* CONTAINER */
-  .container {
-    display:flex; 
-    flex-direction:column; 
-    align-items:center; 
-    justify-content:center; 
-    min-height:100vh;
-    position:relative;
-    perspective:1000px;
-    overflow:hidden;
-    text-align:center;
-  }
+body{
+  font-family:monospace;
+  background:#0f111a;
+  color:#00ffdd;
+  overflow:hidden;
+}
 
-  h1 {
-    font-size:3rem; 
-    color:#ff6600; 
-    margin-bottom:50px; 
-    animation: slideIn 1s ease-out;
-  }
+.container{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  text-align:center;
+  position:relative;
+}
 
-  @keyframes slideIn {
-    0% { transform: translateY(-50px); opacity:0; }
-    100% { transform: translateY(0); opacity:1; }
-  }
+h1{
+  font-size:3rem;
+  color:#ff6600;
+  margin-bottom:50px;
+  animation:fadeDown 1s ease-out;
+}
 
-  /* BUTTONS */
-  .btn {
-    padding:20px 40px;
-    margin:20px;
-    font-size:1.5rem;
-    font-weight:bold;
-    border:none;
-    border-radius:12px;
-    cursor:pointer;
-    background: linear-gradient(45deg,#ff6600,#00ffdd);
-    color:black;
-    transition: transform 0.3s, box-shadow 0.3s;
-    position:relative;
-    z-index:2;
-  }
+@keyframes fadeDown{
+  from{opacity:0; transform:translateY(-40px);}
+  to{opacity:1; transform:translateY(0);}
+}
 
-  .btn:hover {
-    transform: translateY(-10px) scale(1.05);
-    box-shadow: 0 10px 20px #00ffdd, 0 0 30px #ff6600;
-  }
+.btn{
+  padding:20px 45px;
+  margin:20px;
+  font-size:1.4rem;
+  font-weight:bold;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  background:linear-gradient(45deg,#ff6600,#00ffdd);
+  color:black;
+  transition:0.3s;
+}
 
-  /* PARTICLES BACKGROUND */
-  .particles {
-    position:absolute;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    z-index:1;
-  }
-  .particles span {
-    position:absolute;
-    background:#00ffdd;
-    border-radius:50%;
-    animation: float 5s linear infinite;
-  }
-  @keyframes float {
-    0% { transform: translateY(0px); opacity:0.8; }
-    50% { transform: translateY(-20px); opacity:0.4; }
-    100% { transform: translateY(0px); opacity:0.8; }
-  }
+.btn:hover{
+  transform:scale(1.08) translateY(-8px);
+  box-shadow:0 0 20px #00ffdd,0 0 30px #ff6600;
+}
 
-  /* MOBILE */
-  @media(max-width:768px){
-    h1 { font-size:2rem; margin-bottom:30px; }
-    .btn { padding:15px 30px; font-size:1.2rem; margin:15px; }
-  }
+/* PARTICLES */
+.particles{
+  position:absolute;
+  width:100%;
+  height:100%;
+  z-index:-1;
+}
+
+.particles span{
+  position:absolute;
+  background:#00ffdd;
+  border-radius:50%;
+  animation:float 6s linear infinite;
+}
+
+@keyframes float{
+  0%{transform:translateY(0);}
+  50%{transform:translateY(-20px);}
+  100%{transform:translateY(0);}
+}
+
+@media(max-width:768px){
+  h1{font-size:2rem;}
+  .btn{padding:15px 30px;font-size:1.1rem;}
+}
 </style>
 </head>
 <body>
+
 <div class="container">
   <h1>Choose Your Field</h1>
+
   <button class="btn" onclick="chooseField('programming')">💻 Programming</button>
-  <button class="btn" onclick="chooseField('IT')">🖥 IT / Cybersecurity</button>
+  <button class="btn" onclick="chooseField('it')">🖥 IT / Cybersecurity</button>
   <button class="btn" onclick="chooseField('pentesting')">🕵 Pentesting</button>
 
   <div class="particles"></div>
 </div>
 
-<!-- FIREBASE -->
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
@@ -112,43 +113,54 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// CHECK LOGIN
-onAuthStateChanged(auth, user => {
-  if (!user || !user.emailVerified) {
-    alert("❌ Login and verify your email first!");
+let currentUser = null;
+
+/* 🔐 AUTH CHECK */
+onAuthStateChanged(auth, async user => {
+
+  if(!user || !user.emailVerified){
     window.location.href = "index.html#login";
+    return;
+  }
+
+  currentUser = user;
+
+  const userRef = doc(db,"users",user.uid);
+  const snap = await getDoc(userRef);
+
+  // 🔁 If already selected before → skip this page
+  if(snap.exists() && snap.data().selectedField){
+    window.location.href = "stages.html";
   }
 });
 
-// PARTICLES
-const particleContainer = document.querySelector('.particles');
+/* 🎯 FIELD SELECTION */
+window.chooseField = function(field){
+
+  localStorage.setItem("selectedField",field);
+
+  const userRef = doc(db,"users",currentUser.uid);
+
+  setDoc(userRef,{ selectedField:field },{ merge:true })
+  .then(()=>{
+    window.location.href="stages.html";
+  });
+};
+
+/* ✨ PARTICLES */
+const particleContainer=document.querySelector('.particles');
 for(let i=0;i<70;i++){
-  const span = document.createElement('span');
-  const size = Math.random()*5 + 2;
-  span.style.width = `${size}px`;
-  span.style.height = `${size}px`;
-  span.style.top = `${Math.random()*100}%`;
-  span.style.left = `${Math.random()*100}%`;
-  span.style.animationDuration = `${Math.random()*5 + 3}s`;
+  const span=document.createElement('span');
+  const size=Math.random()*5+2;
+  span.style.width=size+"px";
+  span.style.height=size+"px";
+  span.style.top=Math.random()*100+"%";
+  span.style.left=Math.random()*100+"%";
+  span.style.animationDuration=Math.random()*5+3+"s";
   particleContainer.appendChild(span);
 }
 
-// CHOOSE FIELD FUNCTION
-function chooseField(field){
-  localStorage.setItem("selectedField", field);
-
-  const user = auth.currentUser;
-  if(user){
-    setDoc(doc(db, "users", user.uid), { selectedField: field }, { merge:true })
-    .then(()=> {
-      alert(`✅ You selected: ${field}`);
-      window.location.href = "games.html"; // redirect to games page
-    })
-    .catch(err => console.error(err));
-  } else {
-    window.location.href = "stages.html";
-  }
-}
 </script>
+
 </body>
 </html>
