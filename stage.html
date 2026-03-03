@@ -12,7 +12,6 @@ body {
   background:#0f111a;
   color:#00ffdd;
 }
-
 nav {
   background:#111422;
   border-bottom:1px solid #00ffdd;
@@ -21,7 +20,6 @@ nav {
   align-items:center;
   padding:15px 30px;
 }
-
 nav h2 { color:#ff6600; }
 nav button {
   background:#ff6600;
@@ -30,18 +28,14 @@ nav button {
   font-weight:bold;
   cursor:pointer;
 }
-
 .container {
-  max-width:500px;
+  max-width:800px;
   margin:40px auto;
-  padding:30px;
+  padding:20px;
   background:#111422;
   border:1px solid #00ffdd;
   border-radius:10px;
 }
-
-h2 { color:#ff6600; margin-bottom:15px; }
-
 input {
   width:100%;
   padding:10px;
@@ -49,35 +43,18 @@ input {
   background:black;
   border:1px solid #00ffdd;
   color:white;
-  border-radius:5px;
 }
-
-button.submit, button#loginBtnSim {
-  margin-top:15px;
-  padding:10px;
-  width:100%;
-  background:#00ffdd;
-  border:none;
-  cursor:pointer;
-  font-weight:bold;
-  border-radius:5px;
-}
-
-button.hintBtn {
+button {
   margin-top:10px;
-  width:100%;
-  background:#ff6600;
-  border:none;
+  padding:8px 12px;
+  font-weight:bold;
   cursor:pointer;
-  font-weight:bold;
-  padding:10px;
-  border-radius:5px;
+  border:none;
 }
-
-#result, #hintBox, #loginResult {
-  margin-top:15px;
-  font-weight:bold;
-}
+.submit { background:#00ffdd; }
+.hintBtn { background:#ff6600; }
+#result, #hintBox { margin-top:15px; font-weight:bold; }
+.locked { font-size:1.5rem; color:orange; text-align:center; margin-top:20px; }
 </style>
 </head>
 
@@ -104,6 +81,7 @@ button.hintBtn {
 </div>
 
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { 
@@ -138,13 +116,16 @@ let stageXP = 0;
 let stageHint = "";
 let currentUser = null;
 
+// Define stage prerequisites (add new stages here)
+const stagePrerequisites = {
+  stage2: "stage1",
+  stage3: "stage2",
+  // stage4: "stage3" and so on
+};
+
 onAuthStateChanged(auth, async (user) => {
 
-  if (!user) {
-    window.location.href = "index.html";
-    return;
-  }
-
+  if (!user) { window.location.href = "index.html"; return; }
   currentUser = user;
 
   const stageRef = doc(db, "stages", stageId);
@@ -170,39 +151,39 @@ onAuthStateChanged(auth, async (user) => {
   if (userSnap.exists()) {
     solvedStages = userSnap.data().solvedStages || [];
   } else {
-    await setDoc(userRef, { xp:0, solvedStages: [] });
+    await setDoc(userRef, { xp: 0, solvedStages: [] });
   }
 
-  const alreadySolved = solvedStages.includes(stageId);
+  // ============ LOCK CHECK ============
+  const prereqStage = stagePrerequisites[stageId];
+  if(prereqStage && !solvedStages.includes(prereqStage)) {
+    document.getElementById("defaultFlagArea").style.display = "none";
+    document.getElementById("hintBtn").style.display = "none";
+    document.getElementById("result").style.display = "none";
+    document.getElementById("hintBox").style.display = "none";
 
-  /* ===== STAGE 3 - SQL INJECTION ===== */
-  if (stageId === "stage3") {
+    const container = document.querySelector(".container");
+    container.innerHTML += `<div class="locked">🔒 Complete ${prereqStage} first!</div>`;
+    return;
+  }
 
-    // Check if stage2 is solved
-    if (!solvedStages.includes("stage2")) {
-      document.querySelector(".container").innerHTML = `
-        <h2>Stage 3 🔒 Locked</h2>
-        <p>You must complete Stage 2 first.</p>
-      `;
-      return;
-    }
+  // ============ STAGE 3 - SQL INJECTION LOGIN ============
+  if(stageId === "stage3") {
 
     document.getElementById("defaultFlagArea").style.display = "none";
 
     const container = document.querySelector(".container");
-
     container.innerHTML += `
-      <h2>Admin Login</h2>
-      <p>Use SQL injection to bypass the login.</p>
+      <h3>Admin Login</h3>
       <input type="text" id="loginUser" placeholder="Username">
       <input type="password" id="loginPass" placeholder="Password">
-      <button id="loginBtnSim">Login</button>
+      <button id="loginBtnSim" class="submit">Login</button>
       <div id="loginResult"></div>
     `;
 
     document.getElementById("loginBtnSim").onclick = async () => {
 
-      if (alreadySolved) {
+      if(solvedStages.includes(stageId)) {
         document.getElementById("loginResult").textContent = "⚠️ Already solved!";
         document.getElementById("loginResult").style.color = "yellow";
         return;
@@ -210,9 +191,8 @@ onAuthStateChanged(auth, async (user) => {
 
       const username = document.getElementById("loginUser").value;
 
-      if (username.includes("' OR 1=1")) {
-        document.getElementById("loginResult").innerHTML =
-          "🎉 Access Granted!<br>Flag: ITZSOS{sql_bypass_success}";
+      if(username.includes("' OR 1=1")) {
+        document.getElementById("loginResult").innerHTML = "🎉 Access Granted!<br>Flag: ITZSOS{sql_bypass_success}";
         document.getElementById("loginResult").style.color = "lightgreen";
 
         await updateDoc(userRef, {
@@ -231,19 +211,20 @@ onAuthStateChanged(auth, async (user) => {
 
 });
 
-/* ===== HINT BUTTON ===== */
+// ====================== HINT BUTTON ======================
 document.getElementById("hintBtn").onclick = () => {
   document.getElementById("hintBox").textContent = "💡 Hint: " + stageHint;
 };
 
-/* ===== NORMAL FLAG SUBMIT ===== */
+// ====================== FLAG SUBMIT ======================
 document.getElementById("submitBtn").onclick = async () => {
-  if (!currentUser) return;
+
+  if(!currentUser) return;
 
   const input = document.getElementById("flagInput").value.trim().toLowerCase();
   const answer = correctAnswer.trim().toLowerCase();
 
-  if (input !== answer) {
+  if(input !== answer){
     document.getElementById("result").textContent = "❌ Wrong flag!";
     document.getElementById("result").style.color = "red";
     return;
@@ -253,11 +234,11 @@ document.getElementById("submitBtn").onclick = async () => {
   const userSnap = await getDoc(userRef);
 
   let solvedStages = [];
-  if (userSnap.exists()) {
+  if(userSnap.exists()){
     solvedStages = userSnap.data().solvedStages || [];
   }
 
-  if (solvedStages.includes(stageId)) {
+  if(solvedStages.includes(stageId)){
     document.getElementById("result").textContent = "⚠️ Already solved!";
     document.getElementById("result").style.color = "yellow";
     return;
@@ -271,7 +252,7 @@ document.getElementById("submitBtn").onclick = async () => {
   document.getElementById("result").textContent = "✅ Correct! +" + stageXP + " XP";
   document.getElementById("result").style.color = "lightgreen";
 };
-</script>
 
+</script>
 </body>
 </html>
