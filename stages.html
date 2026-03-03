@@ -169,11 +169,11 @@ onAuthStateChanged(auth, async (user) => {
   const userData = userSnap.data();
 
   // 🔐 Only IT (Cybersecurity) allowed
-  if (userData.selectedField !== "IT") {
-    alert("🚫 This page is only for Cybersecurity track.");
-    window.location.href = "selection.html";
-    return;
-  }
+  if (!userData.selectedField || userData.selectedField.trim().toUpperCase() !== "IT") {
+  alert("🚫 This page is only for Cybersecurity track.");
+  window.location.href = "selection.html";
+  return;
+}
 
   userEmail.innerHTML = "👤 Logged in as: <strong>" + user.email + "</strong>";
   userXP.textContent = "XP: " + (userData.xp || 0);
