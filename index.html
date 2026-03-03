@@ -306,10 +306,9 @@ footer { background:#111422; text-align:center; padding:20px; border-top:1px sol
     Join hundreds of learners building real cybersecurity skills.
   </p>
 
-  <button class="btn" onclick="location.href='#login'">
+  <button class="btn" id="joinBtn">
     Join Now
-  </button>
-
+</button>
 </section>
 
 <!-- LOGIN SECTION -->
@@ -361,6 +360,7 @@ const loginBtn = document.getElementById("loginBtn");
 const resetBtn = document.getElementById("resetBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const startBtn = document.getElementById("startBtn");
+const joinBtn = document.getElementById("joinBtn");
 
 
 
@@ -432,6 +432,23 @@ startBtn.onclick = () => {
   window.location.href = "selection.html";
 };
 
+// Join button control
+joinBtn.onclick = () => {
+
+  if (!currentUser) {
+    alert("❌ Please login first!");
+    location.href = "#login";
+    return;
+  }
+
+  if (!currentUser.emailVerified) {
+    alert("❌ Verify your email first!");
+    sendEmailVerification(currentUser);
+    return;
+  }
+
+  window.location.href = "selection.html";
+};
 const params = new URLSearchParams(window.location.search);
 const mode = params.get("mode");
 const oobCode = params.get("oobCode");
