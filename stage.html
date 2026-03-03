@@ -196,38 +196,97 @@ onAuthStateChanged(auth, async(user)=>{
   /* STAGE 3 SQL SIMULATION */
   if(stageId==="stage3"){
 
-    document.getElementById("defaultFlagArea").style.display="none";
+  document.getElementById("defaultFlagArea").style.display="none";
+  document.getElementById("hintBtn").style.display="none";
 
-    const container=document.querySelector(".container");
-    container.innerHTML+=`
-      <h3>Admin Login</h3>
-      <input type="text" id="loginUser" placeholder="Username">
-      <input type="password" id="loginPass" placeholder="Password">
-      <button id="loginBtnSim" class="submit">Login</button>
-      <div id="loginResult"></div>
-    `;
+  const container=document.querySelector(".container");
 
-    document.getElementById("loginBtnSim").onclick=async()=>{
-      const username=document.getElementById("loginUser").value;
+  container.innerHTML=`
+    <div style="text-align:center;margin-bottom:30px;">
+      <h2 style="color:white;">SecureCorp Internal Portal</h2>
+      <p style="color:gray;">Authorized Personnel Only</p>
+    </div>
 
-      if(username.includes("' OR 1=1")){
-        document.getElementById("loginResult").innerHTML=
-          "🎉 Access Granted!<br>Flag: ITZSOS{sql_bypass_success}";
-        document.getElementById("loginResult").style.color="lightgreen";
+    <div style="
+      background:white;
+      color:black;
+      padding:30px;
+      border-radius:10px;
+      max-width:400px;
+      margin:auto;
+      box-shadow:0 10px 25px rgba(0,0,0,0.5);
+    ">
+      <h3 style="text-align:center;margin-bottom:20px;">Employee Login</h3>
 
-        await updateDoc(userRef,{
-          solvedStages:arrayUnion(stageId),
-          xp:increment(stageXP)
-        });
-      }else{
-        document.getElementById("loginResult").textContent="Access Denied.";
-        document.getElementById("loginResult").style.color="red";
-      }
-    };
+      <label>Username</label>
+      <input type="text" id="loginUser" style="
+        width:100%;
+        padding:10px;
+        margin-bottom:15px;
+        border:1px solid #ccc;
+      ">
 
-    return;
-  }
+      <label>Password</label>
+      <input type="password" id="loginPass" style="
+        width:100%;
+        padding:10px;
+        margin-bottom:20px;
+        border:1px solid #ccc;
+      ">
 
+      <button id="loginBtnSim" style="
+        width:100%;
+        padding:10px;
+        background:#1a73e8;
+        color:white;
+        border:none;
+        font-weight:bold;
+        cursor:pointer;
+      ">
+        Sign In
+      </button>
+
+      <div id="loginResult" style="margin-top:15px;text-align:center;font-weight:bold;"></div>
+    </div>
+
+    <div style="text-align:center;margin-top:25px;color:gray;font-size:0.9rem;">
+      © 2026 SecureCorp Systems
+    </div>
+  `;
+
+  document.getElementById("loginBtnSim").onclick=async()=>{
+
+    const username=document.getElementById("loginUser").value;
+    const password=document.getElementById("loginPass").value;
+    const resultBox=document.getElementById("loginResult");
+
+    if(username.trim()==="" || password.trim()===""){
+      resultBox.textContent="Please fill in all fields.";
+      resultBox.style.color="red";
+      return;
+    }
+
+    // SQL Injection vulnerability
+    if(username.includes("' OR 1=1")){
+      resultBox.innerHTML="✅ Login Successful<br><br>FLAG: ITZSOS{sql_bypass_success}";
+      resultBox.style.color="green";
+
+      const userRef=doc(db,"users",currentUser.uid);
+
+      await updateDoc(userRef,{
+        solvedStages:arrayUnion(stageId),
+        xp:increment(stageXP)
+      });
+
+    }else{
+      resultBox.textContent="Invalid username or password.";
+      resultBox.style.color="red";
+    }
+
+  };
+
+  return;
+}
 });
 
 /* HINT BUTTON */
