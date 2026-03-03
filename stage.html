@@ -4,16 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stage | Itzsos Labs</title>
-
 <style>
-body{
+body {
   margin:0;
   font-family:monospace;
   background:#0f111a;
   color:#00ffdd;
 }
-
-nav{
+nav {
   background:#111422;
   border-bottom:1px solid #00ffdd;
   display:flex;
@@ -21,18 +19,15 @@ nav{
   align-items:center;
   padding:15px 30px;
 }
-
-nav h2{ color:#ff6600; }
-
-nav button{
+nav h2 { color:#ff6600; }
+nav button {
   background:#ff6600;
   border:none;
   padding:8px 15px;
   font-weight:bold;
   cursor:pointer;
 }
-
-.container{
+.container {
   max-width:800px;
   margin:40px auto;
   padding:20px;
@@ -40,8 +35,7 @@ nav button{
   border:1px solid #00ffdd;
   border-radius:10px;
 }
-
-input{
+input {
   width:100%;
   padding:10px;
   margin-top:15px;
@@ -49,34 +43,24 @@ input{
   border:1px solid #00ffdd;
   color:white;
 }
-
-button{
+button {
   margin-top:10px;
   padding:8px 12px;
   font-weight:bold;
   cursor:pointer;
   border:none;
 }
-
-.submit{ background:#00ffdd; }
-.hintBtn{ background:#ff6600; }
-
-#result,#hintBox{ margin-top:15px;font-weight:bold; }
-
-.locked{
-  font-size:1.5rem;
-  color:orange;
-  text-align:center;
-  margin-top:20px;
-}
+.submit { background:#00ffdd; }
+.hintBtn { background:#ff6600; }
+#result, #hintBox { margin-top:15px; font-weight:bold; }
+.locked { font-size:1.2rem; color:orange; text-align:center; margin-top:20px; opacity:0.6; }
 </style>
 </head>
-
 <body>
 
 <nav>
   <h2>Itzsos Labs - Stage</h2>
-  <button onclick="window.location.href='stages.html'">Back</button>
+  <button id="backBtn">Back</button>
 </nav>
 
 <div class="container">
@@ -89,27 +73,20 @@ button{
   </div>
 
   <button class="hintBtn" id="hintBtn">Show Hint</button>
-
   <div id="result"></div>
   <div id="hintBox"></div>
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  arrayUnion,
-  increment
+import { 
+  getFirestore, doc, getDoc, updateDoc, arrayUnion, increment, setDoc 
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
+// 🔑 Firebase config
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
+  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
   projectId: "itzsos-labs",
   storageBucket: "itzsos-labs.firebasestorage.app",
@@ -121,199 +98,175 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const params = new URLSearchParams(window.location.search);
-const stageId = params.get("id");
+const stageId = new URLSearchParams(window.location.search).get("id");
 
-let correctAnswer="";
-let stageXP=0;
-let stageHint="";
-let currentUser=null;
+let currentUser = null;
+let correctAnswer = "";
+let stageXP = 0;
+let stageHint = "";
 
-const stagePrerequisites={
-  stage2:"stage1",
-  stage3:"stage2"
+// Stage prerequisites
+const stagePrerequisites = {
+  stage2: "stage1",
+  stage3: "stage2"
 };
 
-onAuthStateChanged(auth, async (user)=>{
+const stageTitleEl = document.getElementById("stageTitle");
+const stageTextEl = document.getElementById("stageText");
+const defaultFlagArea = document.getElementById("defaultFlagArea");
+const resultEl = document.getElementById("result");
+const hintBoxEl = document.getElementById("hintBox");
 
-  if(!user || !user.emailVerified){
-    window.location.href="index.html";
+// 🔐 Back button
+document.getElementById("backBtn").onclick = () => { window.location.href="stages.html"; };
+
+// ================= AUTH CHECK =================
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    alert("Please login first!");
+    window.location.href = "index.html";
     return;
   }
 
-  currentUser=user;
+  currentUser = user;
 
-  const userRef=doc(db,"users",user.uid);
-  const userSnap=await getDoc(userRef);
-
-  if(!userSnap.exists()){
-    window.location.href="selection.html";
+  if (!user.emailVerified) {
+    alert("Please verify your email first!");
+    window.location.href = "index.html";
     return;
   }
 
-  const userData=userSnap.data();
+  // Get user data
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
 
-  if(userData.selectedField!=="IT"){
+  if (!userSnap.exists()) {
+    window.location.href = "selection.html";
+    return;
+  }
+
+  const userData = userSnap.data();
+
+  if (userData.selectedField !== "IT") {
     alert("🚫 Only Cybersecurity users allowed.");
-    window.location.href="selection.html";
+    window.location.href = "selection.html";
     return;
   }
 
-  const stageRef=doc(db,"stages",stageId);
-  const stageSnap=await getDoc(stageRef);
+  // Load XP
+  stageXP = 0;
+  correctAnswer = "";
+  stageHint = "";
 
-  if(!stageSnap.exists()){
-    document.getElementById("stageTitle").textContent="Stage not found";
+  // Load stage
+  loadStage(userData);
+});
+
+// ================= LOAD STAGE =================
+async function loadStage(userData) {
+  const stageRef = doc(db, "stages", stageId);
+  const stageSnap = await getDoc(stageRef);
+
+  if (!stageSnap.exists()) {
+    stageTitleEl.textContent = "Stage not found";
     return;
   }
 
-  const data=stageSnap.data();
+  const stageData = stageSnap.data();
+  stageTitleEl.textContent = stageData.title;
+  stageTextEl.textContent = stageData.text;
 
-  document.getElementById("stageTitle").textContent=data.title;
-  document.getElementById("stageText").textContent=data.text;
+  correctAnswer = stageData.answer || "";
+  stageXP = stageData.xp || 0;
+  stageHint = stageData.hint || "No hint available";
 
-  correctAnswer=data.answer || "";
-  stageXP=data.xp || 0;
-  stageHint=data.hint || "No hint available";
+  const solvedStages = userData.solvedStages || [];
 
-  let solvedStages=userData.solvedStages || [];
-
-  // 🔒 Lock check
-  const prereq=stagePrerequisites[stageId];
-  if(prereq && !solvedStages.includes(prereq)){
-    document.getElementById("defaultFlagArea").style.display="none";
-    document.getElementById("hintBtn").style.display="none";
-    document.getElementById("result").innerHTML=
-      `<div class="locked">🔒 Complete ${prereq} first!</div>`;
+  // Lock logic
+  const prereq = stagePrerequisites[stageId];
+  if (prereq && !solvedStages.includes(prereq)) {
+    defaultFlagArea.style.display = "none";
+    document.getElementById("hintBtn").style.display = "none";
+    resultEl.style.display = "none";
+    hintBoxEl.style.display = "none";
+    stageTextEl.textContent = "";
+    stageTitleEl.textContent += " 🔒 Locked";
     return;
   }
 
-  // ======================
-  // 🔥 PROFESSIONAL STAGE 3
-  // ======================
-  if(stageId==="stage3"){
+  // Stage 3 login simulation
+  if (stageId === "stage3") {
+    defaultFlagArea.style.display = "none";
+    stageTextEl.textContent = "Login as admin using SQL Injection!";
 
-    document.getElementById("defaultFlagArea").style.display="none";
-    document.getElementById("hintBtn").style.display="none";
-
-    const container=document.querySelector(".container");
-
-    container.innerHTML=`
-      <div style="text-align:center;margin-bottom:30px;">
-        <h2 style="color:white;">SecureCorp Internal Portal</h2>
-        <p style="color:gray;">Authorized Personnel Only</p>
-      </div>
-
-      <div style="
-        background:white;
-        color:black;
-        padding:30px;
-        border-radius:10px;
-        max-width:400px;
-        margin:auto;
-        box-shadow:0 10px 25px rgba(0,0,0,0.5);
-      ">
-        <h3 style="text-align:center;margin-bottom:20px;">Employee Login</h3>
-
-        <label>Username</label>
-        <input type="text" id="loginUser">
-
-        <label>Password</label>
-        <input type="password" id="loginPass">
-
-        <button id="loginBtnSim" style="
-          width:100%;
-          padding:10px;
-          background:#1a73e8;
-          color:white;
-          border:none;
-          font-weight:bold;
-          cursor:pointer;
-        ">
-          Sign In
-        </button>
-
-        <div id="loginResult" style="margin-top:15px;text-align:center;font-weight:bold;"></div>
-      </div>
+    const container = document.querySelector(".container");
+    container.innerHTML += `
+      <h3>Admin Login</h3>
+      <input type="text" id="loginUser" placeholder="Username">
+      <input type="password" id="loginPass" placeholder="Password">
+      <button id="loginBtnSim" class="submit">Login</button>
+      <div id="loginResult"></div>
     `;
 
-    document.getElementById("loginBtnSim").onclick=async()=>{
+    document.getElementById("loginBtnSim").onclick = async () => {
+      const userRef = doc(db, "users", currentUser.uid);
+      const userSnap = await getDoc(userRef);
+      const solved = userSnap.exists() ? userSnap.data().solvedStages || [] : [];
 
-      const userRef=doc(db,"users",currentUser.uid);
-      const freshSnap=await getDoc(userRef);
-      const solved=freshSnap.data().solvedStages || [];
-
-      const username=document.getElementById("loginUser").value;
-      const resultBox=document.getElementById("loginResult");
-
-      if(solved.includes(stageId)){
-        resultBox.textContent="⚠️ Already solved!";
-        resultBox.style.color="orange";
+      if (solved.includes(stageId)) {
+        document.getElementById("loginResult").textContent = "⚠️ Already solved!";
         return;
       }
 
-      if(username.includes("' OR 1=1")){
-        resultBox.innerHTML="✅ Login Successful<br><br>FLAG: ITZSOS{sql_bypass_success}";
-        resultBox.style.color="green";
-
-        await updateDoc(userRef,{
-          solvedStages:arrayUnion(stageId),
-          xp:increment(stageXP)
+      const username = document.getElementById("loginUser").value;
+      if (username.includes("' OR 1=1")) {
+        document.getElementById("loginResult").innerHTML = "🎉 Access Granted!<br>Flag: ITZSOS{sql_bypass_success}";
+        await updateDoc(userRef, {
+          solvedStages: arrayUnion(stageId),
+          xp: increment(stageXP)
         });
-
-      }else{
-        resultBox.textContent="Invalid username or password.";
-        resultBox.style.color="red";
+      } else {
+        document.getElementById("loginResult").textContent = "Access Denied.";
       }
     };
-
     return;
   }
+}
 
-});
-
-// ======================
-// HINT BUTTON
-// ======================
-document.getElementById("hintBtn").onclick=()=>{
-  document.getElementById("hintBox").textContent="💡 Hint: "+stageHint;
+// ================= HINT =================
+document.getElementById("hintBtn").onclick = () => {
+  hintBoxEl.textContent = "💡 Hint: " + stageHint;
 };
 
-// ======================
-// NORMAL FLAG SUBMIT
-// ======================
-document.getElementById("submitBtn").onclick=async()=>{
+// ================= FLAG SUBMIT =================
+document.getElementById("submitBtn").onclick = async () => {
+  if (!currentUser) return;
 
-  if(!currentUser) return;
-
-  const userRef=doc(db,"users",currentUser.uid);
-  const userSnap=await getDoc(userRef);
-  const solved=userSnap.data().solvedStages || [];
-
-  if(solved.includes(stageId)){
-    document.getElementById("result").textContent="⚠️ Already solved!";
-    document.getElementById("result").style.color="orange";
+  const input = document.getElementById("flagInput").value.trim().toLowerCase();
+  if (input !== correctAnswer.trim().toLowerCase()) {
+    resultEl.textContent = "❌ Wrong flag!";
+    resultEl.style.color = "red";
     return;
   }
 
-  const input=document.getElementById("flagInput").value.trim().toLowerCase();
-  const answer=correctAnswer.trim().toLowerCase();
+  const userRef = doc(db, "users", currentUser.uid);
+  const userSnap = await getDoc(userRef);
+  const solvedStages = userSnap.exists() ? userSnap.data().solvedStages || [] : [];
 
-  if(input!==answer){
-    document.getElementById("result").textContent="❌ Wrong flag!";
-    document.getElementById("result").style.color="red";
+  if (solvedStages.includes(stageId)) {
+    resultEl.textContent = "⚠️ Already solved!";
+    resultEl.style.color = "yellow";
     return;
   }
 
-  await updateDoc(userRef,{
-    solvedStages:arrayUnion(stageId),
-    xp:increment(stageXP)
+  await updateDoc(userRef, {
+    solvedStages: arrayUnion(stageId),
+    xp: increment(stageXP)
   });
 
-  document.getElementById("result").textContent="✅ Correct! +"+stageXP+" XP";
-  document.getElementById("result").style.color="lightgreen";
+  resultEl.textContent = "✅ Correct! +" + stageXP + " XP";
+  resultEl.style.color = "lightgreen";
 };
-
 </script>
 </body>
 </html>
