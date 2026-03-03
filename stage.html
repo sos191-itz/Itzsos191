@@ -12,6 +12,7 @@ body{
   background:#0f111a;
   color:#00ffdd;
 }
+
 nav{
   background:#111422;
   border-bottom:1px solid #00ffdd;
@@ -20,7 +21,9 @@ nav{
   align-items:center;
   padding:15px 30px;
 }
-nav h2{color:#ff6600;}
+
+nav h2{ color:#ff6600; }
+
 nav button{
   background:#ff6600;
   border:none;
@@ -28,6 +31,7 @@ nav button{
   font-weight:bold;
   cursor:pointer;
 }
+
 .container{
   max-width:800px;
   margin:40px auto;
@@ -36,6 +40,7 @@ nav button{
   border:1px solid #00ffdd;
   border-radius:10px;
 }
+
 input{
   width:100%;
   padding:10px;
@@ -44,6 +49,7 @@ input{
   border:1px solid #00ffdd;
   color:white;
 }
+
 button{
   margin-top:10px;
   padding:8px 12px;
@@ -51,17 +57,21 @@ button{
   cursor:pointer;
   border:none;
 }
-.submit{background:#00ffdd;}
-.hintBtn{background:#ff6600;}
-#result,#hintBox{margin-top:15px;font-weight:bold;}
+
+.submit{ background:#00ffdd; }
+.hintBtn{ background:#ff6600; }
+
+#result,#hintBox{ margin-top:15px;font-weight:bold; }
+
 .locked{
-  font-size:1.2rem;
+  font-size:1.5rem;
   color:orange;
   text-align:center;
   margin-top:20px;
 }
 </style>
 </head>
+
 <body>
 
 <nav>
@@ -92,14 +102,14 @@ import {
   getFirestore,
   doc,
   getDoc,
+  setDoc,
   updateDoc,
   arrayUnion,
   increment
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* 🔥 YOUR REAL FIREBASE CONFIG */
 const firebaseConfig = {
-  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  apiKey: "YOUR_KEY",
   authDomain: "itzsos-labs.firebaseapp.com",
   projectId: "itzsos-labs",
   storageBucket: "itzsos-labs.firebasestorage.app",
@@ -111,27 +121,20 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* GET STAGE ID */
 const params = new URLSearchParams(window.location.search);
 const stageId = params.get("id");
-
-if(!stageId){
-  document.getElementById("stageTitle").textContent="Invalid stage ID.";
-  throw new Error("Stage ID missing");
-}
 
 let correctAnswer="";
 let stageXP=0;
 let stageHint="";
 let currentUser=null;
 
-/* STAGE LOCK ORDER */
 const stagePrerequisites={
   stage2:"stage1",
   stage3:"stage2"
 };
 
-onAuthStateChanged(auth, async(user)=>{
+onAuthStateChanged(auth, async (user)=>{
 
   if(!user || !user.emailVerified){
     window.location.href="index.html";
@@ -150,154 +153,148 @@ onAuthStateChanged(auth, async(user)=>{
 
   const userData=userSnap.data();
 
-  /* BLOCK NON-IT USERS */
   if(userData.selectedField!=="IT"){
-    alert("Only Cybersecurity users allowed.");
+    alert("🚫 Only Cybersecurity users allowed.");
     window.location.href="selection.html";
     return;
   }
 
-  /* LOAD STAGE SAFELY */
-  let stageSnap;
-  try{
-    const stageRef=doc(db,"stages",stageId);
-    stageSnap=await getDoc(stageRef);
-  }catch(e){
-    document.getElementById("stageTitle").textContent="Error loading stage.";
-    return;
-  }
+  const stageRef=doc(db,"stages",stageId);
+  const stageSnap=await getDoc(stageRef);
 
   if(!stageSnap.exists()){
-    document.getElementById("stageTitle").textContent="Stage not found.";
+    document.getElementById("stageTitle").textContent="Stage not found";
     return;
   }
 
   const data=stageSnap.data();
 
-  document.getElementById("stageTitle").textContent=data.title||"No Title";
-  document.getElementById("stageText").textContent=data.text||"";
+  document.getElementById("stageTitle").textContent=data.title;
+  document.getElementById("stageText").textContent=data.text;
 
-  correctAnswer=data.answer||"";
-  stageXP=data.xp||0;
-  stageHint=data.hint||"No hint available";
+  correctAnswer=data.answer || "";
+  stageXP=data.xp || 0;
+  stageHint=data.hint || "No hint available";
 
-  let solvedStages=userData.solvedStages||[];
+  let solvedStages=userData.solvedStages || [];
 
-  /* LOCK CHECK */
+  // 🔒 Lock check
   const prereq=stagePrerequisites[stageId];
   if(prereq && !solvedStages.includes(prereq)){
     document.getElementById("defaultFlagArea").style.display="none";
     document.getElementById("hintBtn").style.display="none";
-    document.querySelector(".container").innerHTML+=
+    document.getElementById("result").innerHTML=
       `<div class="locked">🔒 Complete ${prereq} first!</div>`;
     return;
   }
 
-  /* STAGE 3 SQL SIMULATION */
+  // ======================
+  // 🔥 PROFESSIONAL STAGE 3
+  // ======================
   if(stageId==="stage3"){
 
-  document.getElementById("defaultFlagArea").style.display="none";
-  document.getElementById("hintBtn").style.display="none";
+    document.getElementById("defaultFlagArea").style.display="none";
+    document.getElementById("hintBtn").style.display="none";
 
-  const container=document.querySelector(".container");
+    const container=document.querySelector(".container");
 
-  container.innerHTML=`
-    <div style="text-align:center;margin-bottom:30px;">
-      <h2 style="color:white;">SecureCorp Internal Portal</h2>
-      <p style="color:gray;">Authorized Personnel Only</p>
-    </div>
+    container.innerHTML=`
+      <div style="text-align:center;margin-bottom:30px;">
+        <h2 style="color:white;">SecureCorp Internal Portal</h2>
+        <p style="color:gray;">Authorized Personnel Only</p>
+      </div>
 
-    <div style="
-      background:white;
-      color:black;
-      padding:30px;
-      border-radius:10px;
-      max-width:400px;
-      margin:auto;
-      box-shadow:0 10px 25px rgba(0,0,0,0.5);
-    ">
-      <h3 style="text-align:center;margin-bottom:20px;">Employee Login</h3>
-
-      <label>Username</label>
-      <input type="text" id="loginUser" style="
-        width:100%;
-        padding:10px;
-        margin-bottom:15px;
-        border:1px solid #ccc;
+      <div style="
+        background:white;
+        color:black;
+        padding:30px;
+        border-radius:10px;
+        max-width:400px;
+        margin:auto;
+        box-shadow:0 10px 25px rgba(0,0,0,0.5);
       ">
+        <h3 style="text-align:center;margin-bottom:20px;">Employee Login</h3>
 
-      <label>Password</label>
-      <input type="password" id="loginPass" style="
-        width:100%;
-        padding:10px;
-        margin-bottom:20px;
-        border:1px solid #ccc;
-      ">
+        <label>Username</label>
+        <input type="text" id="loginUser">
 
-      <button id="loginBtnSim" style="
-        width:100%;
-        padding:10px;
-        background:#1a73e8;
-        color:white;
-        border:none;
-        font-weight:bold;
-        cursor:pointer;
-      ">
-        Sign In
-      </button>
+        <label>Password</label>
+        <input type="password" id="loginPass">
 
-      <div id="loginResult" style="margin-top:15px;text-align:center;font-weight:bold;"></div>
-    </div>
+        <button id="loginBtnSim" style="
+          width:100%;
+          padding:10px;
+          background:#1a73e8;
+          color:white;
+          border:none;
+          font-weight:bold;
+          cursor:pointer;
+        ">
+          Sign In
+        </button>
 
-    <div style="text-align:center;margin-top:25px;color:gray;font-size:0.9rem;">
-      © 2026 SecureCorp Systems
-    </div>
-  `;
+        <div id="loginResult" style="margin-top:15px;text-align:center;font-weight:bold;"></div>
+      </div>
+    `;
 
-  document.getElementById("loginBtnSim").onclick=async()=>{
-
-    const username=document.getElementById("loginUser").value;
-    const password=document.getElementById("loginPass").value;
-    const resultBox=document.getElementById("loginResult");
-
-    if(username.trim()==="" || password.trim()===""){
-      resultBox.textContent="Please fill in all fields.";
-      resultBox.style.color="red";
-      return;
-    }
-
-    // SQL Injection vulnerability
-    if(username.includes("' OR 1=1")){
-      resultBox.innerHTML="✅ Login Successful<br><br>FLAG: ITZSOS{sql_bypass_success}";
-      resultBox.style.color="green";
+    document.getElementById("loginBtnSim").onclick=async()=>{
 
       const userRef=doc(db,"users",currentUser.uid);
+      const freshSnap=await getDoc(userRef);
+      const solved=freshSnap.data().solvedStages || [];
 
-      await updateDoc(userRef,{
-        solvedStages:arrayUnion(stageId),
-        xp:increment(stageXP)
-      });
+      const username=document.getElementById("loginUser").value;
+      const resultBox=document.getElementById("loginResult");
 
-    }else{
-      resultBox.textContent="Invalid username or password.";
-      resultBox.style.color="red";
-    }
+      if(solved.includes(stageId)){
+        resultBox.textContent="⚠️ Already solved!";
+        resultBox.style.color="orange";
+        return;
+      }
 
-  };
+      if(username.includes("' OR 1=1")){
+        resultBox.innerHTML="✅ Login Successful<br><br>FLAG: ITZSOS{sql_bypass_success}";
+        resultBox.style.color="green";
 
-  return;
-}
+        await updateDoc(userRef,{
+          solvedStages:arrayUnion(stageId),
+          xp:increment(stageXP)
+        });
+
+      }else{
+        resultBox.textContent="Invalid username or password.";
+        resultBox.style.color="red";
+      }
+    };
+
+    return;
+  }
+
 });
 
-/* HINT BUTTON */
+// ======================
+// HINT BUTTON
+// ======================
 document.getElementById("hintBtn").onclick=()=>{
   document.getElementById("hintBox").textContent="💡 Hint: "+stageHint;
 };
 
-/* FLAG SUBMIT */
+// ======================
+// NORMAL FLAG SUBMIT
+// ======================
 document.getElementById("submitBtn").onclick=async()=>{
 
   if(!currentUser) return;
+
+  const userRef=doc(db,"users",currentUser.uid);
+  const userSnap=await getDoc(userRef);
+  const solved=userSnap.data().solvedStages || [];
+
+  if(solved.includes(stageId)){
+    document.getElementById("result").textContent="⚠️ Already solved!";
+    document.getElementById("result").style.color="orange";
+    return;
+  }
 
   const input=document.getElementById("flagInput").value.trim().toLowerCase();
   const answer=correctAnswer.trim().toLowerCase();
@@ -308,15 +305,12 @@ document.getElementById("submitBtn").onclick=async()=>{
     return;
   }
 
-  const userRef=doc(db,"users",currentUser.uid);
-
   await updateDoc(userRef,{
-    xp:increment(stageXP),
-    solvedStages:arrayUnion(stageId)
+    solvedStages:arrayUnion(stageId),
+    xp:increment(stageXP)
   });
 
-  document.getElementById("result").textContent=
-    "✅ Correct! +"+stageXP+" XP";
+  document.getElementById("result").textContent="✅ Correct! +"+stageXP+" XP";
   document.getElementById("result").style.color="lightgreen";
 };
 
