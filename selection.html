@@ -169,7 +169,6 @@ window.chooseField = async function(field) {
   try {
     await setDoc(userRef, { selectedField: field }, { merge: true });
 
-    localStorage.setItem("selectedField", field);
 
     // 🔥 IMPORTANT: Redirect to choose.html
     window.location.href = "choose.html";
