@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="google-site-verification" content="8qTPfxaWZr3Utd41Q9rcD61dBhCvwINivYjw-dFKpm8" />
 <title>Cybersecurity Stages | Itzsos Labs</title>
-
 <style>
 body {
   margin:0;
@@ -98,51 +96,8 @@ footer {
   border-top:1px solid #00ffdd;
   margin-top:40px;
 }
-#userBox {
-  margin-bottom:30px;
-  padding:20px;
-  background:linear-gradient(145deg,#111422,#1a1f35);
-  border:1px solid #00ffdd;
-  border-radius:12px;
-  box-shadow:0 0 15px rgba(0,255,221,0.2);
-}
-
-.user-info {
-  display:flex;
-  align-items:center;
-  gap:15px;
-}
-
-.avatar {
-  width:55px;
-  height:55px;
-  border-radius:50%;
-  background:linear-gradient(45deg,#ff6600,#00ffdd);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:1.5rem;
-  font-weight:bold;
-  color:#0f111a;
-}
-
-.user-details {
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-
-.xp-badge {
-  background:#00ffdd;
-  color:#0f111a;
-  padding:5px 10px;
-  border-radius:20px;
-  font-weight:bold;
-  width:fit-content;
-}
 </style>
 </head>
-
 <body>
 
 <nav>
@@ -153,14 +108,14 @@ footer {
 <div class="container">
 
   <div id="userBox">
-  <div class="user-info">
-    <div class="avatar" id="userAvatar">U</div>
-    <div class="user-details">
-      <div id="userEmail">Loading user...</div>
-      <div id="userXP" class="xp-badge">XP: 0</div>
+    <div class="user-info">
+      <div class="avatar" id="userAvatar">U</div>
+      <div class="user-details">
+        <div id="userEmail">Loading user...</div>
+        <div id="userXP">XP: 0</div>
+      </div>
     </div>
   </div>
-</div>
 
   <div class="stage-grid" id="stageContainer"></div>
 
@@ -173,7 +128,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebas
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* FIREBASE CONFIG */
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -192,81 +147,49 @@ const userEmail = document.getElementById("userEmail");
 const userXP = document.getElementById("userXP");
 const logoutBtn = document.getElementById("logoutBtn");
 
-/* AUTH + CYBERSECURITY CHECK */
+// Auth
 onAuthStateChanged(auth, async (user) => {
+  if(!user) return window.location.href="index.html";
+  if(!user.emailVerified){ alert("Verify email!"); return window.location.href="index.html"; }
 
-  if (!user) {
-    window.location.href = "index.html";
-    return;
-  }
-
-  if (!user.emailVerified) {
-    alert("Verify your email first!");
-    window.location.href = "index.html";
-    return;
-  }
-
-  const userRef = doc(db, "users", user.uid);
+  const userRef = doc(db,"users",user.uid);
   const userSnap = await getDoc(userRef);
-
-  if (!userSnap.exists()) {
-    window.location.href = "selection.html";
-    return;
-  }
-
+  if(!userSnap.exists()) return window.location.href="selection.html";
   const userData = userSnap.data();
 
-  // 🔐 Only IT (Cybersecurity) allowed
-  if (!userData.selectedField || userData.selectedField.trim().toUpperCase() !== "IT") {
-  alert("🚫 This page is only for Cybersecurity track.");
-  window.location.href = "selection.html";
-  return;
-}
-
-  const firstLetter = user.email.charAt(0).toUpperCase();
-document.getElementById("userAvatar").textContent = firstLetter;
-
-userEmail.innerHTML = "<strong>" + user.email + "</strong>";
-userXP.textContent = "XP: " + (userData.xp || 0);
-
-  await loadStages(user, userData);
-});
-
-/* LOAD STAGES */
-async function loadStages(user, userData) {
-
-  const querySnapshot = await getDocs(collection(db, "stages"));
-
-  if (querySnapshot.empty) {
-    stageContainer.innerHTML = "<p>No stages added yet.</p>";
-    return;
+  if(!userData.selectedField || userData.selectedField.trim().toUpperCase()!=="IT"){
+    alert("🚫 Cybersecurity track only"); return window.location.href="selection.html";
   }
 
+  document.getElementById("userAvatar").textContent = user.email.charAt(0).toUpperCase();
+  userEmail.innerHTML = "<strong>"+user.email+"</strong>";
+  userXP.textContent = "XP: "+(userData.xp||0);
+
+  await loadStages(userData);
+});
+
+// Load stages
+async function loadStages(userData){
+  const querySnapshot = await getDocs(collection(db,"stages"));
   const solvedStages = userData.solvedStages || [];
 
-  querySnapshot.forEach((docSnap) => {
-
+  querySnapshot.forEach(docSnap=>{
     const data = docSnap.data();
     const stageId = docSnap.id;
-
     const card = document.createElement("div");
     card.classList.add("stage-card");
 
-    if (solvedStages.includes(stageId)) {
+    if(solvedStages.includes(stageId)){
       card.classList.add("solved");
     }
 
-    // 🔒 Lock logic: Stage 1 unlocked, others require previous
     let isLocked = false;
-
-    if (data.order > 1) {
-      const previousStage = "stage" + (data.order - 1);
-      if (!solvedStages.includes(previousStage)) {
-        isLocked = true;
-      }
+    if(data.order > 1){
+      const previousStage = "stage"+(data.order-1);
+      if(!solvedStages.includes(previousStage)) isLocked = true;
     }
 
-    if (isLocked) {
+    if(isLocked){
       card.classList.add("locked");
       card.innerHTML = `
         <h3>${data.title} 🔒</h3>
@@ -287,17 +210,11 @@ async function loadStages(user, userData) {
   });
 }
 
-/* OPEN STAGE */
-window.openStage = function(id) {
-  window.location.href = "stage.html?id=" + id;
-};
+// Open stage
+window.openStage = (id)=>{ window.location.href="stage.html?id="+id; }
 
-/* LOGOUT */
-logoutBtn.onclick = () => {
-  signOut(auth).then(() => {
-    window.location.href = "index.html";
-  });
-};
+// Logout
+logoutBtn.onclick = ()=>{ signOut(auth).then(()=>window.location.href="index.html"); }
 </script>
 
 </body>
