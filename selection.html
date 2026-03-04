@@ -142,10 +142,10 @@ onAuthStateChanged(auth, async (user) => {
   const userRef = doc(db,"users",user.uid);
   const snap = await getDoc(userRef);
 
-  // If already selected before → skip page
-  if(snap.exists() && snap.data().selectedField){
-    window.location.href = "stages.html";
-  }
+  // If already selected before → go to choose page
+if (snap.exists() && snap.data().selectedField) {
+  window.location.href = "choose.html";
+}
 });
 
 /* 🎯 FIELD SELECTION */
