@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Choose Your Role | Itzsos Labs</title>
+
+<style>
+body{
+  margin:0;
+  font-family:monospace;
+  background:#0f111a;
+  color:#00ffdd;
+}
+
+nav{
+  background:#111422;
+  border-bottom:1px solid #00ffdd;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 30px;
+}
+
+nav h2{ color:#ff6600; margin:0; }
+
+.container{
+  max-width:1100px;
+  margin:80px auto;
+  padding:20px;
+  text-align:center;
+}
+
+h1{
+  color:#ff6600;
+  font-size:2.5rem;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:30px;
+  margin-top:50px;
+}
+
+.card{
+  background:#111422;
+  border:1px solid #00ffdd;
+  padding:40px 25px;
+  border-radius:15px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.card:hover{
+  transform:translateY(-8px);
+  box-shadow:0 0 20px #00ffdd44;
+}
+
+.red:hover{ border-color:#ff2e2e; }
+.blue:hover{ border-color:#00bfff; }
+.purple:hover{ border-color:#a020f0; }
+
+footer{
+  text-align:center;
+  padding:20px;
+  border-top:1px solid #00ffdd;
+  background:#111422;
+  margin-top:80px;
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <h2>Itzsos Labs</h2>
+</nav>
+
+<section class="container">
+  <h1>Choose Your Cyber Role</h1>
+
+  <div class="grid">
+
+    <div class="card red" onclick="chooseRole('Red Team')">
+      <h2 style="color:#ff2e2e;">🔴 Red Team</h2>
+      <p>Offensive security and penetration testing.</p>
+    </div>
+
+    <div class="card blue" onclick="chooseRole('Blue Team')">
+      <h2 style="color:#00bfff;">🔵 Blue Team</h2>
+      <p>Defense, monitoring and protection.</p>
+    </div>
+
+    <div class="card purple" onclick="chooseRole('Purple Team')">
+      <h2 style="color:#a020f0;">🟣 Purple Team</h2>
+      <p>Combination of attack and defense.</p>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  © 2026 Itzsos Labs
+</footer>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+/* 🔑 YOUR FIREBASE KEYS */
+const firebaseConfig = {
+  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  authDomain: "itzsos-labs.firebaseapp.com",
+  projectId: "itzsos-labs",
+  storageBucket: "itzsos-labs.firebasestorage.app",
+  messagingSenderId: "1012826517121",
+  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+
+/* 🔐 CHECK LOGIN + VERIFY + FIELD */
+onAuthStateChanged(auth, async (user) => {
+
+  if (!user) {
+    alert("❌ Please login first.");
+    window.location.href = "index.html";
+    return;
+  }
+
+  if (!user.emailVerified) {
+    alert("❌ Verify your email first.");
+    sendEmailVerification(user);
+    window.location.href = "index.html";
+    return;
+  }
+
+  currentUser = user;
+
+  // 🔎 CHECK IF USER SELECTED CYBERSECURITY
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+
+  if (!snap.exists()) {
+    window.location.href = "selection.html";
+    return;
+  }
+
+  const userData = snap.data();
+
+  if (userData.selectedField !== "IT") {
+    alert("❌ You must select Cybersecurity first.");
+    window.location.href = "selection.html";
+    return;
+  }
+
+});
+
+/* 💾 SAVE ROLE */
+window.chooseRole = async function(role){
+
+  if (!currentUser) {
+    alert("Please wait...");
+    return;
+  }
+
+  try{
+    const userRef = doc(db, "users", currentUser.uid);
+
+    await setDoc(userRef, {
+      role: role
+    }, { merge:true });
+
+    alert("Role saved ✅");
+
+    if(role === "Purple Team"){
+        window.location.href = "stages.html";
+    }else{
+        alert("This path is coming soon 🚧");
+    }
+
+  }catch(error){
+    console.error(error);
+    alert("Error saving role ❌");
+  }
+
+};
+
+</script>
+
+</body>
+</html>
