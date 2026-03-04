@@ -98,6 +98,48 @@ footer {
   border-top:1px solid #00ffdd;
   margin-top:40px;
 }
+#userBox {
+  margin-bottom:30px;
+  padding:20px;
+  background:linear-gradient(145deg,#111422,#1a1f35);
+  border:1px solid #00ffdd;
+  border-radius:12px;
+  box-shadow:0 0 15px rgba(0,255,221,0.2);
+}
+
+.user-info {
+  display:flex;
+  align-items:center;
+  gap:15px;
+}
+
+.avatar {
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  background:linear-gradient(45deg,#ff6600,#00ffdd);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.5rem;
+  font-weight:bold;
+  color:#0f111a;
+}
+
+.user-details {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.xp-badge {
+  background:#00ffdd;
+  color:#0f111a;
+  padding:5px 10px;
+  border-radius:20px;
+  font-weight:bold;
+  width:fit-content;
+}
 </style>
 </head>
 
@@ -111,9 +153,14 @@ footer {
 <div class="container">
 
   <div id="userBox">
-    <div id="userEmail">Loading user...</div>
-    <div id="userXP">XP: 0</div>
+  <div class="user-info">
+    <div class="avatar" id="userAvatar">U</div>
+    <div class="user-details">
+      <div id="userEmail">Loading user...</div>
+      <div id="userXP" class="xp-badge">XP: 0</div>
+    </div>
   </div>
+</div>
 
   <div class="stage-grid" id="stageContainer"></div>
 
@@ -176,8 +223,11 @@ onAuthStateChanged(auth, async (user) => {
   return;
 }
 
-  userEmail.innerHTML = "👤 Logged in as: <strong>" + user.email + "</strong>";
-  userXP.textContent = "XP: " + (userData.xp || 0);
+  const firstLetter = user.email.charAt(0).toUpperCase();
+document.getElementById("userAvatar").textContent = firstLetter;
+
+userEmail.innerHTML = "<strong>" + user.email + "</strong>";
+userXP.textContent = "XP: " + (userData.xp || 0);
 
   await loadStages(user, userData);
 });
