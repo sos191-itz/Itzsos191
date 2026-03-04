@@ -124,10 +124,23 @@ const db = getFirestore(app);
 
 let currentUser = null;
 /*✅ Check localStorage first to skip selection page*/
-const savedField = localStorage.getItem("selectedField");
-if (savedField) {
+onAuthStateChanged(auth, async (user) => {
+
+  if(!user || !user.emailVerified){
+    window.location.href = "index.html#login";
+    return;
+  }
+
+  currentUser = user;
+
+  const userRef = doc(db,"users",user.uid);
+  const snap = await getDoc(userRef);
+
+  if (snap.exists() && snap.data().selectedField) {
     window.location.href = "choose.html";
-}
+  }
+
+});
 
 /* 🔐 AUTH CHECK */
 onAuthStateChanged(auth, async (user) => {
