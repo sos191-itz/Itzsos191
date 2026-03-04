@@ -137,9 +137,23 @@ onAuthStateChanged(auth, async (user) => {
   const snap = await getDoc(userRef);
 
   // If field already selected → go to choose page
-  if (snap.exists() && snap.data().selectedField) {
-    window.location.href = "choose.html";
+  if (snap.exists()) {
+
+  const data = snap.data();
+
+  if (data.selectedField === "IT" && data.role) {
+    // Already chose field AND role → go to stages
+    window.location.href = "stages.html";
+    return;
   }
+
+  if (data.selectedField) {
+    // Field chosen but role not chosen → go to choose page
+    window.location.href = "choose.html";
+    return;
+  }
+
+}
 
 });
 
