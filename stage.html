@@ -107,10 +107,7 @@ let stageXP = 0;
 let stageHint = "";
 
 // Stage prerequisites
-const stagePrerequisites = {
-  stage2: "stage1",
-  stage3: "stage2"
-};
+
 
 const stageTitleEl = document.getElementById("stageTitle");
 const stageTextEl = document.getElementById("stageText");
@@ -181,11 +178,17 @@ async function loadStage(userData) {
   stageXP = stageData.xp || 0;
   stageHint = stageData.hint || "No hint available";
 
-  const solvedStages = userData.solvedStages || [];
+  // 🔒 Dynamic Lock Logic (Professional Version)
 
-  // Lock logic
-  const prereq = stagePrerequisites[stageId];
-  if (prereq && !solvedStages.includes(prereq)) {
+const solvedStages = userData.solvedStages || [];
+const currentOrder = stageData.order;
+
+// If not first stage → require previous stage
+if (currentOrder > 1) {
+
+  const previousStageId = "stage" + (currentOrder - 1);
+
+  if (!solvedStages.includes(previousStageId)) {
     defaultFlagArea.style.display = "none";
     document.getElementById("hintBtn").style.display = "none";
     resultEl.style.display = "none";
@@ -194,6 +197,7 @@ async function loadStage(userData) {
     stageTitleEl.textContent += " 🔒 Locked";
     return;
   }
+}
 
   // Stage 3 login simulation
   if (stageId === "stage3") {
