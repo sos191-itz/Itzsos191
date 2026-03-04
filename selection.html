@@ -158,7 +158,7 @@ window.chooseField = async function(field) {
   try {
     await setDoc(userRef, { selectedField: field }, { merge: true });
     localStorage.setItem("selectedField", field); // << Save field locally
-    window.location.href = "stages.html";
+    window.location.href = "choose.html";
   } catch(err) {
     console.error(err);
     alert("Error saving selection.");
