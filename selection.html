@@ -149,19 +149,17 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 /* 🎯 FIELD SELECTION */
-window.chooseField = async function(field){
-
-  if(!currentUser){
+window.chooseField = async function(field) {
+  if (!currentUser) {
     alert("Please wait... loading user.");
     return;
   }
-
-  const userRef = doc(db,"users",currentUser.uid);
-
-  try{
-    await setDoc(userRef,{ selectedField:field },{ merge:true });
-    window.location.href="stages.html";
-  }catch(err){
+  const userRef = doc(db, "users", currentUser.uid);
+  try {
+    await setDoc(userRef, { selectedField: field }, { merge: true });
+    localStorage.setItem("selectedField", field); // << Save field locally
+    window.location.href = "stages.html";
+  } catch(err) {
     console.error(err);
     alert("Error saving selection.");
   }
