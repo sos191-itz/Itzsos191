@@ -3,26 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="google-site-verification" content="8qTPfxaWZr3Utd41Q9rcD61dBhCvwINivYjw-dFKpm8" />
 <title>Purple Team | Itzsos Labs</title>
 <style>
 body {
   margin:0;
   font-family:monospace;
-  background:#5a0fb2; /* Purple background */
-  color:#ffffff;
+  background: linear-gradient(180deg, #0a0f2e, #000);
+  color:#00ffdd;
 }
 nav {
-  background:#3d0070;
-  border-bottom:1px solid #ffffff;
+  background:#1a1f4f;
+  border-bottom:1px solid #00ffdd;
   display:flex;
   justify-content:space-between;
   align-items:center;
   padding:15px 30px;
 }
-nav h2 { color:#ffdd00; }
+nav h2 { color:#ff66cc; }
 nav button {
-  background:#ffdd00;
+  background:#ff66cc;
   border:none;
   padding:8px 15px;
   font-weight:bold;
@@ -32,16 +31,16 @@ nav button {
   max-width:800px;
   margin:40px auto;
   padding:20px;
-  background:#4b0080;
-  border:1px solid #ffffff;
+  background:#0f1233;
+  border:1px solid #00ffdd;
   border-radius:10px;
 }
 input {
   width:100%;
   padding:10px;
   margin-top:15px;
-  background:#2e004d;
-  border:1px solid #ffffff;
+  background:#0a0f2e;
+  border:1px solid #00ffdd;
   color:white;
 }
 button {
@@ -51,31 +50,32 @@ button {
   cursor:pointer;
   border:none;
 }
-.submit { background:#ffdd00; color:#000; }
-.hintBtn { background:#ff6600; color:#000; }
+.submit { background:#00ffdd; }
+.hintBtn { background:#ff66cc; }
 #result, #hintBox { margin-top:15px; font-weight:bold; }
 .locked { font-size:1.2rem; color:orange; text-align:center; margin-top:20px; opacity:0.6; }
+#sqlLoginArea { margin-top:20px; }
 </style>
 </head>
 <body>
 
 <nav>
-  <h2>Purple Team - Stage</h2>
+  <h2>Purple Team - Itzsos Labs</h2>
   <button id="backBtn">Back</button>
 </nav>
 
 <div class="container">
 
-  <!-- 📊 Progress Section -->
+  <!-- Progress Section -->
   <div id="progressWrapper" style="margin-bottom:20px;">
     <div id="progressText" style="margin-bottom:5px; font-weight:bold;">
       Loading progress...
     </div>
-    <div style="background:#2e004d; border-radius:8px; overflow:hidden;">
+    <div style="background:#222; border-radius:8px; overflow:hidden;">
       <div id="progressBar" style="
         height:12px;
         width:0%;
-        background:linear-gradient(90deg,#ffdd00,#ff9900);
+        background:linear-gradient(90deg,#00ffdd,#00aa88);
         transition:width 0.5s ease;">
       </div>
     </div>
@@ -89,7 +89,6 @@ button {
     <button class="submit" id="submitBtn">Submit</button>
   </div>
 
-  <!-- SQL login area for Stage 3 -->
   <div id="sqlLoginArea"></div>
 
   <button class="hintBtn" id="hintBtn">Show Hint</button>
@@ -105,7 +104,7 @@ button {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { 
-  getFirestore, doc, getDoc, updateDoc, arrayUnion, increment
+  getFirestore, doc, getDoc, updateDoc, arrayUnion, increment 
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 // 🔑 Firebase config
@@ -123,41 +122,55 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 const stageId = new URLSearchParams(window.location.search).get("id");
+const TOTAL_STAGES = 50;
 
 let currentUser = null;
 let correctAnswer = "";
 let stageXP = 0;
 let stageHint = "";
 let currentOrder = 0;
-const nextStageBtn = document.getElementById("nextStageBtn");
-const TOTAL_STAGES = 50;
 
 const stageTitleEl = document.getElementById("stageTitle");
 const stageTextEl = document.getElementById("stageText");
 const defaultFlagArea = document.getElementById("defaultFlagArea");
+const sqlLoginArea = document.getElementById("sqlLoginArea");
 const resultEl = document.getElementById("result");
 const hintBoxEl = document.getElementById("hintBox");
 const progressText = document.getElementById("progressText");
 const progressBar = document.getElementById("progressBar");
-const sqlLoginArea = document.getElementById("sqlLoginArea");
+const nextStageBtn = document.getElementById("nextStageBtn");
 
-// 🔐 Back button
+// Back button
 document.getElementById("backBtn").onclick = () => { window.location.href="stages.html"; };
 
 // ================= AUTH CHECK =================
 onAuthStateChanged(auth, async (user) => {
-  if (!user) { alert("Please login first!"); window.location.href = "index.html"; return; }
+  if (!user) {
+    alert("Please login first!");
+    window.location.href = "index.html";
+    return;
+  }
+
   currentUser = user;
-  if (!user.emailVerified) { alert("Please verify your email!"); window.location.href = "index.html"; return; }
+
+  if (!user.emailVerified) {
+    alert("Please verify your email first!");
+    window.location.href = "index.html";
+    return;
+  }
 
   const userRef = doc(db, "users", user.uid);
   const userSnap = await getDoc(userRef);
-  if (!userSnap.exists()) { window.location.href = "selection.html"; return; }
-  const userData = userSnap.data();
+  if (!userSnap.exists()) {
+    window.location.href = "selection.html";
+    return;
+  }
 
-  if(userData.selectedField !== "IT"){
+  const userData = userSnap.data();
+  if (userData.selectedField !== "IT") {
     alert("🚫 Only Cybersecurity users allowed.");
-    window.location.href = "selection.html"; return;
+    window.location.href = "selection.html";
+    return;
   }
 
   loadStage(userData);
@@ -175,32 +188,35 @@ async function loadStage(userData){
   stageXP = stageData.xp || 0;
   stageHint = stageData.hint || "No hint available";
 
-  const solvedStages = userData.solvedStages || [];
-
-  // 🔒 LOCK FUTURE STAGES
-  if(currentOrder > 1){
-    const prevId = "stage" + (currentOrder-1);
-    if(!solvedStages.includes(prevId)){
-      defaultFlagArea.style.display = "none";
-      sqlLoginArea.style.display = "none";
-      document.getElementById("hintBtn").style.display = "none";
-      resultEl.style.display = "none";
-      hintBoxEl.style.display = "none";
-      stageTextEl.textContent = "";
-      stageTitleEl.textContent = stageData.title + " 🔒 Locked";
-
-      // Show progress up to previous stage
-      const percentage = Math.round(((currentOrder-1)/TOTAL_STAGES)*100);
-      progressText.textContent = "Stage " + currentOrder + " / " + TOTAL_STAGES + " ("+percentage+"% completed)";
-      progressBar.style.width = percentage + "%";
-      return;
+  // 🔒 Determine lock
+  let solvedStages = userData.solvedStages || [];
+  let highestSolvedOrder = 0;
+  solvedStages.forEach(s => {
+    const orderNum = parseInt(s.replace('stage',''));
+    if(!isNaN(orderNum) && orderNum > highestSolvedOrder){
+      highestSolvedOrder = orderNum;
     }
+  });
+
+  if(currentOrder > highestSolvedOrder + 1){
+    // LOCKED
+    defaultFlagArea.style.display = "none";
+    sqlLoginArea.style.display = "none";
+    document.getElementById("hintBtn").style.display = "none";
+    resultEl.style.display = "none";
+    hintBoxEl.style.display = "none";
+    stageTextEl.textContent = "";
+    stageTitleEl.textContent = stageData.title + " 🔒 Locked";
+
+    const percentage = Math.round((highestSolvedOrder/TOTAL_STAGES)*100);
+    progressText.textContent = "Stage " + currentOrder + " / " + TOTAL_STAGES + " (" + percentage + "% completed)";
+    progressBar.style.width = percentage + "%";
+    return;
   }
 
-  // ✅ Stage is unlocked, show content
+  // UNLOCKED
   stageTitleEl.textContent = stageData.title;
   stageTextEl.textContent = stageData.text;
-
   const percentage = Math.round((currentOrder/TOTAL_STAGES)*100);
   progressText.textContent = "Stage " + currentOrder + " / " + TOTAL_STAGES + " ("+percentage+"% completed)";
   progressBar.style.width = percentage + "%";
@@ -247,15 +263,15 @@ document.getElementById("submitBtn").onclick = async () => {
 
   const input = document.getElementById("flagInput").value.trim().toLowerCase();
   if(input !== correctAnswer.trim().toLowerCase()){
-    resultEl.textContent="❌ Wrong flag!"; resultEl.style.color="red"; return;
+    resultEl.textContent = "❌ Wrong flag!"; resultEl.style.color="red"; return;
   }
 
-  const userRef = doc(db,"users",currentUser.uid);
+  const userRef = doc(db, "users", currentUser.uid);
   const userSnap = await getDoc(userRef);
-  const solvedStages = userSnap.exists() ? userSnap.data().solvedStages||[] : [];
+  const solvedStages = userSnap.exists()? userSnap.data().solvedStages||[] : [];
 
   if(solvedStages.includes(stageId)){
-    resultEl.textContent="⚠️ Already solved!"; resultEl.style.color="yellow"; return;
+    resultEl.textContent = "⚠️ Already solved!"; resultEl.style.color="yellow"; return;
   }
 
   await updateDoc(userRef,{
@@ -263,24 +279,23 @@ document.getElementById("submitBtn").onclick = async () => {
     xp: increment(stageXP)
   });
 
-  resultEl.textContent="✅ Correct! +" + stageXP + " XP"; resultEl.style.color="lightgreen";
+  resultEl.textContent = "✅ Correct! +" + stageXP + " XP"; resultEl.style.color="lightgreen";
 
   // NEXT STAGE LOGIC
-  const nextStageId = "stage" + (currentOrder+1);
-  const nextStageRef = doc(db, "stages", nextStageId);
+  const nextStageId = "stage"+(currentOrder+1);
+  const nextStageRef = doc(db,"stages",nextStageId);
   const nextStageSnap = await getDoc(nextStageRef);
 
   if(!nextStageSnap.exists()){
-    nextStageBtn.style.display="block";
+    nextStageBtn.style.display = "block";
     nextStageBtn.textContent="🏆 Track Completed - Back to Stages";
-    nextStageBtn.onclick = () => { window.location.href="stages.html"; };
+    nextStageBtn.onclick=()=>window.location.href="stages.html";
     return;
   }
 
   nextStageBtn.style.display="block";
-
-  let timer = setTimeout(()=>{ window.location.href="stage.html?id="+nextStageId; },5000);
-  nextStageBtn.onclick = ()=>{ clearTimeout(timer); window.location.href="stage.html?id="+nextStageId; };
+  let timer = setTimeout(()=>window.location.href="stage.html?id="+nextStageId,5000);
+  nextStageBtn.onclick=()=>{ clearTimeout(timer); window.location.href="stage.html?id="+nextStageId; };
 };
 </script>
 </body>
