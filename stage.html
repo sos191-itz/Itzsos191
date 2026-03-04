@@ -100,7 +100,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebas
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -115,12 +114,6 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 const stageId = new URLSearchParams(window.location.search).get("id");
-
-let currentUser = null;
-let correctAnswer = "";
-let stageXP = 0;
-let stageHint = "";
-let currentOrder = 0;
 const TOTAL_STAGES = 50;
 
 const stageTitleEl = document.getElementById("stageTitle");
@@ -130,104 +123,83 @@ const resultEl = document.getElementById("result");
 const hintBoxEl = document.getElementById("hintBox");
 const progressText = document.getElementById("progressText");
 const progressBar = document.getElementById("progressBar");
-const nextStageBtn = document.getElementById("nextStageBtn");
-const sqlLoginArea = document.getElementById("sqlLoginArea");
 
-document.getElementById("backBtn").onclick = () => { window.location.href="stages.html"; };
+let currentUser = null;
+let stageXP = 0;
+let correctAnswer = "";
+let stageHint = "";
+let currentOrder = 0;
 
-// Auth check
+// Auth
 onAuthStateChanged(auth, async (user) => {
-  if(!user){ alert("Login first!"); window.location.href="index.html"; return; }
+  if (!user) return window.location.href="index.html";
   currentUser = user;
-  if(!user.emailVerified){ alert("Verify email first!"); window.location.href="index.html"; return; }
 
-  const userRef = doc(db,"users",user.uid);
+  const userRef = doc(db, "users", user.uid);
   const userSnap = await getDoc(userRef);
-  if(!userSnap.exists()){ window.location.href="selection.html"; return; }
+  if (!userSnap.exists()) return window.location.href="selection.html";
 
   const userData = userSnap.data();
-  if(userData.selectedField !== "IT"){ alert("Only Cybersecurity users allowed."); window.location.href="selection.html"; return; }
-
-  loadStage(userData);
+  await loadStage(userData);
 });
 
-// Load stage
-async function loadStage(userData){
+// Load stage and apply lock logic
+async function loadStage(userData) {
   const stageRef = doc(db,"stages",stageId);
   const stageSnap = await getDoc(stageRef);
-  if(!stageSnap.exists()){ stageTitleEl.textContent="Stage not found"; return; }
 
+  if (!stageSnap.exists()) { stageTitleEl.textContent="Stage not found"; return; }
   const stageData = stageSnap.data();
   currentOrder = stageData.order;
   correctAnswer = stageData.answer || "";
   stageXP = stageData.xp || 0;
   stageHint = stageData.hint || "No hint available";
 
+  // Calculate highest solved stage
   const solvedStages = userData.solvedStages || [];
-  // find highest solved stage
   let highestSolvedOrder = 0;
   solvedStages.forEach(s=>{
     const n = parseInt(s.replace("stage",""));
-    if(!isNaN(n) && n>highestSolvedOrder) highestSolvedOrder=n;
+    if(!isNaN(n) && n>highestSolvedOrder) highestSolvedOrder = n;
   });
 
-  // LOCK logic
+  // Lock stage if user hasn't unlocked it yet
   if(currentOrder > highestSolvedOrder + 1){
     stageTitleEl.textContent = stageData.title + " 🔒 Locked";
-    stageTextEl.textContent = "Complete previous stages first.";
+    stageTextEl.textContent = "";
     defaultFlagArea.style.display = "none";
     document.getElementById("hintBtn").style.display = "none";
     resultEl.style.display = "none";
     hintBoxEl.style.display = "none";
-    sqlLoginArea.style.display = "none";
 
-    const percent = Math.floor((highestSolvedOrder/TOTAL_STAGES)*100);
-    progressText.textContent = `Stage ${currentOrder} / ${TOTAL_STAGES} (${percent}% completed)`;
-    progressBar.style.width = percent + "%";
+    // Progress shows last solved stage
+    const percentage = Math.round((highestSolvedOrder/TOTAL_STAGES)*100);
+    progressText.textContent = "Stage " + currentOrder + " / " + TOTAL_STAGES + " (" + percentage + "% completed)";
+    progressBar.style.width = percentage + "%";
     return;
   }
 
-  // UNLOCKED stage
+  // Stage unlocked
   stageTitleEl.textContent = stageData.title;
   stageTextEl.textContent = stageData.text;
-  const percent = Math.floor((currentOrder/TOTAL_STAGES)*100);
-  progressText.textContent = `Stage ${currentOrder} / ${TOTAL_STAGES} (${percent}% completed)`;
-  progressBar.style.width = percent + "%";
-
-  // Stage 3 SQL login
-  if(stageId==="stage3"){
-    defaultFlagArea.style.display="none";
-    sqlLoginArea.innerHTML = `
-      <h3>Admin Login</h3>
-      <input type="text" id="loginUser" placeholder="Username">
-      <input type="password" id="loginPass" placeholder="Password">
-      <button id="loginBtnSim" class="submit">Login</button>
-      <div id="loginResult"></div>
-    `;
-    document.getElementById("loginBtnSim").onclick = async ()=>{
-      const userRef = doc(db,"users",currentUser.uid);
-      const userSnap = await getDoc(userRef);
-      const solved = userSnap.exists()?userSnap.data().solvedStages||[]:[];
-      if(solved.includes(stageId)){ document.getElementById("loginResult").textContent="Already solved!"; return; }
-      const username = document.getElementById("loginUser").value;
-      if(username.includes("' OR 1=1")){
-        document.getElementById("loginResult").innerHTML="Access Granted!<br>Flag: ITZSOS{sql_bypass_success}";
-        await updateDoc(userRef,{solvedStages:arrayUnion(stageId), xp:increment(stageXP)});
-      }else{ document.getElementById("loginResult").textContent="Access Denied."; }
-    };
-  }
+  const percentage = Math.round((highestSolvedOrder/TOTAL_STAGES)*100);
+  progressText.textContent = "Stage " + currentOrder + " / " + TOTAL_STAGES + " (" + percentage + "% completed)";
+  progressBar.style.width = percentage + "%";
 }
 
-// Hint
-document.getElementById("hintBtn").onclick = ()=>{ hintBoxEl.textContent = "💡 Hint: " + stageHint; };
+// Hint button
+document.getElementById("hintBtn").onclick = () => {
+  hintBoxEl.textContent = "💡 Hint: " + stageHint;
+};
 
 // Flag submit
-document.getElementById("submitBtn").onclick = async ()=>{
+document.getElementById("submitBtn").onclick = async () => {
   if(!currentUser) return;
   const input = document.getElementById("flagInput").value.trim().toLowerCase();
-  if(input!==correctAnswer.trim().toLowerCase()){
+  if(input !== correctAnswer.trim().toLowerCase()){
     resultEl.textContent="❌ Wrong flag!"; resultEl.style.color="red"; return;
   }
+
   const userRef = doc(db,"users",currentUser.uid);
   const userSnap = await getDoc(userRef);
   const solvedStages = userSnap.exists()?userSnap.data().solvedStages||[]:[];
@@ -235,23 +207,12 @@ document.getElementById("submitBtn").onclick = async ()=>{
     resultEl.textContent="⚠️ Already solved!"; resultEl.style.color="yellow"; return;
   }
 
-  await updateDoc(userRef,{solvedStages:arrayUnion(stageId), xp:increment(stageXP)});
-  resultEl.textContent=`✅ Correct! +${stageXP} XP`; resultEl.style.color="lightgreen";
+  await updateDoc(userRef,{
+    solvedStages: arrayUnion(stageId),
+    xp: increment(stageXP)
+  });
 
-  // Next stage
-  const nextStageId = "stage"+(currentOrder+1);
-  const nextStageRef = doc(db,"stages",nextStageId);
-  const nextStageSnap = await getDoc(nextStageRef);
-  if(!nextStageSnap.exists()){
-    nextStageBtn.style.display="block";
-    nextStageBtn.textContent="🏆 Track Completed - Back to Stages";
-    nextStageBtn.onclick = ()=>{ window.location.href="stages.html"; };
-    return;
-  }
-
-  nextStageBtn.style.display="block";
-  let timer = setTimeout(()=>{ window.location.href="stage.html?id="+nextStageId; },5000);
-  nextStageBtn.onclick = ()=>{ clearTimeout(timer); window.location.href="stage.html?id="+nextStageId; };
+  resultEl.textContent="✅ Correct! +" + stageXP + " XP"; resultEl.style.color="lightgreen";
 };
 </script>
 
