@@ -1,0 +1,14 @@
+# robots.txt for Itzsos Labs
+# Allow all search engines and AI crawlers
+User-agent: *
+Allow: /
+
+# Sitemap location (helps crawlers find all pages)
+Sitemap: https://sos191-itz.github.io/Itzsos191/sitemap.xml
+
+# Optional: Block specific files you don't want indexed (e.g., config files)
+Disallow: /README.md
+Disallow: /LICENSE
+
+# Crawl delay (optional, to reduce server load)
+Crawl-delay: 10
