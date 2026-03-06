@@ -3,175 +3,298 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Leaderboard | Itzsos Labs</title>
 
 <style>
+
 body{
-  margin:0;
-  font-family:monospace;
-  background:#0b0f2b;
-  color:white;
+margin:0;
+font-family:monospace;
+background:linear-gradient(135deg,#0f111a,#05070f);
+color:#00ffdd;
+overflow-x:hidden;
 }
 
+/* NAVBAR */
+
 nav{
-  background:#12163a;
-  border-bottom:2px solid purple;
-  padding:15px 30px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px 30px;
+background:#111422;
+border-bottom:1px solid #00ffdd;
 }
 
 nav h2{
-  color:#b84cff;
+color:#ff6600;
 }
 
 nav button{
-  background:#b84cff;
-  border:none;
-  padding:8px 14px;
-  font-weight:bold;
-  cursor:pointer;
+background:#ff6600;
+border:none;
+padding:8px 15px;
+cursor:pointer;
+font-weight:bold;
 }
+
+/* MAIN */
 
 .container{
-  max-width:900px;
-  margin:40px auto;
-  padding:20px;
-  background:#12163a;
-  border-radius:10px;
+max-width:1000px;
+margin:auto;
+padding:40px 20px;
 }
 
-h1{
-  text-align:center;
-  color:#b84cff;
+/* TITLE */
+
+.title{
+text-align:center;
+font-size:2rem;
+margin-bottom:30px;
+color:#00ffdd;
+animation:glow 2s infinite alternate;
 }
+
+@keyframes glow{
+from{ text-shadow:0 0 5px #00ffdd;}
+to{ text-shadow:0 0 20px #00ffdd;}
+}
+
+/* TABLE */
 
 table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:20px;
-}
-
-th, td{
-  padding:12px;
-  border-bottom:1px solid #333;
-  text-align:left;
+width:100%;
+border-collapse:collapse;
+background:#111422;
+border-radius:10px;
+overflow:hidden;
 }
 
 th{
-  color:#b84cff;
+background:#ff6600;
+color:black;
+padding:12px;
+font-size:1rem;
 }
 
-.rank1{
-  color:gold;
-  font-weight:bold;
+td{
+padding:12px;
+text-align:center;
+border-bottom:1px solid #1c2136;
 }
 
-.rank2{
-  color:silver;
-  font-weight:bold;
+tr{
+transition:0.3s;
 }
 
-.rank3{
-  color:#cd7f32;
-  font-weight:bold;
+tr:hover{
+background:#1a1f35;
+transform:scale(1.02);
 }
+
+/* MEDALS */
+
+.gold{color:gold;font-weight:bold;}
+.silver{color:silver;font-weight:bold;}
+.bronze{color:#cd7f32;font-weight:bold;}
+
+/* XP BADGE */
+
+.xp{
+background:#00ffdd;
+color:black;
+padding:4px 10px;
+border-radius:15px;
+font-weight:bold;
+}
+
+/* USER HIGHLIGHT */
+
+.me{
+background:#003c3c !important;
+}
+
+/* ANIMATION */
+
+.fade{
+animation:fadeIn 1s ease forwards;
+opacity:0;
+}
+
+@keyframes fadeIn{
+to{opacity:1;}
+}
+
+/* FOOTER */
+
+footer{
+text-align:center;
+padding:20px;
+margin-top:40px;
+border-top:1px solid #00ffdd;
+}
+
 </style>
 </head>
 
 <body>
 
 <nav>
-  <h2>Itzsos Labs</h2>
-  <button onclick="window.location.href='stages.html'">Back</button>
+<h2>Itzsos Labs</h2>
+
+<div>
+<button onclick="window.location.href='stages.html'">Back</button>
+<button id="logoutBtn">Logout</button>
+</div>
+
 </nav>
 
 <div class="container">
 
-<h1>🏆 Leaderboard</h1>
+<div class="title">🏆 Global Leaderboard</div>
 
 <table>
+
 <thead>
 <tr>
 <th>Rank</th>
-<th>Email</th>
+<th>User</th>
 <th>Role</th>
 <th>XP</th>
 </tr>
 </thead>
 
 <tbody id="leaderboardBody">
+
 <tr>
-<td colspan="4">Loading...</td>
+<td colspan="4">Loading leaderboard...</td>
 </tr>
+
 </tbody>
 
 </table>
 
 </div>
 
+<footer>
+© 2026 Itzsos Labs
+</footer>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { 
+getFirestore, collection, getDocs 
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+/* FIREBASE CONFIG */
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
-  authDomain: "itzsos-labs.firebaseapp.com",
-  projectId: "itzsos-labs",
-  storageBucket: "itzsos-labs.firebasestorage.app",
-  messagingSenderId: "1012826517121",
-  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
+apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+authDomain: "itzsos-labs.firebaseapp.com",
+projectId: "itzsos-labs",
+storageBucket: "itzsos-labs.firebasestorage.app",
+messagingSenderId: "1012826517121",
+appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
 
-const table = document.getElementById("leaderboardBody");
+const leaderboardBody = document.getElementById("leaderboardBody");
 
-async function loadLeaderboard(){
+/* AUTH */
 
-  const querySnapshot = await getDocs(collection(db,"users"));
+onAuthStateChanged(auth, async(user)=>{
 
-  let users = [];
+if(!user){
+window.location.href="index.html";
+return;
+}
 
-  querySnapshot.forEach(doc=>{
-    const data = doc.data();
+loadLeaderboard(user);
 
-    users.push({
-      email:data.email || "unknown",
-      xp:data.xp || 0,
-      role:data.role || "User"
-    });
-  });
+});
 
-  // sort by XP
-  users.sort((a,b)=> b.xp - a.xp);
+/* LOAD LEADERBOARD */
 
-  table.innerHTML="";
+async function loadLeaderboard(currentUser){
 
-  users.forEach((user,index)=>{
+const snapshot = await getDocs(collection(db,"users"));
 
-    let rankClass="";
+let users=[];
 
-    if(index==0) rankClass="rank1";
-    if(index==1) rankClass="rank2";
-    if(index==2) rankClass="rank3";
+snapshot.forEach(doc=>{
+users.push({
+id:doc.id,
+...doc.data()
+});
+});
 
-    table.innerHTML += `
-    <tr>
-      <td class="${rankClass}">#${index+1}</td>
-      <td>${user.email}</td>
-      <td>${user.role}</td>
-      <td>${user.xp}</td>
-    </tr>
-    `;
-  });
+/* SORT BY XP */
+
+users.sort((a,b)=>(b.xp||0)-(a.xp||0));
+
+leaderboardBody.innerHTML="";
+
+let rank=1;
+
+users.forEach((u,index)=>{
+
+let medal="";
+
+if(rank===1) medal="🥇";
+else if(rank===2) medal="🥈";
+else if(rank===3) medal="🥉";
+
+let role=u.role || "Unknown";
+let xp=u.xp || 0;
+
+let email=u.email || "unknown";
+
+/* ROW */
+
+const row=document.createElement("tr");
+
+row.classList.add("fade");
+
+if(u.id===currentUser.uid){
+row.classList.add("me");
+}
+
+row.innerHTML=`
+
+<td class="${rank===1?'gold':rank===2?'silver':rank===3?'bronze':''}">
+${medal} #${rank}
+</td>
+
+<td>${email}</td>
+
+<td>${role}</td>
+
+<td><span class="xp">${xp}</span></td>
+
+`;
+
+leaderboardBody.appendChild(row);
+
+rank++;
+
+});
 
 }
 
-loadLeaderboard();
+/* LOGOUT */
+
+document.getElementById("logoutBtn").onclick=()=>{
+signOut(auth).then(()=>{
+window.location.href="index.html";
+});
+};
 
 </script>
 
