@@ -460,14 +460,26 @@ logoutBtn.onclick = ()=>{
 let currentUser = null;
 
 // Track login state
-onAuthStateChanged(auth, user => {
+import { getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+onAuthStateChanged(auth, async user => {
+
   currentUser = user;
 
   if (user) {
-    status.textContent = "Welcome " + user.email;
+
+    const userRef = doc(db,"users",user.uid);
+    const snap = await getDoc(userRef);
+
+    if(snap.exists()){
+      const data = snap.data();
+      status.textContent = "Welcome " + data.username + " 🧑‍💻";
+    }
+
   } else {
     status.textContent = "Not logged in";
   }
+
 });
 
 // Start button control
