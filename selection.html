@@ -167,7 +167,12 @@ window.chooseField = async function(field) {
   const userRef = doc(db, "users", currentUser.uid);
 
   try {
-    await setDoc(userRef, { selectedField: field }, { merge: true });
+    await setDoc(userRef, {
+  email: currentUser.email,
+  selectedField: field,
+  xp: 0,
+  solvedStages: []
+}, { merge: true });
 
 
     // 🔥 IMPORTANT: Redirect to choose.html
