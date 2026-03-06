@@ -140,6 +140,17 @@ footer {
   font-weight:bold;
   width:fit-content;
 }
+nav div button{
+  margin-left:10px;
+}
+nav div{
+  display:flex;
+  align-items:center;
+}
+
+nav div button{
+  margin-left:10px;
+}
 </style>
 </head>
 
@@ -147,7 +158,16 @@ footer {
 
 <nav>
   <h2>Itzsos Labs - Cybersecurity Track</h2>
-  <button id="logoutBtn">Logout</button>
+
+  <div>
+    <button onclick="window.location.href='leaderboard.html'">
+      Leaderboard
+    </button>
+
+    <button id="logoutBtn">
+      Logout
+    </button>
+  </div>
 </nav>
 
 <div class="container">
