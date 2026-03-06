@@ -169,9 +169,7 @@ window.chooseField = async function(field) {
   try {
     await setDoc(userRef, {
   email: currentUser.email,
-  selectedField: field,
-  xp: 0,
-  solvedStages: []
+  selectedField: field
 }, { merge: true });
 
 
