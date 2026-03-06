@@ -151,6 +151,18 @@ nav div{
 nav div button{
   margin-left:10px;
 }
+.activity-box{
+margin-top:40px;
+background:#111422;
+border:1px solid #00ffdd;
+padding:20px;
+border-radius:10px;
+}
+
+.activity{
+padding:6px;
+border-bottom:1px solid #222;
+}
 </style>
 </head>
 
@@ -186,6 +198,13 @@ Profile
 </div>
 
   <div class="stage-grid" id="stageContainer"></div>
+<div class="activity-box">
+
+<h3>🔥 Live Hacker Activity</h3>
+
+<div id="activityFeed"></div>
+
+</div>
 
 </div>
 
@@ -194,7 +213,17 @@ Profile
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { 
+getFirestore,
+collection,
+getDocs,
+doc,
+getDoc,
+query,
+orderBy,
+limit,
+onSnapshot
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 /* FIREBASE CONFIG */
 const firebaseConfig = {
@@ -323,6 +352,34 @@ async function loadStages(user, userData) {
   });
 }
 
+/* 🔥 LIVE ACTIVITY FEED */
+
+const activityFeed = document.getElementById("activityFeed");
+
+const q = query(
+collection(db,"activity"),
+orderBy("time","desc"),
+limit(10)
+);
+
+onSnapshot(q,(snapshot)=>{
+
+activityFeed.innerHTML="";
+
+snapshot.forEach(doc=>{
+
+const data = doc.data();
+
+const div = document.createElement("div");
+div.className="activity";
+
+div.innerHTML = "⚡ " + data.email + " " + data.action;
+
+activityFeed.appendChild(div);
+
+});
+
+});
 /* OPEN STAGE */
 window.openStage = function(id) {
   window.location.href = "stage.html?id=" + id;
