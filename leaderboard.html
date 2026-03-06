@@ -237,7 +237,7 @@ const data=doc.data();
 
 players.push({
 id:doc.id,
-name:data.username || data.email || "unknown",
+name:data.username ? data.username : "unknown"
 role:data.role || "User",
 xp:data.xp || 0
 });
