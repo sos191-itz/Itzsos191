@@ -265,20 +265,17 @@ onAuthStateChanged(auth, async (user) => {
   // ✅ Create user document if it doesn't exist
   if (!userSnap.exists()) {
 
-    await setDoc(userRef,{
-      email:user.email,
-      xp:0,
-      solvedStages:[],
-      role:"",
-      selectedField:""
-    });
+  await setDoc(userRef,{
+    email:user.email,
+    xp:0,
+    solvedStages:[],
+    role:"",
+    selectedField:""
+  });
 
-  }
-
-  if (!userSnap.exists()) {
-    window.location.href = "selection.html";
-    return;
-  }
+  window.location.href = "selection.html";
+  return;
+}
 
   const userData = userSnap.data();
 
@@ -377,7 +374,9 @@ const data = doc.data();
 const div = document.createElement("div");
 div.className="activity";
 
-div.innerHTML = "⚡ " + (data.username || data.email) + " " + data.action;
+div.innerHTML = `
+⚡ <strong>${data.username || data.email}</strong> ${data.action}
+`;
 
 activityFeed.appendChild(div);
 
