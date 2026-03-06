@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Leaderboard | Itzsos Labs</title>
 
 <style>
@@ -11,7 +10,7 @@
 body{
 margin:0;
 font-family:monospace;
-background:linear-gradient(135deg,#0f111a,#05070f);
+background:#0f111a;
 color:#00ffdd;
 overflow-x:hidden;
 }
@@ -19,12 +18,12 @@ overflow-x:hidden;
 /* NAVBAR */
 
 nav{
+background:#111422;
+border-bottom:1px solid #00ffdd;
 display:flex;
 justify-content:space-between;
 align-items:center;
 padding:15px 30px;
-background:#111422;
-border-bottom:1px solid #00ffdd;
 }
 
 nav h2{
@@ -35,8 +34,8 @@ nav button{
 background:#ff6600;
 border:none;
 padding:8px 15px;
-cursor:pointer;
 font-weight:bold;
+cursor:pointer;
 }
 
 /* MAIN */
@@ -44,22 +43,53 @@ font-weight:bold;
 .container{
 max-width:1000px;
 margin:auto;
-padding:40px 20px;
+padding:30px;
 }
 
-/* TITLE */
+/* PODIUM */
 
-.title{
+.podium{
+display:flex;
+justify-content:center;
+align-items:flex-end;
+gap:30px;
+margin-bottom:50px;
+}
+
+.podium-card{
 text-align:center;
-font-size:2rem;
-margin-bottom:30px;
-color:#00ffdd;
-animation:glow 2s infinite alternate;
+width:180px;
+border-radius:12px;
+padding:15px;
+color:#0f111a;
+font-weight:bold;
+animation:float 3s infinite ease-in-out;
 }
 
-@keyframes glow{
-from{ text-shadow:0 0 5px #00ffdd;}
-to{ text-shadow:0 0 20px #00ffdd;}
+@keyframes float{
+0%{transform:translateY(0)}
+50%{transform:translateY(-8px)}
+100%{transform:translateY(0)}
+}
+
+.gold{
+background:linear-gradient(45deg,#ffd700,#ffae00);
+height:180px;
+box-shadow:0 0 25px gold;
+}
+
+.silver{
+background:linear-gradient(45deg,#cfcfcf,#9e9e9e);
+height:150px;
+}
+
+.bronze{
+background:linear-gradient(45deg,#cd7f32,#a35a18);
+height:130px;
+}
+
+.rank{
+font-size:1.4rem;
 }
 
 /* TABLE */
@@ -72,68 +102,50 @@ border-radius:10px;
 overflow:hidden;
 }
 
-th{
-background:#ff6600;
-color:black;
+th,td{
 padding:12px;
-font-size:1rem;
+text-align:left;
 }
 
-td{
-padding:12px;
-text-align:center;
-border-bottom:1px solid #1c2136;
+th{
+background:#1a1f35;
 }
 
 tr{
-transition:0.3s;
+border-bottom:1px solid #222;
 }
 
 tr:hover{
-background:#1a1f35;
-transform:scale(1.02);
+background:#151a2c;
 }
 
-/* MEDALS */
+/* XP BAR */
 
-.gold{color:gold;font-weight:bold;}
-.silver{color:silver;font-weight:bold;}
-.bronze{color:#cd7f32;font-weight:bold;}
-
-/* XP BADGE */
-
-.xp{
-background:#00ffdd;
-color:black;
-padding:4px 10px;
-border-radius:15px;
-font-weight:bold;
+.xp-bar-bg{
+background:#222;
+height:10px;
+border-radius:10px;
+overflow:hidden;
 }
 
-/* USER HIGHLIGHT */
+.xp-bar{
+height:10px;
+background:linear-gradient(90deg,#00ffdd,#00aa88);
+width:0%;
+transition:width 1s ease;
+}
+
+/* CURRENT USER */
 
 .me{
-background:#003c3c !important;
+background:#1b2a33 !important;
+border-left:4px solid #00ffdd;
 }
 
-/* ANIMATION */
+/* GLOW TOP HACKER */
 
-.fade{
-animation:fadeIn 1s ease forwards;
-opacity:0;
-}
-
-@keyframes fadeIn{
-to{opacity:1;}
-}
-
-/* FOOTER */
-
-footer{
-text-align:center;
-padding:20px;
-margin-top:40px;
-border-top:1px solid #00ffdd;
+.top-glow{
+text-shadow:0 0 8px #00ffdd;
 }
 
 </style>
@@ -142,18 +154,37 @@ border-top:1px solid #00ffdd;
 <body>
 
 <nav>
-<h2>Itzsos Labs</h2>
-
-<div>
+<h2>Itzsos Labs Leaderboard</h2>
 <button onclick="window.location.href='stages.html'">Back</button>
-<button id="logoutBtn">Logout</button>
-</div>
-
 </nav>
 
 <div class="container">
 
-<div class="title">🏆 Global Leaderboard</div>
+<h2 style="text-align:center;margin-bottom:30px;">🏆 Global Leaderboard</h2>
+
+<!-- PODIUM -->
+
+<div class="podium">
+
+<div id="second" class="podium-card silver">
+<div class="rank">🥈</div>
+<div id="silverName">---</div>
+<div id="silverXP">0 XP</div>
+</div>
+
+<div id="first" class="podium-card gold">
+<div class="rank">🥇</div>
+<div id="goldName">---</div>
+<div id="goldXP">0 XP</div>
+</div>
+
+<div id="third" class="podium-card bronze">
+<div class="rank">🥉</div>
+<div id="bronzeName">---</div>
+<div id="bronzeXP">0 XP</div>
+</div>
+
+</div>
 
 <table>
 
@@ -163,138 +194,102 @@ border-top:1px solid #00ffdd;
 <th>User</th>
 <th>Role</th>
 <th>XP</th>
+<th>Progress</th>
 </tr>
 </thead>
 
-<tbody id="leaderboardBody">
-
-<tr>
-<td colspan="4">Loading leaderboard...</td>
-</tr>
-
-</tbody>
+<tbody id="leaderboardBody"></tbody>
 
 </table>
 
 </div>
 
-<footer>
-© 2026 Itzsos Labs
-</footer>
-
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { 
-getFirestore, collection, getDocs 
-} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore,collection,getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* FIREBASE CONFIG */
-
-const firebaseConfig = {
-apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
-authDomain: "itzsos-labs.firebaseapp.com",
-projectId: "itzsos-labs",
-storageBucket: "itzsos-labs.firebasestorage.app",
-messagingSenderId: "1012826517121",
-appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
+const firebaseConfig={
+apiKey:"AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+authDomain:"itzsos-labs.firebaseapp.com",
+projectId:"itzsos-labs",
+storageBucket:"itzsos-labs.firebasestorage.app",
+messagingSenderId:"1012826517121",
+appId:"1:1012826517121:web:abaf58ebce7f15cfc86780"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
-const leaderboardBody = document.getElementById("leaderboardBody");
-
-/* AUTH */
+const body=document.getElementById("leaderboardBody");
 
 onAuthStateChanged(auth, async(user)=>{
 
-if(!user){
-window.location.href="index.html";
-return;
-}
+const snapshot=await getDocs(collection(db,"users"));
 
-loadLeaderboard(user);
-
-});
-
-/* LOAD LEADERBOARD */
-
-async function loadLeaderboard(currentUser){
-
-const snapshot = await getDocs(collection(db,"users"));
-
-let users=[];
+let players=[];
 
 snapshot.forEach(doc=>{
-users.push({
+
+const data=doc.data();
+
+players.push({
 id:doc.id,
-...doc.data()
+name:data.username || data.email || "unknown",
+role:data.role || "User",
+xp:data.xp || 0
 });
+
 });
 
-/* SORT BY XP */
+players.sort((a,b)=>b.xp-a.xp);
 
-users.sort((a,b)=>(b.xp||0)-(a.xp||0));
+/* PODIUM */
 
-leaderboardBody.innerHTML="";
-
-let rank=1;
-
-users.forEach((u,index)=>{
-
-let medal="";
-
-if(rank===1) medal="🥇";
-else if(rank===2) medal="🥈";
-else if(rank===3) medal="🥉";
-
-let role=u.role || "Unknown";
-let xp=u.xp || 0;
-
-let email=u.email || "unknown";
-
-/* ROW */
-
-const row=document.createElement("tr");
-
-row.classList.add("fade");
-
-if(u.id===currentUser.uid){
-row.classList.add("me");
+if(players[0]){
+goldName.textContent=players[0].name;
+goldXP.textContent=players[0].xp+" XP";
 }
 
-row.innerHTML=`
+if(players[1]){
+silverName.textContent=players[1].name;
+silverXP.textContent=players[1].xp+" XP";
+}
 
-<td class="${rank===1?'gold':rank===2?'silver':rank===3?'bronze':''}">
-${medal} #${rank}
+if(players[2]){
+bronzeName.textContent=players[2].name;
+bronzeXP.textContent=players[2].xp+" XP";
+}
+
+/* TABLE */
+
+players.forEach((p,i)=>{
+
+const tr=document.createElement("tr");
+
+if(user && user.uid===p.id){
+tr.classList.add("me");
+}
+
+tr.innerHTML=`
+<td class="${i<3?'top-glow':''}">#${i+1}</td>
+<td>${p.name}</td>
+<td>${p.role}</td>
+<td>${p.xp}</td>
+<td>
+<div class="xp-bar-bg">
+<div class="xp-bar" style="width:${Math.min(p.xp/10,100)}%"></div>
+</div>
 </td>
-
-<td>${email}</td>
-
-<td>${role}</td>
-
-<td><span class="xp">${xp}</span></td>
-
 `;
 
-leaderboardBody.appendChild(row);
-
-rank++;
+body.appendChild(tr);
 
 });
 
-}
-
-/* LOGOUT */
-
-document.getElementById("logoutBtn").onclick=()=>{
-signOut(auth).then(()=>{
-window.location.href="index.html";
 });
-};
 
 </script>
 
