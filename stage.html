@@ -211,10 +211,12 @@ correctAnswer = stageData.answer || "";
 stageXP = stageData.xp || 0;
 stageHint = stageData.hint || "No hint available";
 
-// 🔒 STRONG LOCK SYSTEM
+// 🔒 STRONG LOCK
+let solvedStages = userData.solvedStages || [];
 
-const solvedStages = userData.solvedStages || [];
-
+if (solvedStages.includes("[]")) {
+  solvedStages = solvedStages.filter(s => s !== "[]");
+}
 // find highest solved stage
 let highestSolved = 0;
 
