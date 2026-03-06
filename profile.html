@@ -222,7 +222,7 @@ transform:translateY(0);
 
 <div class="avatar" id="avatar">U</div>
 
-<div class="email" id="email">Loading...</div>
+<div class="username" id="email">Loading...</div>
 
 <div class="role" id="role">Role</div>
 
@@ -304,14 +304,14 @@ window.location.href="index.html";
 return;
 }
 
-avatar.textContent=user.email.charAt(0).toUpperCase();
+avatar.textContent=data.username.charAt(0).toUpperCase();
 
 const userRef=doc(db,"users",user.uid);
 const userSnap=await getDoc(userRef);
 
 const data=userSnap.data();
 
-email.textContent=user.email;
+email.textContent=data.username || user.email;
 role.textContent=data.role || "Hacker";
 
 const xp=data.xp || 0;
