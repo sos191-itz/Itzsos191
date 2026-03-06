@@ -3,24 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Profile | Itzsos Labs</title>
+<title>Hacker Profile | Itzsos Labs</title>
 
 <style>
 
 body{
 margin:0;
 font-family:monospace;
-background:#0f111a;
+background:linear-gradient(180deg,#0b0f1a,#05070d);
 color:#00ffdd;
 }
 
+/* NAV */
+
 nav{
-background:#111422;
-border-bottom:1px solid #00ffdd;
 display:flex;
 justify-content:space-between;
 align-items:center;
 padding:15px 30px;
+background:#0f111a;
+border-bottom:1px solid #00ffdd;
 }
 
 nav h2{
@@ -35,91 +37,167 @@ font-weight:bold;
 cursor:pointer;
 }
 
+/* CONTAINER */
+
 .container{
-max-width:900px;
+max-width:1000px;
 margin:50px auto;
 padding:20px;
 }
 
+/* PROFILE CARD */
+
 .profile-card{
+
 background:#111422;
+padding:40px;
+border-radius:15px;
+text-align:center;
 border:1px solid #00ffdd;
-border-radius:12px;
-padding:30px;
-box-shadow:0 0 20px rgba(0,255,221,0.2);
+
+box-shadow:
+0 0 15px rgba(0,255,221,0.2),
+0 0 30px rgba(0,255,221,0.1);
+
 animation:fadeIn 1s ease;
 }
 
-@keyframes fadeIn{
-from{opacity:0; transform:translateY(20px);}
-to{opacity:1; transform:translateY(0);}
-}
+/* AVATAR */
 
 .avatar{
-width:90px;
-height:90px;
+
+width:120px;
+height:120px;
 border-radius:50%;
-background:linear-gradient(45deg,#ff6600,#00ffdd);
+
+margin:auto;
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:2rem;
+
+font-size:3rem;
 font-weight:bold;
-color:#0f111a;
-margin-bottom:15px;
+
+background:linear-gradient(45deg,#ff6600,#00ffdd);
+
+color:black;
+
+box-shadow:
+0 0 20px #00ffdd,
+0 0 30px #ff6600;
+
+margin-bottom:20px;
 }
 
-.info{
-margin-top:10px;
-font-size:1.1rem;
+/* USER INFO */
+
+.email{
+font-size:1.2rem;
+margin-bottom:5px;
 }
 
-.badge{
-display:inline-block;
-padding:5px 12px;
-border-radius:20px;
-background:#00ffdd;
-color:#0f111a;
-font-weight:bold;
-margin-top:10px;
+.role{
+color:#ff6600;
+margin-bottom:20px;
 }
 
-.progress-box{
-margin-top:25px;
+/* XP BAR */
+
+.xp-box{
+margin-top:20px;
+}
+
+.progress{
+
+width:100%;
+height:20px;
+background:#0f111a;
+border-radius:10px;
+overflow:hidden;
+border:1px solid #00ffdd;
+
 }
 
 .progress-bar{
-height:14px;
-background:#222;
-border-radius:10px;
-overflow:hidden;
-}
 
-.progress-fill{
 height:100%;
 width:0%;
-background:linear-gradient(90deg,#00ffdd,#00aa88);
+background:linear-gradient(90deg,#ff6600,#00ffdd);
+
 transition:width 1s ease;
+
 }
 
+/* STATS */
+
 .stats{
+
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+grid-template-columns:repeat(3,1fr);
 gap:20px;
 margin-top:30px;
+
 }
 
 .stat{
-background:#111422;
-border:1px solid #00ffdd;
+
+background:#0f111a;
 padding:15px;
 border-radius:10px;
-text-align:center;
+border:1px solid #00ffdd;
+
 }
 
 .stat h3{
+margin:0;
 color:#ff6600;
-margin-bottom:5px;
+}
+
+/* SOLVED STAGES */
+
+.solved{
+
+margin-top:40px;
+}
+
+.stage-grid{
+
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(80px,1fr));
+gap:10px;
+
+margin-top:15px;
+}
+
+.stage{
+
+padding:10px;
+border-radius:8px;
+background:#0f111a;
+border:1px solid #00ffdd;
+}
+
+.stage.solved{
+
+background:rgba(0,255,0,0.1);
+border-color:lime;
+
+}
+
+/* ANIMATIONS */
+
+@keyframes fadeIn{
+
+from{
+opacity:0;
+transform:translateY(20px);
+}
+
+to{
+opacity:1;
+transform:translateY(0);
+}
+
 }
 
 </style>
@@ -128,8 +206,14 @@ margin-bottom:5px;
 <body>
 
 <nav>
-<h2>Itzsos Labs - Profile</h2>
-<button onclick="window.location.href='stages.html'">Back</button>
+
+<h2>Itzsos Labs</h2>
+
+<div>
+<button onclick="window.location.href='stages.html'">Stages</button>
+<button id="logoutBtn">Logout</button>
+</div>
+
 </nav>
 
 <div class="container">
@@ -138,18 +222,16 @@ margin-bottom:5px;
 
 <div class="avatar" id="avatar">U</div>
 
-<div class="info">
-<strong id="email">Loading...</strong>
-</div>
+<div class="email" id="email">Loading...</div>
 
-<div class="badge" id="role">Team</div>
+<div class="role" id="role">Role</div>
 
-<div class="progress-box">
+<h3 id="xp">XP: 0</h3>
 
-<p id="progressText">Loading progress...</p>
+<div class="xp-box">
 
-<div class="progress-bar">
-<div class="progress-fill" id="progressFill"></div>
+<div class="progress">
+<div class="progress-bar" id="xpBar"></div>
 </div>
 
 </div>
@@ -157,19 +239,27 @@ margin-bottom:5px;
 <div class="stats">
 
 <div class="stat">
-<h3>XP</h3>
-<p id="xp">0</p>
+<h3 id="rank">#0</h3>
+<p>Rank</p>
 </div>
 
 <div class="stat">
-<h3>Solved</h3>
-<p id="solved">0</p>
+<h3 id="solvedCount">0</h3>
+<p>Stages Solved</p>
 </div>
 
 <div class="stat">
-<h3>Total Stages</h3>
-<p>50</p>
+<h3>50</h3>
+<p>Total Stages</p>
 </div>
+
+</div>
+
+<div class="solved">
+
+<h3>🧠 Solved Stages</h3>
+
+<div class="stage-grid" id="stageGrid"></div>
 
 </div>
 
@@ -180,23 +270,32 @@ margin-bottom:5px;
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
+
 apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
 authDomain: "itzsos-labs.firebaseapp.com",
 projectId: "itzsos-labs",
 storageBucket: "itzsos-labs.firebasestorage.app",
 messagingSenderId: "1012826517121",
 appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
+
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const TOTAL_STAGES = 50;
+const avatar = document.getElementById("avatar");
+const email = document.getElementById("email");
+const role = document.getElementById("role");
+const xpText = document.getElementById("xp");
+const xpBar = document.getElementById("xpBar");
+const solvedCount = document.getElementById("solvedCount");
+const stageGrid = document.getElementById("stageGrid");
+const rankText = document.getElementById("rank");
 
 onAuthStateChanged(auth, async (user)=>{
 
@@ -205,34 +304,71 @@ window.location.href="index.html";
 return;
 }
 
-document.getElementById("email").textContent=user.email;
-
-document.getElementById("avatar").textContent=
-user.email.charAt(0).toUpperCase();
+avatar.textContent=user.email.charAt(0).toUpperCase();
 
 const userRef=doc(db,"users",user.uid);
-const snap=await getDoc(userRef);
+const userSnap=await getDoc(userRef);
 
-if(!snap.exists()) return;
+const data=userSnap.data();
 
-const data=snap.data();
+email.textContent=user.email;
+role.textContent=data.role || "Hacker";
 
-document.getElementById("role").textContent=data.role || "No Team";
+const xp=data.xp || 0;
 
-document.getElementById("xp").textContent=data.xp || 0;
+xpText.textContent="XP: "+xp;
+
+xpBar.style.width=Math.min(xp/1000*100,100)+"%";
 
 const solved=data.solvedStages || [];
 
-document.getElementById("solved").textContent=solved.length;
+solvedCount.textContent=solved.length;
 
-const percent=Math.round((solved.length/TOTAL_STAGES)*100);
+/* stage grid */
 
-document.getElementById("progressText").textContent=
-"Progress: "+solved.length+" / "+TOTAL_STAGES+" ("+percent+"%)";
+for(let i=1;i<=50;i++){
 
-document.getElementById("progressFill").style.width=percent+"%";
+const box=document.createElement("div");
+
+box.classList.add("stage");
+
+box.textContent=i;
+
+if(solved.includes("stage"+i)){
+box.classList.add("solved");
+}
+
+stageGrid.appendChild(box);
+
+}
+
+/* leaderboard rank */
+
+const snap=await getDocs(collection(db,"users"));
+
+let users=[];
+
+snap.forEach(d=>{
+users.push(d.data());
+});
+
+users.sort((a,b)=> (b.xp||0)-(a.xp||0));
+
+let rank=users.findIndex(u=>u.email===user.email)+1;
+
+rankText.textContent="#"+rank;
 
 });
+
+/* logout */
+
+document.getElementById("logoutBtn").onclick=()=>{
+
+signOut(auth).then(()=>{
+window.location.href="index.html";
+});
+
+}
 
 </script>
 
