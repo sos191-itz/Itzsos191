@@ -288,10 +288,13 @@ onAuthStateChanged(auth, async (user) => {
   return;
 }
 
-  const firstLetter = user.email.charAt(0).toUpperCase();
+  const username = userData.username || user.email;
+
+const firstLetter = username.charAt(0).toUpperCase();
+
 document.getElementById("userAvatar").textContent = firstLetter;
 
-userEmail.innerHTML = "<strong>" + user.email + "</strong>";
+userEmail.innerHTML = "<strong>" + (userData.username || user.email) + "</strong>";
 userXP.textContent = "XP: " + (userData.xp || 0);
 
   await loadStages(user, userData);
