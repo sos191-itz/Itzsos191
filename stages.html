@@ -229,6 +229,19 @@ onAuthStateChanged(auth, async (user) => {
   const userRef = doc(db, "users", user.uid);
   const userSnap = await getDoc(userRef);
 
+  // ✅ Create user document if it doesn't exist
+  if (!userSnap.exists()) {
+
+    await setDoc(userRef,{
+      email:user.email,
+      xp:0,
+      solvedStages:[],
+      role:"",
+      selectedField:""
+    });
+
+  }
+
   if (!userSnap.exists()) {
     window.location.href = "selection.html";
     return;
