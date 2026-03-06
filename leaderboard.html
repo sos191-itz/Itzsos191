@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leaderboard | Itzsos Labs</title>
+
+<style>
+body{
+  margin:0;
+  font-family:monospace;
+  background:#0b0f2b;
+  color:white;
+}
+
+nav{
+  background:#12163a;
+  border-bottom:2px solid purple;
+  padding:15px 30px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+nav h2{
+  color:#b84cff;
+}
+
+nav button{
+  background:#b84cff;
+  border:none;
+  padding:8px 14px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.container{
+  max-width:900px;
+  margin:40px auto;
+  padding:20px;
+  background:#12163a;
+  border-radius:10px;
+}
+
+h1{
+  text-align:center;
+  color:#b84cff;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+}
+
+th, td{
+  padding:12px;
+  border-bottom:1px solid #333;
+  text-align:left;
+}
+
+th{
+  color:#b84cff;
+}
+
+.rank1{
+  color:gold;
+  font-weight:bold;
+}
+
+.rank2{
+  color:silver;
+  font-weight:bold;
+}
+
+.rank3{
+  color:#cd7f32;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <h2>Itzsos Labs</h2>
+  <button onclick="window.location.href='stages.html'">Back</button>
+</nav>
+
+<div class="container">
+
+<h1>🏆 Leaderboard</h1>
+
+<table>
+<thead>
+<tr>
+<th>Rank</th>
+<th>Email</th>
+<th>Role</th>
+<th>XP</th>
+</tr>
+</thead>
+
+<tbody id="leaderboardBody">
+<tr>
+<td colspan="4">Loading...</td>
+</tr>
+</tbody>
+
+</table>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  authDomain: "itzsos-labs.firebaseapp.com",
+  projectId: "itzsos-labs",
+  storageBucket: "itzsos-labs.firebasestorage.app",
+  messagingSenderId: "1012826517121",
+  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const table = document.getElementById("leaderboardBody");
+
+async function loadLeaderboard(){
+
+  const querySnapshot = await getDocs(collection(db,"users"));
+
+  let users = [];
+
+  querySnapshot.forEach(doc=>{
+    const data = doc.data();
+
+    users.push({
+      email:data.email || "unknown",
+      xp:data.xp || 0,
+      role:data.role || "User"
+    });
+  });
+
+  // sort by XP
+  users.sort((a,b)=> b.xp - a.xp);
+
+  table.innerHTML="";
+
+  users.forEach((user,index)=>{
+
+    let rankClass="";
+
+    if(index==0) rankClass="rank1";
+    if(index==1) rankClass="rank2";
+    if(index==2) rankClass="rank3";
+
+    table.innerHTML += `
+    <tr>
+      <td class="${rankClass}">#${index+1}</td>
+      <td>${user.email}</td>
+      <td>${user.role}</td>
+      <td>${user.xp}</td>
+    </tr>
+    `;
+  });
+
+}
+
+loadLeaderboard();
+
+</script>
+
+</body>
+</html>
