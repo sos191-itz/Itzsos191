@@ -342,8 +342,10 @@ footer { background:#111422; text-align:center; padding:20px; border-top:1px sol
 <section id="login" style="max-width:900px;margin:60px auto;padding:20px;text-align:center;">
   <div id="loginBox">
     <h3>User Account</h3>
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
+    <input id="username" type="text" placeholder="Username">
+<input id="email" type="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+   
     <br>
     <button class="btn" id="registerBtn">Register</button>
     <button class="btn" id="loginBtn">Login</button>
@@ -364,6 +366,7 @@ footer { background:#111422; text-align:center; padding:20px; border-top:1px sol
 <!-- FIREBASE SCRIPT -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, sendEmailVerification, applyActionCode, confirmPasswordReset } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -377,7 +380,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-
+const db = getFirestore(app);
+const username = document.getElementById("username");
 const email = document.getElementById("email");
 const password = document.getElementById("password");
 const status = document.getElementById("status");
@@ -389,15 +393,41 @@ const logoutBtn = document.getElementById("logoutBtn");
 const startBtn = document.getElementById("startBtn");
 const joinBtn = document.getElementById("joinBtn");
 
+const username = document.getElementById("username");
 
+registerBtn.onclick = async () => {
 
-registerBtn.onclick = ()=>{
-  createUserWithEmailAndPassword(auth,email.value,password.value)
-  .then(res=>{
-    sendEmailVerification(res.user);
-    status.textContent="Registered! Check email 📧";
-  })
-  .catch(e=>status.textContent=e.message);
+  if(!username.value){
+    status.textContent = "Enter username";
+    return;
+  }
+
+  try {
+
+    const res = await createUserWithEmailAndPassword(
+      auth,
+      email.value,
+      password.value
+    );
+
+    // send verification
+    await sendEmailVerification(res.user);
+
+    // save user in Firestore
+    await setDoc(doc(db,"users",res.user.uid),{
+      username: username.value,
+      email: res.user.email,
+      xp: 0,
+      role: "New Hacker",
+      solvedStages: []
+    });
+
+    status.textContent = "Registered! Check email 📧";
+
+  } catch(e) {
+    status.textContent = e.message;
+  }
+
 };
 
 loginBtn.onclick = () => {
