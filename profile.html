@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile | Itzsos Labs</title>
+
+<style>
+
+body{
+margin:0;
+font-family:monospace;
+background:#0f111a;
+color:#00ffdd;
+}
+
+nav{
+background:#111422;
+border-bottom:1px solid #00ffdd;
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px 30px;
+}
+
+nav h2{
+color:#ff6600;
+}
+
+nav button{
+background:#ff6600;
+border:none;
+padding:8px 15px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.container{
+max-width:900px;
+margin:50px auto;
+padding:20px;
+}
+
+.profile-card{
+background:#111422;
+border:1px solid #00ffdd;
+border-radius:12px;
+padding:30px;
+box-shadow:0 0 20px rgba(0,255,221,0.2);
+animation:fadeIn 1s ease;
+}
+
+@keyframes fadeIn{
+from{opacity:0; transform:translateY(20px);}
+to{opacity:1; transform:translateY(0);}
+}
+
+.avatar{
+width:90px;
+height:90px;
+border-radius:50%;
+background:linear-gradient(45deg,#ff6600,#00ffdd);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:2rem;
+font-weight:bold;
+color:#0f111a;
+margin-bottom:15px;
+}
+
+.info{
+margin-top:10px;
+font-size:1.1rem;
+}
+
+.badge{
+display:inline-block;
+padding:5px 12px;
+border-radius:20px;
+background:#00ffdd;
+color:#0f111a;
+font-weight:bold;
+margin-top:10px;
+}
+
+.progress-box{
+margin-top:25px;
+}
+
+.progress-bar{
+height:14px;
+background:#222;
+border-radius:10px;
+overflow:hidden;
+}
+
+.progress-fill{
+height:100%;
+width:0%;
+background:linear-gradient(90deg,#00ffdd,#00aa88);
+transition:width 1s ease;
+}
+
+.stats{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+gap:20px;
+margin-top:30px;
+}
+
+.stat{
+background:#111422;
+border:1px solid #00ffdd;
+padding:15px;
+border-radius:10px;
+text-align:center;
+}
+
+.stat h3{
+color:#ff6600;
+margin-bottom:5px;
+}
+
+</style>
+</head>
+
+<body>
+
+<nav>
+<h2>Itzsos Labs - Profile</h2>
+<button onclick="window.location.href='stages.html'">Back</button>
+</nav>
+
+<div class="container">
+
+<div class="profile-card">
+
+<div class="avatar" id="avatar">U</div>
+
+<div class="info">
+<strong id="email">Loading...</strong>
+</div>
+
+<div class="badge" id="role">Team</div>
+
+<div class="progress-box">
+
+<p id="progressText">Loading progress...</p>
+
+<div class="progress-bar">
+<div class="progress-fill" id="progressFill"></div>
+</div>
+
+</div>
+
+<div class="stats">
+
+<div class="stat">
+<h3>XP</h3>
+<p id="xp">0</p>
+</div>
+
+<div class="stat">
+<h3>Solved</h3>
+<p id="solved">0</p>
+</div>
+
+<div class="stat">
+<h3>Total Stages</h3>
+<p>50</p>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+authDomain: "itzsos-labs.firebaseapp.com",
+projectId: "itzsos-labs",
+storageBucket: "itzsos-labs.firebasestorage.app",
+messagingSenderId: "1012826517121",
+appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const TOTAL_STAGES = 50;
+
+onAuthStateChanged(auth, async (user)=>{
+
+if(!user){
+window.location.href="index.html";
+return;
+}
+
+document.getElementById("email").textContent=user.email;
+
+document.getElementById("avatar").textContent=
+user.email.charAt(0).toUpperCase();
+
+const userRef=doc(db,"users",user.uid);
+const snap=await getDoc(userRef);
+
+if(!snap.exists()) return;
+
+const data=snap.data();
+
+document.getElementById("role").textContent=data.role || "No Team";
+
+document.getElementById("xp").textContent=data.xp || 0;
+
+const solved=data.solvedStages || [];
+
+document.getElementById("solved").textContent=solved.length;
+
+const percent=Math.round((solved.length/TOTAL_STAGES)*100);
+
+document.getElementById("progressText").textContent=
+"Progress: "+solved.length+" / "+TOTAL_STAGES+" ("+percent+"%)";
+
+document.getElementById("progressFill").style.width=percent+"%";
+
+});
+
+</script>
+
+</body>
+</html>
