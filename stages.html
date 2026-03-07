@@ -1,11 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cybersecurity Stages | Itzsos Labs</title>
-
-<style>
+<title>Cybersecurity Stages | Itzsos Labs</title><style>
 
 body{
 margin:0;
@@ -13,6 +10,8 @@ font-family:monospace;
 background:#0f111a;
 color:#00ffdd;
 }
+
+/* NAV */
 
 nav{
 background:#111422;
@@ -36,6 +35,8 @@ cursor:pointer;
 margin-left:10px;
 }
 
+/* PAGE */
+
 .container{
 max-width:1100px;
 margin:40px auto;
@@ -47,10 +48,9 @@ padding:20px;
 #userBox{
 margin-bottom:30px;
 padding:20px;
-background:linear-gradient(145deg,#111422,#1a1f35);
+background:#111422;
 border:1px solid #00ffdd;
-border-radius:12px;
-box-shadow:0 0 15px rgba(0,255,221,0.2);
+border-radius:10px;
 }
 
 .user-info{
@@ -60,31 +60,26 @@ gap:15px;
 }
 
 .avatar{
-width:55px;
-height:55px;
+width:50px;
+height:50px;
 border-radius:50%;
 background:linear-gradient(45deg,#ff6600,#00ffdd);
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:1.5rem;
+font-size:20px;
 font-weight:bold;
-color:#0f111a;
-}
-
-.user-details{
-display:flex;
-flex-direction:column;
-gap:6px;
+color:black;
 }
 
 .xp-badge{
 background:#00ffdd;
-color:#0f111a;
-padding:5px 10px;
+color:black;
+padding:4px 10px;
 border-radius:20px;
 font-weight:bold;
-width:fit-content;
+margin-top:5px;
+display:inline-block;
 }
 
 /* STAGES */
@@ -134,7 +129,7 @@ opacity:0.5;
 border-color:lightgreen !important;
 }
 
-/* LIVE ACTIVITY */
+/* ACTIVITY FEED */
 
 #activityFeed{
 background:#111422;
@@ -143,12 +138,14 @@ border-radius:10px;
 padding:15px;
 max-height:250px;
 overflow-y:auto;
-font-size:14px;
+margin-top:20px;
 }
 
 .activity-item{
 margin-bottom:8px;
 }
+
+/* FOOTER */
 
 footer{
 text-align:center;
@@ -157,62 +154,18 @@ border-top:1px solid #00ffdd;
 margin-top:40px;
 }
 
-</style>
-</head>
-
-<body>
-
-<nav>
-
-<h2>Itzsos Labs - Cybersecurity Track</h2>
-
-<div>
+</style></head><body><nav>
+<h2>Itzsos Labs - Cybersecurity Track</h2><div>
 <button onclick="window.location.href='profile.html'">Profile</button>
 <button onclick="window.location.href='leaderboard.html'">Leaderboard</button>
 <button id="logoutBtn">Logout</button>
 </div>
-
-</nav>
-
-<div class="container">
-
-<!-- USER PROFILE -->
-
-<div id="userBox">
-
-<div class="user-info">
-
-<div class="avatar" id="userAvatar">U</div>
-
-<div class="user-details">
-
-<div id="userEmail">Loading user...</div>
-
+</nav><div class="container"><!-- USER PROFILE --><div id="userBox"><div class="user-info"><div class="avatar" id="avatar">U</div><div>
+<div id="username">Loading...</div>
 <div id="userXP" class="xp-badge">XP: 0</div>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- STAGES -->
-
-<div class="stage-grid" id="stageContainer"></div>
-
-<!-- LIVE ACTIVITY -->
-
-<h3 style="margin-top:40px;color:#ff6600;">🔥 Live Hacker Activity</h3>
-
-<div id="activityFeed"></div>
-
-</div>
-
-<footer>
+</div></div></div><!-- STAGES --><div id="stageContainer" class="stage-grid"></div><!-- LIVE ACTIVITY --><h3 style="margin-top:40px;color:#ff6600;">🔥 Live Hacker Activity</h3><div id="activityFeed"></div></div><footer>
 © 2026 Itzsos Labs
-</footer>
-
-<script type="module">
+</footer><script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 
@@ -230,26 +183,18 @@ doc,
 getDoc,
 query,
 orderBy,
-onSnapshot
+onSnapshot,
+limit
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-
 const firebaseConfig = {
-
-apiKey:"AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
-
-authDomain:"itzsos-labs.firebaseapp.com",
-
-projectId:"itzsos-labs",
-
-storageBucket:"itzsos-labs.firebasestorage.app",
-
-messagingSenderId:"1012826517121",
-
-appId:"1:1012826517121:web:abaf58ebce7f15cfc86780"
-
+apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+authDomain: "itzsos-labs.firebaseapp.com",
+projectId: "itzsos-labs",
+storageBucket: "itzsos-labs.firebasestorage.app",
+messagingSenderId: "1012826517121",
+appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
 };
-
 
 const app = initializeApp(firebaseConfig);
 
@@ -257,60 +202,45 @@ const auth = getAuth(app);
 
 const db = getFirestore(app);
 
-
 /* DOM */
 
-const stageContainer=document.getElementById("stageContainer");
+const stageContainer = document.getElementById("stageContainer");
 
-const userEmail=document.getElementById("userEmail");
+const usernameBox = document.getElementById("username");
 
-const userXP=document.getElementById("userXP");
+const avatar = document.getElementById("avatar");
 
-const activityFeed=document.getElementById("activityFeed");
+const xpBox = document.getElementById("userXP");
 
-const logoutBtn=document.getElementById("logoutBtn");
+const activityFeed = document.getElementById("activityFeed");
 
+const logoutBtn = document.getElementById("logoutBtn");
 
-/* AUTH CHECK */
+/* AUTH */
 
-onAuthStateChanged(auth,async(user)=>{
+onAuthStateChanged(auth, async user=>{
 
 if(!user) return window.location.href="index.html";
 
-if(!user.emailVerified){
+const userRef = doc(db,"users",user.uid);
 
-alert("Verify your email first!");
+const snap = await getDoc(userRef);
 
-return window.location.href="index.html";
+if(!snap.exists()) return;
 
-}
+const data = snap.data();
 
-const userRef=doc(db,"users",user.uid);
+const username = data.username || user.email;
 
-const snap=await getDoc(userRef);
+usernameBox.textContent = username;
 
-if(!snap.exists()){
+avatar.textContent = username.charAt(0).toUpperCase();
 
-alert("User data missing");
-
-return window.location.href="index.html";
-
-}
-
-const data=snap.data();
-
-const username=data.username || user.email;
-
-document.getElementById("userAvatar").textContent=username.charAt(0).toUpperCase();
-
-userEmail.innerHTML=`<strong>${username}</strong>`;
-
-userXP.textContent="XP: "+(data.xp || 0);
+xpBox.textContent = "XP: " + (data.xp || 0);
 
 loadStages(data);
 
 });
-
 
 /* LOAD STAGES */
 
@@ -318,27 +248,27 @@ async function loadStages(userData){
 
 stageContainer.innerHTML="";
 
-const snapshot=await getDocs(query(collection(db,"stages"),orderBy("order")));
+const solved = userData.solvedStages || [];
 
-const solved=userData.solvedStages || [];
+const snapshot = await getDocs(query(collection(db,"stages"),orderBy("order")));
 
 snapshot.forEach(docSnap=>{
 
-const stage=docSnap.data();
+const stage = docSnap.data();
 
-const stageId=docSnap.id;
+const id = docSnap.id;
 
-const card=document.createElement("div");
+const card = document.createElement("div");
 
 card.classList.add("stage-card");
 
-if(solved.includes(stageId)) card.classList.add("solved");
+if(solved.includes(id)) card.classList.add("solved");
 
-let locked=stage.order>1 && !solved.includes("stage"+(stage.order-1));
+let locked = stage.order>1 && !solved.includes("stage"+(stage.order-1));
 
 card.classList.toggle("locked",locked);
 
-card.innerHTML=`
+card.innerHTML = `
 
 <h3>${stage.title} ${locked?"🔒":""}</h3>
 
@@ -346,7 +276,7 @@ card.innerHTML=`
 
 <p>XP: ${stage.xp}</p>
 
-<button ${locked?"disabled":`onclick="openStage('${stageId}')"`}>
+<button ${locked?"disabled":`onclick="openStage('${id}')"`}>
 ${locked?"Locked":"Start"}
 </button>
 
@@ -358,60 +288,47 @@ stageContainer.appendChild(card);
 
 }
 
-
 /* OPEN STAGE */
 
-window.openStage=(id)=>{
-
+window.openStage = id=>{
 window.location.href="stage.html?id="+id;
-
 };
-
 
 /* LOGOUT */
 
-logoutBtn.onclick=()=>{
+logoutBtn.onclick = ()=>{
 
 signOut(auth).then(()=>{
-
 window.location.href="index.html";
-
 });
 
 };
 
-
 /* LIVE ACTIVITY FEED */
 
-const q=query(collection(db,"activity"),orderBy("time","desc"));
+const q = query(
+collection(db,"activity"),
+orderBy("time","desc"),
+limit(10)
+);
 
-onSnapshot(q,async(snapshot)=>{
+onSnapshot(q,(snapshot)=>{
 
 activityFeed.innerHTML="";
 
-snapshot.docs.slice(0,10).forEach(async(docSnap)=>{
+snapshot.forEach(docSnap=>{
 
-const data=docSnap.data();
+const data = docSnap.data();
 
-let username="Unknown";
+const email = data.email || "Unknown";
 
-try{
+const action = data.action || "did something";
 
-const userSnap=await getDoc(doc(db,"users",data.userId));
-
-if(userSnap.exists()){
-
-username=userSnap.data().username || userSnap.data().email;
-
-}
-
-}catch(e){}
-
-const item=document.createElement("div");
+const item = document.createElement("div");
 
 item.classList.add("activity-item");
 
-item.innerHTML=`⚡ <b>${username}</b> solved ${data.stageId}`;
+item.innerHTML = `⚡ ${email} ${action}`;
 
 activityFeed.appendChild(item);
 
@@ -419,7 +336,5 @@ activityFeed.appendChild(item);
 
 });
 
-</script>
-
-</body>
+</script></body>
 </html>
