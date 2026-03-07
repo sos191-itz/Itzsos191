@@ -5,54 +5,167 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cybersecurity Stages | Itzsos Labs</title>
 <style>
-body { margin:0; font-family:monospace; background:#0f111a; color:#00ffdd; }
-nav { display:flex; justify-content:space-between; align-items:center; padding:15px 30px; background:#111422; border-bottom:1px solid #00ffdd; }
+body {
+  margin:0;
+  font-family:monospace;
+  background:#0f111a;
+  color:#00ffdd;
+}
+
+nav {
+  background:#111422;
+  border-bottom:1px solid #00ffdd;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 30px;
+}
+
 nav h2 { color:#ff6600; }
-nav div button { margin-left:10px; background:#ff6600; border:none; padding:8px 15px; font-weight:bold; cursor:pointer; }
-.container { max-width:1100px; margin:40px auto; padding:20px; }
-#userBox { display:flex; align-items:center; gap:15px; background:linear-gradient(145deg,#111422,#1a1f35); padding:20px; border:1px solid #00ffdd; border-radius:12px; box-shadow:0 0 15px rgba(0,255,221,0.2); margin-bottom:30px; }
-.avatar { width:55px; height:55px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:bold; background:linear-gradient(45deg,#ff6600,#00ffdd); color:#0f111a; }
-.user-details { display:flex; flex-direction:column; gap:6px; }
-.xp-badge { background:#00ffdd; color:#0f111a; padding:5px 10px; border-radius:20px; font-weight:bold; width:fit-content; }
-.stage-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px; }
-.stage-card { background:#111422; border:1px solid #00ffdd; padding:20px; border-radius:10px; transition:0.3s; }
-.stage-card:hover { transform:scale(1.05); border-color:#ff6600; }
-.stage-card h3 { color:#ff6600; }
-.stage-card button { margin-top:10px; padding:8px 12px; background:#00ffdd; border:none; cursor:pointer; font-weight:bold; }
-.stage-card button:disabled { background:gray; cursor:not-allowed; }
-.locked { opacity:0.5; }
-.solved { border-color:lightgreen !important; }
-.activity-box { margin-top:40px; background:#111422; border:1px solid #00ffdd; padding:20px; border-radius:10px; max-height:250px; overflow-y:auto; }
-.activity { padding:6px; border-bottom:1px solid #222; font-size:0.95rem; }
-footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-top:40px; }
+
+nav button {
+  background:#ff6600;
+  border:none;
+  padding:8px 15px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.container {
+  max-width:1100px;
+  margin:40px auto;
+  padding:20px;
+}
+
+#userBox {
+  margin-bottom:30px;
+  padding:20px;
+  background:linear-gradient(145deg,#111422,#1a1f35);
+  border:1px solid #00ffdd;
+  border-radius:12px;
+  box-shadow:0 0 15px rgba(0,255,221,0.2);
+}
+
+.user-info {
+  display:flex;
+  align-items:center;
+  gap:15px;
+}
+
+.avatar {
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  background:linear-gradient(45deg,#ff6600,#00ffdd);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.5rem;
+  font-weight:bold;
+  color:#0f111a;
+}
+
+.user-details {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.xp-badge {
+  background:#00ffdd;
+  color:#0f111a;
+  padding:5px 10px;
+  border-radius:20px;
+  font-weight:bold;
+  width:fit-content;
+}
+
+nav div{
+  display:flex;
+  align-items:center;
+}
+nav div button{
+  margin-left:10px;
+}
+
+.stage-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
+}
+
+.stage-card {
+  background:#111422;
+  border:1px solid #00ffdd;
+  padding:20px;
+  border-radius:10px;
+  transition:0.3s;
+}
+
+.stage-card:hover {
+  transform:scale(1.05);
+  border-color:#ff6600;
+}
+
+.stage-card h3 {
+  color:#ff6600;
+}
+
+.stage-card button {
+  margin-top:10px;
+  padding:8px 12px;
+  background:#00ffdd;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.stage-card button:disabled {
+  background:gray;
+  cursor:not-allowed;
+}
+
+.locked {
+  opacity:0.5;
+}
+
+.solved {
+  border-color:lightgreen !important;
+}
+
+footer {
+  text-align:center;
+  padding:20px;
+  border-top:1px solid #00ffdd;
+  margin-top:40px;
+}
 </style>
 </head>
 <body>
 
 <nav>
-<h2>Itzsos Labs - Cybersecurity Track</h2>
-<div>
-<button onclick="window.location.href='profile.html'">Profile</button>
-<button onclick="window.location.href='leaderboard.html'">Leaderboard</button>
-<button id="logoutBtn">Logout</button>
-</div>
+  <h2>Itzsos Labs - Cybersecurity Track</h2>
+  <div>
+    <button onclick="window.location.href='profile.html'">Profile</button>
+    <button onclick="window.location.href='leaderboard.html'">Leaderboard</button>
+    <button id="logoutBtn">Logout</button>
+  </div>
 </nav>
 
 <div class="container">
-<div id="userBox">
-<div class="avatar" id="userAvatar">U</div>
-<div class="user-details">
-<div id="userEmail">Loading user...</div>
-<div id="userXP" class="xp-badge">XP: 0</div>
-</div>
-</div>
 
-<div class="stage-grid" id="stageContainer"></div>
+  <div id="userBox">
+    <div class="user-info">
+      <div class="avatar" id="userAvatar">U</div>
+      <div class="user-details">
+        <div id="userEmail">Loading user...</div>
+        <div id="userXP" class="xp-badge">XP: 0</div>
+      </div>
+    </div>
+  </div>
 
-<div class="activity-box">
-<h3>🔥 Live Hacker Activity</h3>
-<div id="activityFeed"></div>
-</div>
+  <div class="stage-grid" id="stageContainer"></div>
+
 </div>
 
 <footer>© 2026 Itzsos Labs</footer>
@@ -60,15 +173,15 @@ footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-t
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
-apiKey:"AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
-authDomain:"itzsos-labs.firebaseapp.com",
-projectId:"itzsos-labs",
-storageBucket:"itzsos-labs.firebasestorage.app",
-messagingSenderId:"1012826517121",
-appId:"1:1012826517121:web:abaf58ebce7f15cfc86780"
+  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  authDomain: "itzsos-labs.firebaseapp.com",
+  projectId: "itzsos-labs",
+  storageBucket: "itzsos-labs.firebasestorage.app",
+  messagingSenderId: "1012826517121",
+  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -79,68 +192,68 @@ const stageContainer = document.getElementById("stageContainer");
 const userEmail = document.getElementById("userEmail");
 const userXP = document.getElementById("userXP");
 const logoutBtn = document.getElementById("logoutBtn");
-const activityContainer = document.getElementById("activityFeed");
 
-let userCache = {};
+/* AUTH CHECK */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return window.location.href="index.html";
+  if (!user.emailVerified) { alert("Verify your email first!"); return window.location.href="index.html"; }
 
-onAuthStateChanged(auth, async user => {
-  if(!user){ window.location.href="index.html"; return; }
-  const userRef = doc(db,"users",user.uid);
+  const userRef = doc(db, "users", user.uid);
   const userSnap = await getDoc(userRef);
-  const data = userSnap.exists() ? userSnap.data() : { username:user.email, xp:0, solvedStages:[], selectedField:"IT" };
-  document.getElementById("userAvatar").textContent = (data.username||user.email).charAt(0).toUpperCase();
-  userEmail.innerHTML = `<strong>${data.username||user.email}</strong>`;
-  userXP.textContent = "XP: "+(data.xp||0);
-  loadStages(data);
-  loadActivityFeed();
+
+  if (!userSnap.exists()) {
+    await setDoc(userRef, { email:user.email, xp:0, solvedStages:[], role:"", selectedField:"" });
+    return window.location.href="selection.html";
+  }
+
+  const data = userSnap.data();
+  if (!data.selectedField || data.selectedField.trim().toUpperCase() !== "IT") {
+    alert("🚫 This page is only for Cybersecurity track."); 
+    return window.location.href="selection.html";
+  }
+
+  const username = data.username || user.email;
+  document.getElementById("userAvatar").textContent = username.charAt(0).toUpperCase();
+  userEmail.innerHTML = `<strong>${username}</strong>`;
+  userXP.textContent = "XP: " + (data.xp || 0);
+
+  await loadStages(data);
 });
 
+/* LOAD STAGES */
 async function loadStages(userData){
-  const q = collection(db,"stages");
-  const snapshot = await getDocs(q);
   stageContainer.innerHTML = "";
-  snapshot.forEach(docSnap=>{
+  const snapshot = await getDocs(query(collection(db,"stages"), orderBy("order")));
+  const solved = userData.solvedStages || [];
+
+  snapshot.forEach(docSnap => {
     const stage = docSnap.data();
     const stageId = docSnap.id;
+
     const card = document.createElement("div");
     card.classList.add("stage-card");
-    if((userData.solvedStages||[]).includes(stageId)) card.classList.add("solved");
-    const locked = stage.order>1 && !(userData.solvedStages||[]).includes("stage"+(stage.order-1));
+    if(solved.includes(stageId)) card.classList.add("solved");
+
+    let locked = stage.order > 1 && !solved.includes("stage"+(stage.order-1));
     card.classList.toggle("locked", locked);
-    card.innerHTML = `<h3>${stage.title} ${locked?"🔒":""}</h3><p>${stage.text}</p><p>XP: ${stage.xp}</p>
-      <button ${locked?"disabled":`onclick="openStage('${stageId}')"`}>${locked?"Locked":"Start"}</button>`;
+
+    card.innerHTML = `
+      <h3>${stage.title} ${locked ? "🔒" : ""}</h3>
+      <p>${stage.text}</p>
+      <p>XP: ${stage.xp}</p>
+      <button ${locked ? "disabled" : `onclick="openStage('${stageId}')"`}>${locked ? "Locked" : "Start"}</button>
+    `;
+
     stageContainer.appendChild(card);
   });
 }
 
-// ✅ Live Activity Feed that works even without timestamp
-function loadActivityFeed(){
-  const actCol = collection(db,"activity");
-  onSnapshot(actCol, async snapshot=>{
-    activityContainer.innerHTML = "";
-    for(const docSnap of snapshot.docs){
-      const act = docSnap.data();
-      let username = userCache[act.userId];
-      const div = document.createElement("div");
-      div.className="activity";
-      if(username){
-        div.textContent = `⚡ ${username} solved ${act.stageId}`;
-      }else{
-        div.textContent = `⚡ [Loading...] solved ${act.stageId}`;
-        const userSnap = await getDoc(doc(db,"users",act.userId));
-        if(userSnap.exists()){
-          username = userSnap.data().username||userSnap.data().email;
-          userCache[act.userId] = username;
-          div.textContent = `⚡ ${username} solved ${act.stageId}`;
-        }
-      }
-      activityContainer.appendChild(div);
-    }
-  });
-}
+/* OPEN STAGE */
+window.openStage = id => window.location.href = "stage.html?id=" + id;
 
-window.openStage = id=>window.location.href="stage.html?id="+id;
-logoutBtn.onclick = ()=>signOut(auth).then(()=>window.location.href="index.html");
+/* LOGOUT */
+logoutBtn.onclick = () => signOut(auth).then(() => window.location.href="index.html");
 </script>
+
 </body>
 </html>
