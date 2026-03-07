@@ -1,340 +1,290 @@
-<!DOCTYPE html><html lang="en">
+
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cybersecurity Stages | Itzsos Labs</title><style>
-
-body{
-margin:0;
-font-family:monospace;
-background:#0f111a;
-color:#00ffdd;
+<title>Cybersecurity Stages | Itzsos Labs</title>
+<style>
+/* === Base Body === */
+body {
+  margin:0;
+  font-family: monospace;
+  background:#0f111a;
+  color:#00ffdd;
+  overflow-x:hidden;
+  position:relative;
 }
 
-/* NAV */
-
-nav{
-background:#111422;
-border-bottom:1px solid #00ffdd;
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:15px 30px;
+/* === NAV === */
+nav {
+  background:#111422;
+  border-bottom:1px solid #00ffdd;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 30px;
+  box-shadow:0 0 15px #00ffdd44 inset;
 }
 
-nav h2{
-color:#ff6600;
+nav h2 { color:#ff6600; font-size:1.2rem; text-shadow:0 0 10px #ff6600; }
+
+nav button {
+  background:#ff6600;
+  border:none;
+  padding:8px 15px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.3s;
+  box-shadow:0 0 10px #ff6600,0 0 20px #00ffdd;
+}
+nav button:hover { background:#00ffdd; color:black; transform:scale(1.05); }
+
+/* === USER BOX === */
+.container { max-width:1100px; margin:40px auto; padding:20px; position:relative; z-index:10; }
+#userBox {
+  margin-bottom:30px;
+  padding:20px;
+  background:linear-gradient(145deg,#111422,#1a1f35);
+  border:1px solid #00ffdd;
+  border-radius:12px;
+  box-shadow:0 0 20px #00ffdd66 inset,0 0 25px #ff660044;
+  position:relative;
+}
+.user-info { display:flex; align-items:center; gap:15px; }
+.avatar {
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  background:linear-gradient(45deg,#ff6600,#00ffdd);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.5rem;
+  font-weight:bold;
+  color:#0f111a;
+  text-shadow:0 0 5px #fff;
+}
+.user-details { display:flex; flex-direction:column; gap:6px; }
+.xp-badge {
+  background:#00ffdd;
+  color:#0f111a;
+  padding:5px 10px;
+  border-radius:20px;
+  font-weight:bold;
+  width:fit-content;
+  text-shadow:0 0 5px #111;
 }
 
-nav button{
-background:#ff6600;
-border:none;
-padding:8px 15px;
-font-weight:bold;
-cursor:pointer;
-margin-left:10px;
+/* === STAGE GRID === */
+.stage-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
 }
 
-/* PAGE */
-
-.container{
-max-width:1100px;
-margin:40px auto;
-padding:20px;
+/* === STAGE CARD === */
+.stage-card {
+  background:#111422;
+  border:1px solid #00ffdd;
+  padding:20px;
+  border-radius:12px;
+  transition:0.3s;
+  transform:translateY(20px) rotateX(5deg);
+  opacity:0;
+  position:relative;
+  box-shadow:0 0 15px #00ffdd33 inset;
+}
+.stage-card.show { transform:translateY(0) rotateX(0); opacity:1; }
+.stage-card:hover {
+  transform:scale(1.05) rotateY(3deg);
+  border-color:#ff6600;
+  box-shadow:0 0 25px #ff6600,0 0 40px #00ffdd;
 }
 
-/* USER BOX */
+.stage-card h3 { color:#ff6600; margin:0 0 10px 0; text-shadow:0 0 5px #ff6600; }
 
-#userBox{
-margin-bottom:30px;
-padding:20px;
-background:#111422;
-border:1px solid #00ffdd;
-border-radius:10px;
+.stage-card p { color:#ccc; line-height:1.4; }
+
+.stage-card button {
+  margin-top:10px;
+  padding:8px 12px;
+  background:#00ffdd;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+  transition:0.3s;
+  box-shadow:0 0 5px #00ffdd,0 0 10px #ff6600;
+}
+.stage-card button:hover { background:#ff6600; color:black; transform:scale(1.05); }
+.stage-card button:disabled { background:gray; cursor:not-allowed; }
+
+.locked { opacity:0.4; filter:blur(0.5px); }
+.solved {
+  border-color:#00ff99 !important;
+  animation: solvedGlow 1.5s infinite alternate;
 }
 
-.user-info{
-display:flex;
-align-items:center;
-gap:15px;
+/* === ANIMATIONS === */
+@keyframes solvedGlow {
+  0% { box-shadow:0 0 10px #00ff99; transform:scale(1); }
+  50% { box-shadow:0 0 25px #00ff99; transform:scale(1.02); }
+  100% { box-shadow:0 0 10px #00ff99; transform:scale(1); }
 }
 
-.avatar{
-width:50px;
-height:50px;
-border-radius:50%;
-background:linear-gradient(45deg,#ff6600,#00ffdd);
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:20px;
-font-weight:bold;
-color:black;
+/* === FOOTER === */
+footer {
+  text-align:center;
+  padding:20px;
+  border-top:1px solid #00ffdd;
+  margin-top:40px;
+  text-shadow:0 0 10px #00ffdd;
 }
 
-.xp-badge{
-background:#00ffdd;
-color:black;
-padding:4px 10px;
-border-radius:20px;
-font-weight:bold;
-margin-top:5px;
-display:inline-block;
+/* === GHOST VIBE PARTICLES === */
+.particles {
+  position:fixed;
+  top:0; left:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:1;
 }
-
-/* STAGES */
-
-.stage-grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-gap:20px;
+.particles span {
+  position:absolute;
+  width:3px; height:3px;
+  background:#00ffdd;
+  border-radius:50%;
+  animation:float 8s linear infinite;
+  opacity:0.5;
 }
-
-.stage-card{
-background:#111422;
-border:1px solid #00ffdd;
-padding:20px;
-border-radius:10px;
-transition:0.3s;
+@keyframes float {
+  0% { transform:translateY(0) translateX(0); opacity:0.3; }
+  50% { transform:translateY(-50px) translateX(20px); opacity:0.6; }
+  100% { transform:translateY(0) translateX(-10px); opacity:0.3; }
 }
+</style>
+</head>
+<body>
 
-.stage-card:hover{
-transform:scale(1.05);
-border-color:#ff6600;
-}
+<!-- Ghost particles background -->
+<div class="particles" id="particles"></div>
 
-.stage-card h3{
-color:#ff6600;
-}
+<nav>
+  <h2>Itzsos Labs - Cybersecurity Track</h2>
+  <div>
+    <button onclick="window.location.href='profile.html'">Profile</button>
+    <button onclick="window.location.href='leaderboard.html'">Leaderboard</button>
+    <button id="logoutBtn">Logout</button>
+  </div>
+</nav>
 
-.stage-card button{
-margin-top:10px;
-padding:8px 12px;
-background:#00ffdd;
-border:none;
-cursor:pointer;
-font-weight:bold;
-}
+<div class="container">
+  <div id="userBox">
+    <div class="user-info">
+      <div class="avatar" id="userAvatar">U</div>
+      <div class="user-details">
+        <div id="userName">Loading user...</div>
+        <div id="userXP" class="xp-badge">XP: 0</div>
+      </div>
+    </div>
+  </div>
 
-.stage-card button:disabled{
-background:gray;
-cursor:not-allowed;
-}
-
-.locked{
-opacity:0.5;
-}
-
-.solved{
-border-color:lightgreen !important;
-}
-
-/* ACTIVITY FEED */
-
-#activityFeed{
-background:#111422;
-border:1px solid #00ffdd;
-border-radius:10px;
-padding:15px;
-max-height:250px;
-overflow-y:auto;
-margin-top:20px;
-}
-
-.activity-item{
-margin-bottom:8px;
-}
-
-/* FOOTER */
-
-footer{
-text-align:center;
-padding:20px;
-border-top:1px solid #00ffdd;
-margin-top:40px;
-}
-
-</style></head><body><nav>
-<h2>Itzsos Labs - Cybersecurity Track</h2><div>
-<button onclick="window.location.href='profile.html'">Profile</button>
-<button onclick="window.location.href='leaderboard.html'">Leaderboard</button>
-<button id="logoutBtn">Logout</button>
+  <div class="stage-grid" id="stageContainer"></div>
 </div>
-</nav><div class="container"><!-- USER PROFILE --><div id="userBox"><div class="user-info"><div class="avatar" id="avatar">U</div><div>
-<div id="username">Loading...</div>
-<div id="userXP" class="xp-badge">XP: 0</div>
-</div></div></div><!-- STAGES --><div id="stageContainer" class="stage-grid"></div><!-- LIVE ACTIVITY --><h3 style="margin-top:40px;color:#ff6600;">🔥 Live Hacker Activity</h3><div id="activityFeed"></div></div><footer>
-© 2026 Itzsos Labs
-</footer><script type="module">
 
+<footer>© 2026 Itzsos Labs</footer>
+
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-
-import {
-getAuth,
-onAuthStateChanged,
-signOut
-} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-
-import {
-getFirestore,
-collection,
-getDocs,
-doc,
-getDoc,
-query,
-orderBy,
-onSnapshot,
-limit
-} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
-apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
-authDomain: "itzsos-labs.firebaseapp.com",
-projectId: "itzsos-labs",
-storageBucket: "itzsos-labs.firebasestorage.app",
-messagingSenderId: "1012826517121",
-appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
+  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  authDomain: "itzsos-labs.firebaseapp.com",
+  projectId: "itzsos-labs",
+  storageBucket: "itzsos-labs.firebasestorage.app",
+  messagingSenderId: "1012826517121",
+  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
 };
 
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
-
 const db = getFirestore(app);
 
-/* DOM */
-
 const stageContainer = document.getElementById("stageContainer");
-
-const usernameBox = document.getElementById("username");
-
-const avatar = document.getElementById("avatar");
-
-const xpBox = document.getElementById("userXP");
-
-const activityFeed = document.getElementById("activityFeed");
-
+const userName = document.getElementById("userName");
+const userXP = document.getElementById("userXP");
 const logoutBtn = document.getElementById("logoutBtn");
 
-/* AUTH */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return window.location.href="index.html";
+  if (!user.emailVerified) { alert("Verify your email first!"); return window.location.href="index.html"; }
 
-onAuthStateChanged(auth, async user=>{
+  const userRef = doc(db, "users", user.uid);
+  let userSnap = await getDoc(userRef);
 
-if(!user) return window.location.href="index.html";
+  if (!userSnap.exists()) {
+    await setDoc(userRef, { email:user.email, username:user.email.split('@')[0], xp:0, solvedStages:[], role:"New Hacker" });
+    userSnap = await getDoc(userRef);
+  }
 
-const userRef = doc(db,"users",user.uid);
+  const data = userSnap.data();
+  document.getElementById("userAvatar").textContent = data.username.charAt(0).toUpperCase();
+  userName.innerHTML = `<strong>${data.username}</strong>`;
+  userXP.textContent = "XP: " + (data.xp || 0);
 
-const snap = await getDoc(userRef);
-
-if(!snap.exists()) return;
-
-const data = snap.data();
-
-const username = data.username || user.email;
-
-usernameBox.textContent = username;
-
-avatar.textContent = username.charAt(0).toUpperCase();
-
-xpBox.textContent = "XP: " + (data.xp || 0);
-
-loadStages(data);
-
+  loadStages(data);
 });
-
-/* LOAD STAGES */
 
 async function loadStages(userData){
+  stageContainer.innerHTML = "";
+  const snapshot = await getDocs(query(collection(db,"stages"), orderBy("order")));
+  const solved = userData.solvedStages || [];
 
-stageContainer.innerHTML="";
+  let delay = 0;
+  snapshot.forEach(docSnap => {
+    const stage = docSnap.data();
+    const stageId = docSnap.id;
 
-const solved = userData.solvedStages || [];
+    const card = document.createElement("div");
+    card.classList.add("stage-card");
+    if(solved.includes(stageId)) card.classList.add("solved");
 
-const snapshot = await getDocs(query(collection(db,"stages"),orderBy("order")));
+    let locked = stage.order > 1 && !solved.includes("stage"+(stage.order-1));
+    card.classList.toggle("locked", locked);
 
-snapshot.forEach(docSnap=>{
+    card.innerHTML = `
+      <h3>${stage.title} ${locked ? "🔒" : ""}</h3>
+      <p>${stage.text}</p>
+      <p>XP: ${stage.xp}</p>
+      <button ${locked ? "disabled" : `onclick="openStage('${stageId}')"`}>${locked ? "Locked" : "Start"}</button>
+    `;
+    stageContainer.appendChild(card);
 
-const stage = docSnap.data();
-
-const id = docSnap.id;
-
-const card = document.createElement("div");
-
-card.classList.add("stage-card");
-
-if(solved.includes(id)) card.classList.add("solved");
-
-let locked = stage.order>1 && !solved.includes("stage"+(stage.order-1));
-
-card.classList.toggle("locked",locked);
-
-card.innerHTML = `
-
-<h3>${stage.title} ${locked?"🔒":""}</h3>
-
-<p>${stage.text}</p>
-
-<p>XP: ${stage.xp}</p>
-
-<button ${locked?"disabled":`onclick="openStage('${id}')"`}>
-${locked?"Locked":"Start"}
-</button>
-
-`;
-
-stageContainer.appendChild(card);
-
-});
-
+    setTimeout(()=>card.classList.add("show"), delay);
+    delay += 120;
+  });
 }
 
-/* OPEN STAGE */
+window.openStage = id => window.location.href = "stage.html?id=" + id;
+logoutBtn.onclick = () => signOut(auth).then(() => window.location.href="index.html");
 
-window.openStage = id=>{
-window.location.href="stage.html?id="+id;
-};
+/* === PARTICLES === */
+const particles = document.getElementById('particles');
+for(let i=0;i<80;i++){
+  const span = document.createElement('span');
+  const size = Math.random()*3+2;
+  span.style.width = `${size}px`;
+  span.style.height = `${size}px`;
+  span.style.top = `${Math.random()*100}%`;
+  span.style.left = `${Math.random()*100}%`;
+  span.style.animationDuration = `${Math.random()*5+5}s`;
+  span.style.opacity = Math.random();
+  particles.appendChild(span);
+}
+</script>
 
-/* LOGOUT */
-
-logoutBtn.onclick = ()=>{
-
-signOut(auth).then(()=>{
-window.location.href="index.html";
-});
-
-};
-
-/* LIVE ACTIVITY FEED */
-
-const q = query(
-collection(db,"activity"),
-orderBy("time","desc"),
-limit(10)
-);
-
-onSnapshot(q,(snapshot)=>{
-
-activityFeed.innerHTML="";
-
-snapshot.forEach(docSnap=>{
-
-const data = docSnap.data();
-
-const email = data.email || "Unknown";
-
-const action = data.action || "did something";
-
-const item = document.createElement("div");
-
-item.classList.add("activity-item");
-
-item.innerHTML = `⚡ ${email} ${action}`;
-
-activityFeed.appendChild(item);
-
-});
-
-});
-
-</script></body>
+</body>
 </html>
