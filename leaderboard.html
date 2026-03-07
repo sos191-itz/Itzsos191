@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,291 +7,271 @@
 <title>Leaderboard | Itzsos Labs</title>
 
 <style>
-
+/* GLOBAL */
 body{
-margin:0;
-font-family:monospace;
-background:#0f111a;
-color:#00ffdd;
-overflow-x:hidden;
+  margin:0;
+  font-family:monospace;
+  background:linear-gradient(180deg,#0b0f1a,#05070d);
+  color:#00ffdd;
+  overflow-x:hidden;
 }
 
 /* NAVBAR */
-
 nav{
-background:#111422;
-border-bottom:1px solid #00ffdd;
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:15px 30px;
+  background:#111422;
+  border-bottom:1px solid #00ffdd;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 30px;
+  box-shadow:0 0 15px rgba(0,255,221,0.2);
 }
-
 nav h2{
-color:#ff6600;
+  color:#ff6600;
+  font-size:1.6rem;
 }
-
 nav button{
-background:#ff6600;
-border:none;
-padding:8px 15px;
-font-weight:bold;
-cursor:pointer;
+  background:#ff6600;
+  border:none;
+  padding:8px 15px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.3s;
+}
+nav button:hover{
+  background:#ff9911;
 }
 
-/* MAIN */
-
+/* CONTAINER */
 .container{
-max-width:1000px;
-margin:auto;
-padding:30px;
+  max-width:1100px;
+  margin:30px auto;
+  padding:20px;
 }
 
 /* PODIUM */
-
 .podium{
-display:flex;
-justify-content:center;
-align-items:flex-end;
-gap:30px;
-margin-bottom:50px;
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+  gap:30px;
+  margin-bottom:50px;
 }
-
 .podium-card{
-text-align:center;
-width:180px;
-border-radius:12px;
-padding:15px;
-color:#0f111a;
-font-weight:bold;
-animation:float 3s infinite ease-in-out;
+  text-align:center;
+  width:180px;
+  border-radius:12px;
+  padding:15px;
+  color:#0f111a;
+  font-weight:bold;
+  position:relative;
+  transition:0.3s;
 }
-
-@keyframes float{
-0%{transform:translateY(0)}
-50%{transform:translateY(-8px)}
-100%{transform:translateY(0)}
+.podium-card:hover{
+  transform:translateY(-10px);
 }
-
 .gold{
-background:linear-gradient(45deg,#ffd700,#ffae00);
-height:180px;
-box-shadow:0 0 25px gold;
+  background:linear-gradient(45deg,#ffd700,#ffae00);
+  height:180px;
+  box-shadow:0 0 25px gold;
 }
-
 .silver{
-background:linear-gradient(45deg,#cfcfcf,#9e9e9e);
-height:150px;
+  background:linear-gradient(45deg,#cfcfcf,#9e9e9e);
+  height:150px;
 }
-
 .bronze{
-background:linear-gradient(45deg,#cd7f32,#a35a18);
-height:130px;
+  background:linear-gradient(45deg,#cd7f32,#a35a18);
+  height:130px;
 }
-
-.rank{
-font-size:1.4rem;
+.podium-card .rank{
+  font-size:1.5rem;
+  margin-bottom:5px;
 }
 
 /* TABLE */
-
 table{
-width:100%;
-border-collapse:collapse;
-background:#111422;
-border-radius:10px;
-overflow:hidden;
+  width:100%;
+  border-collapse:collapse;
+  background:#111422;
+  border-radius:10px;
+  overflow:hidden;
+  margin-bottom:50px;
 }
-
 th,td{
-padding:12px;
-text-align:left;
+  padding:12px;
+  text-align:left;
 }
-
 th{
-background:#1a1f35;
+  background:#1a1f35;
 }
-
 tr{
-border-bottom:1px solid #222;
+  border-bottom:1px solid #222;
+  transition:0.2s;
 }
-
 tr:hover{
-background:#151a2c;
+  background:#151a2c;
 }
 
 /* XP BAR */
-
 .xp-bar-bg{
-background:#222;
-height:10px;
-border-radius:10px;
-overflow:hidden;
+  background:#222;
+  height:10px;
+  border-radius:10px;
+  overflow:hidden;
 }
-
 .xp-bar{
-height:10px;
-background:linear-gradient(90deg,#00ffdd,#00aa88);
-width:0%;
-transition:width 1s ease;
+  height:10px;
+  background:linear-gradient(90deg,#00ffdd,#00aa88);
+  width:0%;
+  transition:width 1s ease;
 }
 
 /* CURRENT USER */
-
 .me{
-background:#1b2a33 !important;
-border-left:4px solid #00ffdd;
+  background:#1b2a33 !important;
+  border-left:4px solid #00ffdd;
 }
 
-/* GLOW TOP HACKER */
-
+/* TOP 3 GLOW */
 .top-glow{
-text-shadow:0 0 8px #00ffdd;
+  text-shadow:0 0 8px #00ffdd;
 }
 
+/* HEADER */
+h2.center{
+  text-align:center;
+  margin-bottom:30px;
+  color:#ff6600;
+}
 </style>
 </head>
-
 <body>
 
 <nav>
-<h2>Itzsos Labs Leaderboard</h2>
-<button onclick="window.location.href='stages.html'">Back</button>
+  <h2>Itzsos Labs Leaderboard</h2>
+  <button onclick="window.location.href='stages.html'">Back</button>
 </nav>
 
 <div class="container">
 
-<h2 style="text-align:center;margin-bottom:30px;">🏆 Global Leaderboard</h2>
+<h2 class="center">🏆 Global Hacker Leaderboard</h2>
 
 <!-- PODIUM -->
-
 <div class="podium">
-
-<div id="second" class="podium-card silver">
-<div class="rank">🥈</div>
-<div id="silverName">---</div>
-<div id="silverXP">0 XP</div>
+  <div id="second" class="podium-card silver">
+    <div class="rank">🥈</div>
+    <div id="silverName">---</div>
+    <div id="silverXP">0 XP</div>
+  </div>
+  <div id="first" class="podium-card gold">
+    <div class="rank">🥇</div>
+    <div id="goldName">---</div>
+    <div id="goldXP">0 XP</div>
+  </div>
+  <div id="third" class="podium-card bronze">
+    <div class="rank">🥉</div>
+    <div id="bronzeName">---</div>
+    <div id="bronzeXP">0 XP</div>
+  </div>
 </div>
 
-<div id="first" class="podium-card gold">
-<div class="rank">🥇</div>
-<div id="goldName">---</div>
-<div id="goldXP">0 XP</div>
-</div>
-
-<div id="third" class="podium-card bronze">
-<div class="rank">🥉</div>
-<div id="bronzeName">---</div>
-<div id="bronzeXP">0 XP</div>
-</div>
-
-</div>
-
+<!-- LEADERBOARD TABLE -->
 <table>
-
-<thead>
-<tr>
-<th>Rank</th>
-<th>User</th>
-<th>Role</th>
-<th>XP</th>
-<th>Progress</th>
-</tr>
-</thead>
-
-<tbody id="leaderboardBody"></tbody>
-
+  <thead>
+    <tr>
+      <th>Rank</th>
+      <th>User</th>
+      <th>Role</th>
+      <th>XP</th>
+      <th>Progress</th>
+    </tr>
+  </thead>
+  <tbody id="leaderboardBody"></tbody>
 </table>
 
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { getFirestore,collection,getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const firebaseConfig={
-apiKey:"AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
-authDomain:"itzsos-labs.firebaseapp.com",
-projectId:"itzsos-labs",
-storageBucket:"itzsos-labs.firebasestorage.app",
-messagingSenderId:"1012826517121",
-appId:"1:1012826517121:web:abaf58ebce7f15cfc86780"
+  apiKey:"AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  authDomain:"itzsos-labs.firebaseapp.com",
+  projectId:"itzsos-labs",
+  storageBucket:"itzsos-labs.firebasestorage.app",
+  messagingSenderId:"1012826517121",
+  appId:"1:1012826517121:web:abaf58ebce7f15cfc86780"
 };
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-const body=document.getElementById("leaderboardBody");
+const body = document.getElementById("leaderboardBody");
+const goldName = document.getElementById("goldName");
+const goldXP = document.getElementById("goldXP");
+const silverName = document.getElementById("silverName");
+const silverXP = document.getElementById("silverXP");
+const bronzeName = document.getElementById("bronzeName");
+const bronzeXP = document.getElementById("bronzeXP");
 
-onAuthStateChanged(auth, async(user)=>{
+onAuthStateChanged(auth, async(user) => {
+  const snapshot = await getDocs(collection(db,"users"));
+  const players = [];
 
-const snapshot=await getDocs(collection(db,"users"));
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    players.push({
+      id: doc.id,
+      name: data.username || "Unknown",
+      role: data.role || "Hacker",
+      xp: data.xp || 0
+    });
+  });
 
-let players=[];
+  // Sort by XP descending
+  players.sort((a,b)=> b.xp - a.xp);
 
-snapshot.forEach(doc=>{
+  // Podium top 3
+  if(players[0]){
+    goldName.textContent = players[0].name;
+    goldXP.textContent = players[0].xp + " XP";
+  }
+  if(players[1]){
+    silverName.textContent = players[1].name;
+    silverXP.textContent = players[1].xp + " XP";
+  }
+  if(players[2]){
+    bronzeName.textContent = players[2].name;
+    bronzeXP.textContent = players[2].xp + " XP";
+  }
 
-const data=doc.data();
+  // Max XP for progress bars
+  const maxXP = Math.max(...players.map(p=>p.xp), 100);
 
-players.push({
-id:doc.id,
-name:data.username ? data.username : "unknown"
-role:data.role || "User",
-xp:data.xp || 0
+  // Populate table
+  players.forEach((p,i)=>{
+    const tr = document.createElement("tr");
+    if(user && user.uid===p.id) tr.classList.add("me");
+
+    const width = Math.min((p.xp / maxXP)*100, 100);
+
+    tr.innerHTML = `
+      <td class="${i<3?'top-glow':''}">#${i+1}</td>
+      <td>${p.name}</td>
+      <td>${p.role}</td>
+      <td>${p.xp}</td>
+      <td>
+        <div class="xp-bar-bg">
+          <div class="xp-bar" style="width:${width}%"></div>
+        </div>
+      </td>
+    `;
+    body.appendChild(tr);
+  });
 });
-
-});
-
-players.sort((a,b)=>b.xp-a.xp);
-
-/* PODIUM */
-
-if(players[0]){
-goldName.textContent=players[0].name;
-goldXP.textContent=players[0].xp+" XP";
-}
-
-if(players[1]){
-silverName.textContent=players[1].name;
-silverXP.textContent=players[1].xp+" XP";
-}
-
-if(players[2]){
-bronzeName.textContent=players[2].name;
-bronzeXP.textContent=players[2].xp+" XP";
-}
-
-/* TABLE */
-
-players.forEach((p,i)=>{
-
-const tr=document.createElement("tr");
-
-if(user && user.uid===p.id){
-tr.classList.add("me");
-}
-
-tr.innerHTML=`
-<td class="${i<3?'top-glow':''}">#${i+1}</td>
-<td>${p.name}</td>
-<td>${p.role}</td>
-<td>${p.xp}</td>
-<td>
-<div class="xp-bar-bg">
-<div class="xp-bar" style="width:${Math.min(p.xp/10,100)}%"></div>
-</div>
-</td>
-`;
-
-body.appendChild(tr);
-
-});
-
-});
-
 </script>
 
 </body>
