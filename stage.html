@@ -329,6 +329,15 @@ async function loadStage(userData) {
   }
 
   // ================= STAGE 4 - Kali Linux Terminal =================
+function typeTerminal(text, container, speed=50) {
+  let i = 0;
+  const interval = setInterval(() => {
+    container.innerHTML += text[i];
+    i++;
+    if(i >= text.length) clearInterval(interval);
+    container.scrollTop = container.scrollHeight;
+  }, speed);
+}
   if(stageId === "stage4") {
     defaultFlagArea.style.display = "none";
     stageTextEl.textContent = "🎯 Terminal Challenge: Extract the hidden flag using Linux commands!";
