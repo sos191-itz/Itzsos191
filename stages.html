@@ -356,36 +356,45 @@ const querySnapshot = await getDocs(q);
 
 /* 🔥 LIVE ACTIVITY FEED */
 
-const activityFeed = document.getElementById("activityFeed");
+import { collection, getDocs, doc, getDoc }   
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";  
 
-const q = query(
-collection(db,"activity"),
-orderBy("time","desc"),
-limit(10)
-);
+const activityContainer = document.getElementById("activityFeed");  
 
-onSnapshot(q,(snapshot)=>{
+async function loadActivity(){  
 
-activityFeed.innerHTML="";
+  const snapshot = await getDocs(collection(db,"activity"));  
 
-snapshot.forEach((docSnap)=>{
+  activityContainer.innerHTML="";  
 
-const data = docSnap.data();
+  snapshot.forEach(async (act)=>{  
 
-let username = data.username || data.email || "Unknown";
+    const data = act.data();  
 
-const div = document.createElement("div");
-div.className="activity";
+    // get user info  
+    const userRef = doc(db,"users",data.userId);  
+    const userSnap = await getDoc(userRef);  
 
-div.innerHTML = `
-⚡ <strong>${username}</strong> ${data.action}
-`;
+    let username = "Unknown";  
 
-activityFeed.appendChild(div);
+    if(userSnap.exists()){  
+      username = userSnap.data().username || userSnap.data().email;  
+    }  
 
-});
+    const item = document.createElement("div");  
+    item.className = "activity";
 
-});
+    item.innerHTML = `  
+      ⚡ ${username} solved ${data.stageId}  
+    `;  
+
+    activityContainer.appendChild(item);  
+
+  });  
+
+}  
+
+loadActivity();
 /* OPEN STAGE */
 window.openStage = function(id) {
   window.location.href = "stage.html?id=" + id;
