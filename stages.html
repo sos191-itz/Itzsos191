@@ -9,10 +9,9 @@ margin:0;
 font-family:monospace;
 background:#0f111a;
 color:#00ffdd;
-overflow-x:hidden;
 }
 
-/* NAVBAR */
+/* NAV */
 
 nav{
 background:#111422;
@@ -21,7 +20,6 @@ display:flex;
 justify-content:space-between;
 align-items:center;
 padding:15px 30px;
-animation:fadeDown 0.8s ease;
 }
 
 nav h2{
@@ -31,18 +29,13 @@ color:#ff6600;
 nav button{
 background:#ff6600;
 border:none;
-padding:8px 14px;
+padding:8px 15px;
 font-weight:bold;
 cursor:pointer;
 margin-left:10px;
-transition:0.2s;
 }
 
-nav button:hover{
-transform:scale(1.1);
-}
-
-/* PAGE */
+/* CONTAINER */
 
 .container{
 max-width:1100px;
@@ -55,11 +48,9 @@ padding:20px;
 #userBox{
 margin-bottom:30px;
 padding:20px;
-background:linear-gradient(145deg,#111422,#1a1f35);
+background:#111422;
 border:1px solid #00ffdd;
-border-radius:12px;
-box-shadow:0 0 20px rgba(0,255,221,0.2);
-animation:fadeUp 0.8s ease;
+border-radius:10px;
 }
 
 .user-info{
@@ -69,27 +60,26 @@ gap:15px;
 }
 
 .avatar{
-width:60px;
-height:60px;
+width:55px;
+height:55px;
 border-radius:50%;
 background:linear-gradient(45deg,#ff6600,#00ffdd);
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:24px;
+font-size:22px;
 font-weight:bold;
 color:#0f111a;
-animation:pulse 3s infinite;
 }
 
 .xp-badge{
 background:#00ffdd;
 color:#0f111a;
-padding:5px 12px;
+padding:5px 10px;
 border-radius:20px;
 font-weight:bold;
-margin-top:6px;
 display:inline-block;
+margin-top:5px;
 }
 
 /* STAGES */
@@ -106,13 +96,11 @@ border:1px solid #00ffdd;
 padding:20px;
 border-radius:10px;
 transition:0.3s;
-animation:fadeUp 0.6s ease;
 }
 
 .stage-card:hover{
-transform:translateY(-6px) scale(1.03);
+transform:scale(1.05);
 border-color:#ff6600;
-box-shadow:0 0 15px rgba(255,102,0,0.4);
 }
 
 .stage-card h3{
@@ -126,11 +114,6 @@ background:#00ffdd;
 border:none;
 cursor:pointer;
 font-weight:bold;
-transition:0.2s;
-}
-
-.stage-card button:hover{
-transform:scale(1.1);
 }
 
 .stage-card button:disabled{
@@ -139,15 +122,14 @@ cursor:not-allowed;
 }
 
 .locked{
-opacity:0.4;
+opacity:0.5;
 }
 
 .solved{
 border-color:lightgreen !important;
-box-shadow:0 0 10px rgba(0,255,0,0.5);
 }
 
-/* ACTIVITY FEED */
+/* ACTIVITY */
 
 #activityFeed{
 margin-top:20px;
@@ -155,14 +137,13 @@ background:#111422;
 border:1px solid #00ffdd;
 border-radius:10px;
 padding:15px;
-max-height:260px;
+max-height:250px;
 overflow-y:auto;
 }
 
 .activity{
-padding:8px;
+padding:6px;
 border-bottom:1px solid #222;
-animation:slideIn 0.4s ease;
 }
 
 /* FOOTER */
@@ -172,37 +153,13 @@ text-align:center;
 padding:20px;
 border-top:1px solid #00ffdd;
 margin-top:40px;
-opacity:0.7;
-}
-
-/* ANIMATIONS */
-
-@keyframes fadeUp{
-from{opacity:0; transform:translateY(20px);}
-to{opacity:1; transform:translateY(0);}
-}
-
-@keyframes fadeDown{
-from{opacity:0; transform:translateY(-20px);}
-to{opacity:1; transform:translateY(0);}
-}
-
-@keyframes slideIn{
-from{opacity:0; transform:translateX(-20px);}
-to{opacity:1; transform:translateX(0);}
-}
-
-@keyframes pulse{
-0%{box-shadow:0 0 0px rgba(0,255,221,0.4);}
-50%{box-shadow:0 0 15px rgba(0,255,221,0.7);}
-100%{box-shadow:0 0 0px rgba(0,255,221,0.4);}
 }
 
 </style></head><body><nav><h2>Itzsos Labs - Cybersecurity Track</h2><div>
 <button onclick="window.location.href='profile.html'">Profile</button>
 <button onclick="window.location.href='leaderboard.html'">Leaderboard</button>
 <button id="logoutBtn">Logout</button>
-</div></nav><div class="container"><!-- USER PROFILE --><div id="userBox"><div class="user-info"><div class="avatar" id="avatar">U</div><div><div id="username">Loading...</div><div id="userXP" class="xp-badge">XP: 0</div></div></div></div><!-- STAGES --><div id="stageContainer" class="stage-grid"></div><!-- ACTIVITY --><h3 style="margin-top:40px;color:#ff6600;">🔥 Live Hacker Activity</h3><div id="activityFeed"></div></div><footer>
+</div></nav><div class="container"><!-- USER PROFILE --><div id="userBox"><div class="user-info"><div class="avatar" id="avatar">U</div><div><div id="username">Loading...</div><div id="userXP" class="xp-badge">XP: 0</div></div></div></div><!-- STAGES --><div id="stageContainer" class="stage-grid"></div><!-- ACTIVITY FEED --><h3 style="margin-top:40px;color:#ff6600;">🔥 Live Hacker Activity</h3><div id="activityFeed"></div></div><footer>
 © 2026 Itzsos Labs
 </footer><script type="module">
 
@@ -228,7 +185,7 @@ onSnapshot
 
 /* FIREBASE */
 
-const firebaseConfig={
+const firebaseConfig = {
 apiKey:"AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
 authDomain:"itzsos-labs.firebaseapp.com",
 projectId:"itzsos-labs",
@@ -237,11 +194,11 @@ messagingSenderId:"1012826517121",
 appId:"1:1012826517121:web:abaf58ebce7f15cfc86780"
 };
 
-const app=initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 
-const auth=getAuth(app);
+const auth = getAuth(app);
 
-const db=getFirestore(app);
+const db = getFirestore(app);
 
 /* DOM */
 
@@ -259,7 +216,7 @@ const logoutBtn=document.getElementById("logoutBtn");
 
 /* AUTH */
 
-onAuthStateChanged(auth,async user=>{
+onAuthStateChanged(auth,async(user)=>{
 
 if(!user) return window.location.href="index.html";
 
@@ -277,7 +234,7 @@ usernameBox.textContent=username;
 
 avatar.textContent=username.charAt(0).toUpperCase();
 
-xpBox.textContent="XP: "+(data.xp||0);
+xpBox.textContent="XP: "+(data.xp || 0);
 
 loadStages(data);
 
