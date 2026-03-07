@@ -4,85 +4,131 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cybersecurity Stages | Itzsos Labs</title>
+
 <style>
-/* General */
 body {
-  margin: 0;
-  font-family: monospace;
-  background: linear-gradient(180deg,#0b0f1a,#05070d);
-  color: #00ffdd;
+  margin:0;
+  font-family:monospace;
+  background:linear-gradient(180deg,#0b0f1a,#05070d);
+  color:#00ffdd;
 }
-a { color:#00ffdd; text-decoration:none; }
-button { font-family: monospace; }
 
-/* NAV */
-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 30px;
-  background: #111422;
-  border-bottom: 1px solid #00ffdd;
+/* NAVBAR */
+nav{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 30px;
+  background:#111422;
+  border-bottom:1px solid #00ffdd;
 }
-nav h2 { color: #ff6600; }
-nav div button {
-  background:#ff6600; border:none; padding:8px 15px; font-weight:bold; cursor:pointer; margin-left:10px;
-  border-radius:5px; transition:0.2s;
+nav h2 { color:#ff6600; }
+nav div button{
+  margin-left:10px;
+  background:#ff6600;
+  border:none;
+  padding:8px 15px;
+  font-weight:bold;
+  cursor:pointer;
 }
-nav div button:hover { transform:scale(1.05); }
 
-/* Container */
-.container { max-width: 1100px; margin: 40px auto; padding: 20px; }
-
-/* User Box */
-#userBox {
-  margin-bottom: 30px;
-  padding: 20px;
-  background: linear-gradient(145deg,#111422,#1a1f35);
-  border: 1px solid #00ffdd;
-  border-radius: 12px;
-  box-shadow: 0 0 15px rgba(0,255,221,0.2);
+/* CONTAINER */
+.container{
+  max-width:1100px;
+  margin:40px auto;
+  padding:20px;
 }
-.user-info { display: flex; align-items:center; gap:15px; }
-.avatar {
-  width: 55px; height: 55px; border-radius:50%;
-  background: linear-gradient(45deg,#ff6600,#00ffdd);
-  display:flex; justify-content:center; align-items:center;
-  font-weight:bold; font-size:1.5rem; color:#0f111a;
-}
-.user-details { display:flex; flex-direction: column; gap:6px; }
-.xp-badge { background:#00ffdd; color:#0f111a; padding:5px 10px; border-radius:20px; font-weight:bold; width:fit-content; }
 
-/* Stage Grid */
-.stage-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px; }
-.stage-card {
-  background:#111422; border:1px solid #00ffdd; padding:20px; border-radius:10px;
-  transition:0.3s; cursor:pointer;
+/* USER BOX */
+#userBox{
+  display:flex;
+  align-items:center;
+  gap:15px;
+  background:linear-gradient(145deg,#111422,#1a1f35);
+  padding:20px;
+  border:1px solid #00ffdd;
+  border-radius:12px;
+  box-shadow:0 0 15px rgba(0,255,221,0.2);
+  margin-bottom:30px;
 }
-.stage-card:hover { transform:scale(1.05); border-color:#ff6600; }
-.stage-card h3 { color:#ff6600; margin:0 0 10px 0; }
-.stage-card p { margin:5px 0; }
-.stage-card button { margin-top:10px; padding:8px 12px; background:#00ffdd; border:none; cursor:pointer; font-weight:bold; border-radius:5px; }
-.stage-card button:disabled { background:gray; cursor:not-allowed; }
-.locked { opacity:0.5; }
-.solved { border-color: lightgreen !important; }
+.avatar{
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  background:linear-gradient(45deg,#ff6600,#00ffdd);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.5rem;
+  font-weight:bold;
+  color:#0f111a;
+}
+.user-details{ display:flex; flex-direction:column; gap:6px; }
+.xp-badge{
+  background:#00ffdd;
+  color:#0f111a;
+  padding:5px 10px;
+  border-radius:20px;
+  font-weight:bold;
+  width:fit-content;
+}
 
-/* Activity Feed */
-.activity-box {
+/* STAGE GRID */
+.stage-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
+}
+.stage-card{
+  background:#111422;
+  border:1px solid #00ffdd;
+  padding:20px;
+  border-radius:10px;
+  transition:0.3s;
+}
+.stage-card:hover{
+  transform:scale(1.05);
+  border-color:#ff6600;
+}
+.stage-card h3{ color:#ff6600; }
+.stage-card button{
+  margin-top:10px;
+  padding:8px 12px;
+  background:#00ffdd;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+}
+.stage-card button:disabled{ background:gray; cursor:not-allowed; }
+.locked{ opacity:0.5; }
+.solved{ border-color:lightgreen !important; }
+
+/* LIVE ACTIVITY FEED */
+.activity-box{
   margin-top:40px;
   background:#111422;
   border:1px solid #00ffdd;
   padding:20px;
   border-radius:10px;
 }
-.activity { padding:6px; border-bottom:1px solid #222; font-size:0.95rem; }
+.activity{
+  padding:6px;
+  border-bottom:1px solid #222;
+  font-size:0.95rem;
+}
 
-/* Footer */
-footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-top:40px; }
+/* FOOTER */
+footer{
+  text-align:center;
+  padding:20px;
+  border-top:1px solid #00ffdd;
+  margin-top:40px;
+}
 </style>
 </head>
 
 <body>
+
 <nav>
   <h2>Itzsos Labs - Cybersecurity Track</h2>
   <div>
@@ -94,24 +140,22 @@ footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-t
 
 <div class="container">
 
-  <!-- User Info -->
+  <!-- USER INFO -->
   <div id="userBox">
-    <div class="user-info">
-      <div class="avatar" id="userAvatar">U</div>
-      <div class="user-details">
-        <div id="userEmail">Loading user...</div>
-        <div id="userXP" class="xp-badge">XP: 0</div>
-      </div>
+    <div class="avatar" id="userAvatar">U</div>
+    <div class="user-details">
+      <div id="userEmail">Loading user...</div>
+      <div id="userXP" class="xp-badge">XP: 0</div>
     </div>
   </div>
 
-  <!-- Stages -->
+  <!-- STAGE GRID -->
   <div class="stage-grid" id="stageContainer"></div>
 
-  <!-- Live Activity Feed -->
+  <!-- LIVE ACTIVITY FEED -->
   <div class="activity-box">
     <h3>🔥 Live Hacker Activity</h3>
-    <div id="activityFeed">Loading...</div>
+    <div id="activityFeed"></div>
   </div>
 
 </div>
@@ -121,16 +165,17 @@ footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-t
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, orderBy, limit, onSnapshot } 
+from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 /* FIREBASE CONFIG */
 const firebaseConfig = {
-  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
-  authDomain: "itzsos-labs.firebaseapp.com",
-  projectId: "itzsos-labs",
-  storageBucket: "itzsos-labs.firebasestorage.app",
-  messagingSenderId: "1012826517121",
-  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
+  apiKey:"AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  authDomain:"itzsos-labs.firebaseapp.com",
+  projectId:"itzsos-labs",
+  storageBucket:"itzsos-labs.firebasestorage.app",
+  messagingSenderId:"1012826517121",
+  appId:"1:1012826517121:web:abaf58ebce7f15cfc86780"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -138,36 +183,36 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 const stageContainer = document.getElementById("stageContainer");
-const activityContainer = document.getElementById("activityFeed");
 const userEmail = document.getElementById("userEmail");
 const userXP = document.getElementById("userXP");
 const logoutBtn = document.getElementById("logoutBtn");
+const activityContainer = document.getElementById("activityFeed");
 
 /* AUTH CHECK */
 onAuthStateChanged(auth, async (user) => {
-  if (!user) { window.location.href = "index.html"; return; }
-  if (!user.emailVerified) { alert("Verify your email!"); window.location.href="index.html"; return; }
+  if(!user) { window.location.href="index.html"; return; }
+  if(!user.emailVerified){ alert("Verify your email!"); window.location.href="index.html"; return; }
 
   const userRef = doc(db,"users",user.uid);
-  let userSnap = await getDoc(userRef);
-  
+  const userSnap = await getDoc(userRef);
+
   if(!userSnap.exists()){
-    await setDoc(userRef,{email:user.email,xp:0,solvedStages:[],role:"Hacker",selectedField:"IT"});
-    window.location.href = "selection.html"; return;
+    await setDoc(userRef,{ email:user.email, xp:0, solvedStages:[], role:"Hacker", selectedField:"" });
+    window.location.href="selection.html";
+    return;
   }
 
-  const userData = userSnap.data();
-  if(!userData.selectedField || userData.selectedField.toUpperCase()!=="IT"){ 
-    alert("🚫 Only Cybersecurity track!"); window.location.href="selection.html"; return;
-  }
+  const data = userSnap.data();
+  if(!data.selectedField || data.selectedField.toUpperCase()!=="IT"){ alert("🚫 Only Cybersecurity track!"); window.location.href="selection.html"; return; }
 
-  const username = userData.username || user.email;
+  // DISPLAY USER INFO
+  const username = data.username || user.email;
   document.getElementById("userAvatar").textContent = username.charAt(0).toUpperCase();
-  userEmail.innerHTML = "<strong>" + username + "</strong>";
-  userXP.textContent = "XP: " + (userData.xp||0);
+  userEmail.innerHTML = "<strong>"+username+"</strong>";
+  userXP.textContent = "XP: "+(data.xp||0);
 
-  loadStages(userData);
-  loadActivity();
+  loadStages(data);
+  loadLiveActivity();
 });
 
 /* LOAD STAGES */
@@ -176,53 +221,63 @@ async function loadStages(userData){
   const snapshot = await getDocs(q);
   stageContainer.innerHTML = "";
 
-  const solved = userData.solvedStages || [];
+  const solvedStages = userData.solvedStages || [];
+
   snapshot.forEach(docSnap=>{
-    const data = docSnap.data();
+    const stage = docSnap.data();
     const stageId = docSnap.id;
+
     const card = document.createElement("div");
     card.classList.add("stage-card");
-    if(solved.includes(stageId)) card.classList.add("solved");
-    const locked = data.order>1 && !solved.includes("stage"+(data.order-1));
-    card.classList.toggle("locked",locked);
+    if(solvedStages.includes(stageId)) card.classList.add("solved");
+
+    const isLocked = stage.order>1 && !solvedStages.includes("stage"+(stage.order-1));
+    card.classList.toggle("locked", isLocked);
+
     card.innerHTML = `
-      <h3>${data.title} ${locked?"🔒":""}</h3>
-      <p>${data.text}</p>
-      <p>XP: ${data.xp}</p>
-      <button ${locked?"disabled":`onclick="openStage('${stageId}')"`}>${locked?"Locked":"Start"}</button>
+      <h3>${stage.title} ${isLocked?"🔒":""}</h3>
+      <p>${stage.text}</p>
+      <p>XP: ${stage.xp}</p>
+      <button ${isLocked?"disabled":`onclick="openStage('${stageId}')"`}>${isLocked?"Locked":"Start"}</button>
     `;
+
     stageContainer.appendChild(card);
   });
 }
 
 /* LIVE ACTIVITY FEED */
-async function loadActivity(){
-  activityContainer.innerHTML = "Loading...";
-  const q = query(collection(db,"activity"), orderBy("timestamp","desc"), limit(20));
-  
-  // Live updates with onSnapshot
-  onSnapshot(q, async (snapshot)=>{
+function loadLiveActivity(){
+  const actQuery = query(collection(db,"activity"), orderBy("timestamp","desc"), limit(20));
+
+  onSnapshot(actQuery, async snapshot => {
     activityContainer.innerHTML = "";
-    for(const act of snapshot.docs){
+
+    // Collect unique userIds to fetch once
+    const userIds = [...new Set(snapshot.docs.map(d=>d.data().userId))];
+    const userSnaps = await Promise.all(userIds.map(id=>getDoc(doc(db,"users",id))));
+
+    const userMap = {};
+    userSnaps.forEach(uSnap=>{
+      if(uSnap.exists()){ userMap[uSnap.id] = uSnap.data().username || uSnap.data().email; }
+    });
+
+    snapshot.docs.forEach(act=>{
       const data = act.data();
-      let username = "Unknown";
-      if(data.userId){
-        const userSnap = await getDoc(doc(db,"users",data.userId));
-        if(userSnap.exists()) username = userSnap.data().username || userSnap.data().email;
-      }
+      const username = data.userId && userMap[data.userId]? userMap[data.userId] : "Unknown";
       const item = document.createElement("div");
       item.className = "activity";
       item.textContent = `⚡ ${username} solved ${data.stageId}`;
       activityContainer.appendChild(item);
-    }
+    });
   });
 }
 
 /* OPEN STAGE */
-window.openStage = function(id){ window.location.href="stage.html?id="+id; }
+window.openStage = id => window.location.href="stage.html?id="+id;
 
 /* LOGOUT */
-logoutBtn.onclick = ()=>signOut(auth).then(()=>window.location.href="index.html");
+logoutBtn.onclick = ()=> signOut(auth).then(()=>window.location.href="index.html");
 </script>
+
 </body>
 </html>
