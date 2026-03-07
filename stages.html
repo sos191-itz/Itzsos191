@@ -41,10 +41,53 @@ nav button {
 
 #userBox {
   margin-bottom:30px;
-  padding:15px;
-  background:#111422;
+  padding:20px;
+  background:linear-gradient(145deg,#111422,#1a1f35);
   border:1px solid #00ffdd;
-  border-radius:8px;
+  border-radius:12px;
+  box-shadow:0 0 15px rgba(0,255,221,0.2);
+}
+
+.user-info {
+  display:flex;
+  align-items:center;
+  gap:15px;
+}
+
+.avatar {
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  background:linear-gradient(45deg,#ff6600,#00ffdd);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.5rem;
+  font-weight:bold;
+  color:#0f111a;
+}
+
+.user-details {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.xp-badge {
+  background:#00ffdd;
+  color:#0f111a;
+  padding:5px 10px;
+  border-radius:20px;
+  font-weight:bold;
+  width:fit-content;
+}
+
+nav div{
+  display:flex;
+  align-items:center;
+}
+nav div button{
+  margin-left:10px;
 }
 
 .stage-grid {
@@ -92,76 +135,24 @@ nav button {
   border-color:lightgreen !important;
 }
 
+.activity-box{
+  margin-top:40px;
+  background:#111422;
+  border:1px solid #00ffdd;
+  padding:20px;
+  border-radius:10px;
+}
+
+.activity{
+  padding:6px;
+  border-bottom:1px solid #222;
+}
+
 footer {
   text-align:center;
   padding:20px;
   border-top:1px solid #00ffdd;
   margin-top:40px;
-}
-#userBox {
-  margin-bottom:30px;
-  padding:20px;
-  background:linear-gradient(145deg,#111422,#1a1f35);
-  border:1px solid #00ffdd;
-  border-radius:12px;
-  box-shadow:0 0 15px rgba(0,255,221,0.2);
-}
-
-.user-info {
-  display:flex;
-  align-items:center;
-  gap:15px;
-}
-
-.avatar {
-  width:55px;
-  height:55px;
-  border-radius:50%;
-  background:linear-gradient(45deg,#ff6600,#00ffdd);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:1.5rem;
-  font-weight:bold;
-  color:#0f111a;
-}
-
-.user-details {
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-
-.xp-badge {
-  background:#00ffdd;
-  color:#0f111a;
-  padding:5px 10px;
-  border-radius:20px;
-  font-weight:bold;
-  width:fit-content;
-}
-nav div button{
-  margin-left:10px;
-}
-nav div{
-  display:flex;
-  align-items:center;
-}
-
-nav div button{
-  margin-left:10px;
-}
-.activity-box{
-margin-top:40px;
-background:#111422;
-border:1px solid #00ffdd;
-padding:20px;
-border-radius:10px;
-}
-
-.activity{
-padding:6px;
-border-bottom:1px solid #222;
 }
 </style>
 </head>
@@ -170,41 +161,31 @@ border-bottom:1px solid #222;
 
 <nav>
   <h2>Itzsos Labs - Cybersecurity Track</h2>
-
   <div>
-<button onclick="window.location.href='profile.html'">
-Profile
-</button>
-    <button onclick="window.location.href='leaderboard.html'">
-      Leaderboard
-    </button>
-
-    <button id="logoutBtn">
-      Logout
-    </button>
+    <button onclick="window.location.href='profile.html'">Profile</button>
+    <button onclick="window.location.href='leaderboard.html'">Leaderboard</button>
+    <button id="logoutBtn">Logout</button>
   </div>
 </nav>
 
 <div class="container">
 
   <div id="userBox">
-  <div class="user-info">
-    <div class="avatar" id="userAvatar">U</div>
-    <div class="user-details">
-      <div id="userEmail">Loading user...</div>
-      <div id="userXP" class="xp-badge">XP: 0</div>
+    <div class="user-info">
+      <div class="avatar" id="userAvatar">U</div>
+      <div class="user-details">
+        <div id="userEmail">Loading user...</div>
+        <div id="userXP" class="xp-badge">XP: 0</div>
+      </div>
     </div>
   </div>
-</div>
 
   <div class="stage-grid" id="stageContainer"></div>
-<div class="activity-box">
 
-<h3>🔥 Live Hacker Activity</h3>
-
-<div id="activityFeed"></div>
-
-</div>
+  <div class="activity-box">
+    <h3>🔥 Live Hacker Activity</h3>
+    <div id="activityFeed"></div>
+  </div>
 
 </div>
 
@@ -213,18 +194,8 @@ Profile
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { 
-getFirestore,
-collection,
-getDocs,
-doc,
-getDoc,
-setDoc,
-query,
-orderBy,
-limit,
-onSnapshot
-} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, orderBy, limit } 
+from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 /* FIREBASE CONFIG */
 const firebaseConfig = {
@@ -245,9 +216,8 @@ const userEmail = document.getElementById("userEmail");
 const userXP = document.getElementById("userXP");
 const logoutBtn = document.getElementById("logoutBtn");
 
-/* AUTH + CYBERSECURITY CHECK */
+/* AUTH CHECK */
 onAuthStateChanged(auth, async (user) => {
-
   if (!user) {
     window.location.href = "index.html";
     return;
@@ -262,131 +232,93 @@ onAuthStateChanged(auth, async (user) => {
   const userRef = doc(db, "users", user.uid);
   const userSnap = await getDoc(userRef);
 
-  // ✅ Create user document if it doesn't exist
   if (!userSnap.exists()) {
-
-  await setDoc(userRef,{
-    email:user.email,
-    xp:0,
-    solvedStages:[],
-    role:"",
-    selectedField:""
-  });
-
-  window.location.href = "selection.html";
-  return;
-}
-
-  const userData = userSnap.data();
-
-  // 🔐 Only IT (Cybersecurity) allowed
-  if (!userData.selectedField || userData.selectedField.trim().toUpperCase() !== "IT") {
-  alert("🚫 This page is only for Cybersecurity track.");
-  window.location.href = "selection.html";
-  return;
-}
-
-  const username = userData.username || user.email;
-
-const firstLetter = username.charAt(0).toUpperCase();
-
-document.getElementById("userAvatar").textContent = firstLetter;
-
-userEmail.innerHTML = "<strong>" + (userData.username || user.email) + "</strong>";
-userXP.textContent = "XP: " + (userData.xp || 0);
-
-  await loadStages(user, userData);
-});
-
-/* LOAD STAGES */
-async function loadStages(user, userData) {
-
-  const q = query(collection(db,"stages"),orderBy("order"));
-const querySnapshot = await getDocs(q);
-
-  if (querySnapshot.empty) {
-    stageContainer.innerHTML = "<p>No stages added yet.</p>";
+    await setDoc(userRef, {
+      email:user.email,
+      xp:0,
+      solvedStages:[],
+      role:"",
+      selectedField:""
+    });
+    window.location.href = "selection.html";
     return;
   }
 
+  const userData = userSnap.data();
+
+  if (!userData.selectedField || userData.selectedField.trim().toUpperCase() !== "IT") {
+    alert("🚫 This page is only for Cybersecurity track.");
+    window.location.href = "selection.html";
+    return;
+  }
+
+  const username = userData.username || user.email;
+  document.getElementById("userAvatar").textContent = username.charAt(0).toUpperCase();
+  userEmail.innerHTML = "<strong>" + username + "</strong>";
+  userXP.textContent = "XP: " + (userData.xp || 0);
+
+  await loadStages(userData);
+  await loadActivity();
+});
+
+/* LOAD STAGES */
+async function loadStages(userData){
+  const q = query(collection(db,"stages"), orderBy("order"));
+  const snapshot = await getDocs(q);
+
   const solvedStages = userData.solvedStages || [];
 
-  querySnapshot.forEach((docSnap) => {
-
+  stageContainer.innerHTML = "";
+  snapshot.forEach(docSnap => {
     const data = docSnap.data();
     const stageId = docSnap.id;
 
     const card = document.createElement("div");
     card.classList.add("stage-card");
+    if (solvedStages.includes(stageId)) card.classList.add("solved");
 
-    if (solvedStages.includes(stageId)) {
-      card.classList.add("solved");
-    }
+    let isLocked = data.order > 1 && !solvedStages.includes("stage"+(data.order-1));
 
-    // 🔒 Lock logic: Stage 1 unlocked, others require previous
-    let isLocked = false;
+    card.classList.toggle("locked", isLocked);
 
-    if (data.order > 1) {
-      const previousStage = "stage" + (data.order - 1);
-      if (!solvedStages.includes(previousStage)) {
-        isLocked = true;
-      }
-    }
-
-    if (isLocked) {
-      card.classList.add("locked");
-      card.innerHTML = `
-        <h3>${data.title} 🔒</h3>
-        <p>${data.text}</p>
-        <p>XP: ${data.xp}</p>
-        <button disabled>Locked</button>
-      `;
-    } else {
-      card.innerHTML = `
-        <h3>${data.title}</h3>
-        <p>${data.text}</p>
-        <p>XP: ${data.xp}</p>
-        <button onclick="openStage('${stageId}')">Start</button>
-      `;
-    }
-
+    card.innerHTML = `
+      <h3>${data.title} ${isLocked ? "🔒" : ""}</h3>
+      <p>${data.text}</p>
+      <p>XP: ${data.xp}</p>
+      <button ${isLocked ? "disabled" : `onclick="openStage('${stageId}')"`}>${isLocked ? "Locked" : "Start"}</button>
+    `;
     stageContainer.appendChild(card);
   });
 }
 
-/* 🔥 LIVE ACTIVITY FEED */
-
-
+/* LIVE ACTIVITY FEED */
 const activityContainer = document.getElementById("activityFeed");  
 
 async function loadActivity(){  
   const snapshot = await getDocs(collection(db,"activity"));  
-  activityContainer.innerHTML="";  
+  activityContainer.innerHTML = "";  
 
-  snapshot.forEach(async (act)=>{  
+  snapshot.forEach(async (act) => {  
     const data = act.data();  
     const userSnap = await getDoc(doc(db,"users",data.userId));  
     const username = userSnap.exists() ? (userSnap.data().username || userSnap.data().email) : "Unknown";  
 
     const item = document.createElement("div");  
     item.className = "activity";
-    item.innerHTML = `⚡ ${username} solved ${data.stageId}`;  
+    item.textContent = `⚡ ${username} solved ${data.stageId}`;  
     activityContainer.appendChild(item);  
   });  
-}  
+}
 
-loadActivity();
 /* OPEN STAGE */
-window.openStage = function(id) {
+window.openStage = function(id){
   window.location.href = "stage.html?id=" + id;
-};
+}
 
 /* LOGOUT */
 logoutBtn.onclick = () => {
-  signOut(auth).then(() => {
-    window.location.href = "index.html";
-  });
-};
+  signOut(auth).then(() => window.location.href = "index.html");
+}
 </script>
 
 </body>
