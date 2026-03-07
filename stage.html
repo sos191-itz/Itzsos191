@@ -100,9 +100,7 @@ button {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { 
-  getFirestore, doc, getDoc, updateDoc, arrayUnion, increment, setDoc 
-} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 // 🔑 Firebase config
 const firebaseConfig = {
@@ -127,9 +125,6 @@ let stageHint = "";
 let currentOrder = 0;
 const nextStageBtn = document.getElementById("nextStageBtn");
 const TOTAL_STAGES = 50;
-
-// Stage prerequisites
-
 
 const stageTitleEl = document.getElementById("stageTitle");
 const stageTextEl = document.getElementById("stageText");
@@ -175,12 +170,10 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  // Load XP
   stageXP = 0;
   correctAnswer = "";
   stageHint = "";
 
-  // Load stage
   loadStage(userData);
 });
 
@@ -195,53 +188,41 @@ async function loadStage(userData) {
   }
 
   const stageData = stageSnap.data();
-currentOrder = stageData.order;
-// 📊 Update Progress UI
-const percentage = Math.round((currentOrder / TOTAL_STAGES) * 100);
+  currentOrder = stageData.order;
 
-progressText.textContent =
-  "Stage " + currentOrder + " / " + TOTAL_STAGES +
-  "  (" + percentage + "% completed)";
+  // 📊 Update Progress UI
+  const percentage = Math.round((currentOrder / TOTAL_STAGES) * 100);
+  progressText.textContent = `Stage ${currentOrder} / ${TOTAL_STAGES} (${percentage}%)`;
+  progressBar.style.width = percentage + "%";
 
-progressBar.style.width = percentage + "%";
-stageTitleEl.textContent = stageData.title;
-stageTextEl.textContent = stageData.text;
+  stageTitleEl.textContent = stageData.title;
+  stageTextEl.textContent = stageData.text;
+  correctAnswer = stageData.answer || "";
+  stageXP = stageData.xp || 0;
+  stageHint = stageData.hint || "No hint available";
 
-correctAnswer = stageData.answer || "";
-stageXP = stageData.xp || 0;
-stageHint = stageData.hint || "No hint available";
+  let solvedStages = userData.solvedStages || [];
+  if (solvedStages.includes("[]")) solvedStages = solvedStages.filter(s => s !== "[]");
 
-// 🔒 STRONG LOCK
-let solvedStages = userData.solvedStages || [];
-
-if (solvedStages.includes("[]")) {
-  solvedStages = solvedStages.filter(s => s !== "[]");
-}
-// find highest solved stage
-let highestSolved = 0;
-
-for (let s of solvedStages) {
-  const num = parseInt(s.replace("stage",""));
-  if (!isNaN(num) && num > highestSolved) {
-    highestSolved = num;
+  // 🔒 Locking logic
+  let highestSolved = 0;
+  for (let s of solvedStages) {
+    const num = parseInt(s.replace("stage",""));
+    if (!isNaN(num) && num > highestSolved) highestSolved = num;
   }
-}
 
-// only allow next stage after highest solved
-if (currentOrder > highestSolved + 1) {
+  if (currentOrder > highestSolved + 1) {
+    defaultFlagArea.style.display = "none";
+    document.getElementById("hintBtn").style.display = "none";
+    resultEl.style.display = "none";
+    hintBoxEl.style.display = "none";
+    stageTextEl.textContent = "";
+    stageTitleEl.textContent = stageData.title + " 🔒 Locked";
+    return;
+  }
 
-  defaultFlagArea.style.display = "none";
-  document.getElementById("hintBtn").style.display = "none";
-  resultEl.style.display = "none";
-  hintBoxEl.style.display = "none";
-
-  stageTextEl.textContent = "";
-  stageTitleEl.textContent = stageData.title + " 🔒 Locked";
-
-  return;
-}
-  // Stage 3 login simulation
-  if (stageId === "stage3") {
+  // ================= STAGE 3 - SQL Injection =================
+  if(stageId === "stage3") {
     defaultFlagArea.style.display = "none";
     stageTextEl.textContent = "Login as admin using SQL Injection!";
 
@@ -275,6 +256,86 @@ if (currentOrder > highestSolved + 1) {
         document.getElementById("loginResult").textContent = "Access Denied.";
       }
     };
+    return;
+  }
+
+  // ================= STAGE 4 - Kali Linux Terminal =================
+  if(stageId === "stage4") {
+    defaultFlagArea.style.display = "none";
+    stageTextEl.textContent = "🎯 Terminal Challenge: Extract the hidden flag using Linux commands!";
+
+    const container = document.querySelector(".container");
+    container.innerHTML += `
+      <div id="terminal" style="
+        background:#0b0d14;
+        border:1px solid #00ffdd;
+        border-radius:8px;
+        padding:15px;
+        height:300px;
+        overflow-y:auto;
+        font-family:monospace;
+        color:#00ffdd;
+        margin-top:20px;
+      ">
+        <div id="terminalOutput">Welcome to Kali Lab! Type <span style='color:#ff66cc'>help</span> for commands.</div>
+        <div style="margin-top:5px;">
+          <span style="color:#ff66cc">user@itzsos:</span>~$ <input id="terminalInput" style="
+            background:none;
+            border:none;
+            outline:none;
+            color:#00ffdd;
+            width:80%;
+          ">
+        </div>
+      </div>
+    `;
+
+    correctAnswer = "itzsos{linux_terminal_master}";
+    stageXP = 300;
+
+    const terminalOutput = document.getElementById("terminalOutput");
+    const terminalInput = document.getElementById("terminalInput");
+
+    const commands = {
+      help: "Available commands: cat, ls, echo, pwd",
+      pwd: "/home/user",
+      ls: "flag.txt  readme.txt  notes/",
+      "cat flag.txt": `🎉 FLAG FOUND: ${correctAnswer}`,
+      "echo hello": "hello",
+    };
+
+    terminalInput.focus();
+
+    terminalInput.addEventListener("keydown", async (e)=>{
+      if(e.key !== "Enter") return;
+
+      const input = terminalInput.value.trim();
+      terminalOutput.innerHTML += `<br><span style='color:#ff66cc'>user@itzsos:</span>~$ ${input}`;
+
+      if(commands[input]) {
+        terminalOutput.innerHTML += `<br>${commands[input]}`;
+        if(input === "cat flag.txt") {
+          const userRef = doc(db,"users",currentUser.uid);
+          const userSnap = await getDoc(userRef);
+          const solvedStages = userSnap.exists() ? userSnap.data().solvedStages || [] : [];
+          if(!solvedStages.includes(stageId)) {
+            await updateDoc(userRef, {
+              solvedStages: arrayUnion(stageId),
+              xp: increment(stageXP)
+            });
+            terminalOutput.innerHTML += `<br>✅ Stage Completed! +${stageXP} XP`;
+            nextStageBtn.style.display = "block";
+            nextStageBtn.textContent = "→ Go To Next Stage";
+            nextStageBtn.onclick = () => window.location.href="stage.html?id=stage5";
+          }
+        }
+      } else {
+        terminalOutput.innerHTML += `<br>command not found: ${input}`;
+      }
+
+      terminalInput.value = "";
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    });
     return;
   }
 }
@@ -311,41 +372,28 @@ document.getElementById("submitBtn").onclick = async () => {
   });
 
   resultEl.textContent = "✅ Correct! +" + stageXP + " XP";
-resultEl.style.color = "lightgreen";
+  resultEl.style.color = "lightgreen";
 
-// 🔥 HYBRID NEXT STAGE LOGIC
+  const nextStageId = "stage" + (currentOrder + 1);
+  const nextStageRef = doc(db, "stages", nextStageId);
+  const nextStageSnap = await getDoc(nextStageRef);
 
-const nextStageId = "stage" + (currentOrder + 1);
+  if (!nextStageSnap.exists()) {
+    nextStageBtn.style.display = "block";
+    nextStageBtn.textContent = "🏆 Track Completed - Back to Stages";
+    nextStageBtn.onclick = () => window.location.href = "stages.html";
+    return;
+  }
 
-// Check if next stage exists
-const nextStageRef = doc(db, "stages", nextStageId);
-const nextStageSnap = await getDoc(nextStageRef);
-
-if (!nextStageSnap.exists()) {
-  // 🏆 TRACK COMPLETED
   nextStageBtn.style.display = "block";
-  nextStageBtn.textContent = "🏆 Track Completed - Back to Stages";
+  let timer = setTimeout(() => {
+    window.location.href = "stage.html?id=" + nextStageId;
+  }, 5000);
 
   nextStageBtn.onclick = () => {
-    window.location.href = "stages.html";
+    clearTimeout(timer);
+    window.location.href = "stage.html?id=" + nextStageId;
   };
-
-  return;
-}
-
-// Show button
-nextStageBtn.style.display = "block";
-
-// Auto redirect after 5 seconds
-let timer = setTimeout(() => {
-  window.location.href = "stage.html?id=" + nextStageId;
-}, 5000);
-
-// If user clicks manually → cancel timer
-nextStageBtn.onclick = () => {
-  clearTimeout(timer);
-  window.location.href = "stage.html?id=" + nextStageId;
-};
 };
 </script>
 </body>
