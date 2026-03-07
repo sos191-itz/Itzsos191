@@ -173,57 +173,134 @@ const joinBtn = document.getElementById("joinBtn");
 
 let currentUser = null;
 
-registerBtn.onclick = async () => {
-  if(!username.value){ status.textContent="Enter username"; return; }
+// REGISTER
+registerBtn.addEventListener("click", async () => {
+  const userNameInput = username.value.trim();
+  const emailInput = email.value.trim();
+  const passInput = password.value;
+
+  if (!userNameInput || !emailInput || !passInput) {
+    status.textContent = "Fill all fields!";
+    return;
+  }
+
   try {
-    const res = await createUserWithEmailAndPassword(auth,email.value,password.value);
+    const res = await createUserWithEmailAndPassword(auth, emailInput, passInput);
     await sendEmailVerification(res.user);
-    await setDoc(doc(db,"users",res.user.uid),{username:username.value,email:email.value,xp:0,role:"New Hacker",solvedStages:[]});
-    status.textContent="Registered! Check email 📧";
-  } catch(e){ status.textContent=e.message; }
-};
-
-loginBtn.onclick = async () => {
-  if(!username.value){ status.textContent="Enter username"; return; }
-  try {
-    const res = await signInWithEmailAndPassword(auth,email.value,password.value);
-    await res.user.reload();
-    const snap = await getDoc(doc(db,"users",res.user.uid));
-    if(!snap.exists() || snap.data().username!==username.value){ status.textContent="❌ Username mismatch"; await signOut(auth); return; }
-    if(res.user.emailVerified){ status.textContent="Logged In ✅"; }
-    else { status.textContent="Verify Email First 📧"; sendEmailVerification(res.user); }
-  } catch(e){ status.textContent=e.message; }
-};
-
-resetBtn.onclick = () => {
-  if(!email.value){ status.textContent="Enter email first"; return; }
-  sendPasswordResetEmail(auth,email.value).then(()=>status.textContent="Reset link sent 📧").catch(e=>status.textContent=e.message);
-};
-
-logoutBtn.onclick = ()=>{ signOut(auth); status.textContent="Logged out"; };
-
-onAuthStateChanged(auth, async user=>{
-  currentUser = user;
-  if(user){ const snap = await getDoc(doc(db,"users",user.uid)); if(snap.exists()){ status.textContent="Welcome "+snap.data().username+" 🧑‍💻"; } }
-  else { status.textContent="Not logged in"; }
+    await setDoc(doc(db, "users", res.user.uid), {
+      username: userNameInput,
+      email: emailInput,
+      xp: 0,
+      role: "New Hacker",
+      solvedStages: []
+    });
+    status.textContent = "Registered! Check email 📧";
+  } catch (e) {
+    status.textContent = e.message;
+  }
 });
 
-async function validateUserAndProceed(){
-  if(!currentUser){ alert("❌ Please login first!"); location.href="#login"; return; }
-  if(!currentUser.emailVerified){ alert("❌ Verify email first!"); sendEmailVerification(currentUser); return; }
-  const snap = await getDoc(doc(db,"users",currentUser.uid));
-  if(!snap.exists() || !snap.data().username){ alert("❌ Invalid account"); return; }
-  window.location.href="selection.html";
+// LOGIN
+loginBtn.addEventListener("click", async () => {
+  const userNameInput = username.value.trim();
+  const emailInput = email.value.trim();
+  const passInput = password.value;
+
+  if (!userNameInput || !emailInput || !passInput) {
+    status.textContent = "Fill all fields!";
+    return;
+  }
+
+  try {
+    const res = await signInWithEmailAndPassword(auth, emailInput, passInput);
+
+    const snap = await getDoc(doc(db, "users", res.user.uid));
+    if (!snap.exists()) {
+      status.textContent = "❌ Account not found in database";
+      await signOut(auth);
+      return;
+    }
+
+    if (snap.data().username !== userNameInput) {
+      status.textContent = "❌ Username mismatch";
+      await signOut(auth);
+      return;
+    }
+
+    if (!res.user.emailVerified) {
+      status.textContent = "Verify Email First 📧";
+      await sendEmailVerification(res.user);
+      return;
+    }
+
+    status.textContent = "Logged In ✅";
+    currentUser = res.user;
+
+  } catch (e) {
+    status.textContent = e.message;
+  }
+});
+
+// RESET PASSWORD
+resetBtn.addEventListener("click", () => {
+  const emailInput = email.value.trim();
+  if (!emailInput) { status.textContent = "Enter email first"; return; }
+
+  sendPasswordResetEmail(auth, emailInput)
+    .then(() => status.textContent = "Reset link sent 📧")
+    .catch(e => status.textContent = e.message);
+});
+
+// LOGOUT
+logoutBtn.addEventListener("click", () => {
+  signOut(auth);
+  status.textContent = "Logged out";
+});
+
+// TRACK LOGIN STATE
+onAuthStateChanged(auth, async user => {
+  currentUser = user;
+  if (user) {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (snap.exists()) {
+      status.textContent = "Welcome " + snap.data().username + " 🧑‍💻";
+    }
+  } else {
+    status.textContent = "Not logged in";
+  }
+});
+
+// START / JOIN BUTTONS
+async function validateUserAndProceed() {
+  if (!currentUser) { alert("❌ Please login first!"); location.href = "#login"; return; }
+  if (!currentUser.emailVerified) { alert("❌ Verify email first!"); sendEmailVerification(currentUser); return; }
+  const snap = await getDoc(doc(db, "users", currentUser.uid));
+  if (!snap.exists() || !snap.data().username) { alert("❌ Invalid account"); return; }
+  window.location.href = "selection.html";
 }
 
-startBtn.onclick = validateUserAndProceed;
-joinBtn.onclick = validateUserAndProceed;
+startBtn.addEventListener("click", validateUserAndProceed);
+joinBtn.addEventListener("click", validateUserAndProceed);
 
+// EMAIL VERIFICATION & PASSWORD RESET HANDLER
 const params = new URLSearchParams(window.location.search);
 const mode = params.get("mode");
 const oobCode = params.get("oobCode");
-if(mode==="verifyEmail" && oobCode){ applyActionCode(auth,oobCode).then(()=>alert("Email verified ✅")).catch(()=>alert("Verification failed ❌")); }
-if(mode==="resetPassword" && oobCode){ const newPass=prompt("Enter new password:"); if(newPass){ confirmPasswordReset(auth,oobCode,newPass).then(()=>alert("Password changed ✅")).catch(()=>alert("Reset failed ❌")); } }
+
+if (mode === "verifyEmail" && oobCode) {
+  applyActionCode(auth, oobCode)
+    .then(() => alert("Email verified ✅"))
+    .catch(() => alert("Verification failed ❌"));
+}
+
+if (mode === "resetPassword" && oobCode) {
+  const newPass = prompt("Enter new password:");
+  if (newPass) {
+    confirmPasswordReset(auth, oobCode, newPass)
+      .then(() => alert("Password changed ✅"))
+      .catch(() => alert("Reset failed ❌"));
+  }
+}
 </script>
 <!-- 3D LOGO SCRIPT -->
 <script>
