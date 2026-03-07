@@ -355,43 +355,26 @@ const querySnapshot = await getDocs(q);
 }
 
 /* 🔥 LIVE ACTIVITY FEED */
-
-import { collection, getDocs, doc, getDoc }   
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";  
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, orderBy, limit, onSnapshot } 
+from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+const db = getFirestore(app);
 
 const activityContainer = document.getElementById("activityFeed");  
 
 async function loadActivity(){  
-
   const snapshot = await getDocs(collection(db,"activity"));  
-
   activityContainer.innerHTML="";  
 
   snapshot.forEach(async (act)=>{  
-
     const data = act.data();  
-
-    // get user info  
-    const userRef = doc(db,"users",data.userId);  
-    const userSnap = await getDoc(userRef);  
-
-    let username = "Unknown";  
-
-    if(userSnap.exists()){  
-      username = userSnap.data().username || userSnap.data().email;  
-    }  
+    const userSnap = await getDoc(doc(db,"users",data.userId));  
+    const username = userSnap.exists() ? (userSnap.data().username || userSnap.data().email) : "Unknown";  
 
     const item = document.createElement("div");  
     item.className = "activity";
-
-    item.innerHTML = `  
-      ⚡ ${username} solved ${data.stageId}  
-    `;  
-
+    item.innerHTML = `⚡ ${username} solved ${data.stageId}`;  
     activityContainer.appendChild(item);  
-
   });  
-
 }  
 
 loadActivity();
