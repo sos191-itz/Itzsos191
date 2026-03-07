@@ -363,20 +363,29 @@ orderBy("time","desc"),
 limit(10)
 );
 
-onSnapshot(q,(snapshot)=>{
+snapshot.forEach(async (docSnap)=>{
 
-activityFeed.innerHTML="";
+const data = docSnap.data();
 
-snapshot.forEach(doc=>{
+const userRef = doc(db,"users",data.userId);
+const userSnap = await getDoc(userRef);
 
-const data = doc.data();
+let username = "Unknown";
+
+if(userSnap.exists()){
+  username = userSnap.data().username || userSnap.data().email;
+}
 
 const div = document.createElement("div");
 div.className="activity";
 
 div.innerHTML = `
-⚡ <strong>${data.username || data.email}</strong> ${data.action}
+⚡ <strong>${username}</strong> ${data.action}
 `;
+
+activityFeed.appendChild(div);
+
+});
 
 activityFeed.appendChild(div);
 
