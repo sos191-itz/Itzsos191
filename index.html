@@ -483,10 +483,10 @@ onAuthStateChanged(auth, async user => {
 });
 
 // Start button control
-startBtn.onclick = () => {
+async function validateUserAndProceed() {
   if (!currentUser) {
     alert("❌ Please login first!");
-    location.href = "#login"; // scroll to login box
+    location.href = "#login"; // Scroll to login box
     return;
   }
 
@@ -496,9 +496,22 @@ startBtn.onclick = () => {
     return;
   }
 
-  // ✅ Logged in and verified — go to selection.html
+  // Check Firestore for valid username
+  const userRef = doc(db, "users", currentUser.uid);
+  const snap = await getDoc(userRef);
+
+  if (!snap.exists() || !snap.data().username) {
+    alert("❌ Invalid account. Please register a valid username.");
+    return;
+  }
+
+  // ✅ Everything is good, proceed
   window.location.href = "selection.html";
-};
+}
+
+// Assign both buttons
+startBtn.onclick = validateUserAndProceed;
+joinBtn.onclick = validateUserAndProceed;
 
 // Join button control
 joinBtn.onclick = () => {
