@@ -212,8 +212,13 @@ loginBtn.addEventListener("click", async () => {
   }
 
   try {
+    // Sign in with email & password
     const res = await signInWithEmailAndPassword(auth, emailInput, passInput);
 
+    // Reload user to get latest emailVerified status
+    await res.user.reload();
+
+    // Fetch Firestore user document
     const snap = await getDoc(doc(db, "users", res.user.uid));
     if (!snap.exists()) {
       status.textContent = "❌ Account not found in database";
@@ -221,26 +226,31 @@ loginBtn.addEventListener("click", async () => {
       return;
     }
 
+    // Verify username exactly matches Firestore
     if (snap.data().username !== userNameInput) {
       status.textContent = "❌ Username mismatch";
       await signOut(auth);
       return;
     }
 
+    // Check email verification
     if (!res.user.emailVerified) {
-      status.textContent = "Verify Email First 📧";
+      status.textContent = "❌ Verify Email First 📧";
       await sendEmailVerification(res.user);
       return;
     }
 
+    // Login successful
     status.textContent = "Logged In ✅";
     currentUser = res.user;
 
   } catch (e) {
-    status.textContent = e.message;
+    // Show readable errors
+    if (e.code === "auth/wrong-password") status.textContent = "❌ Wrong password";
+    else if (e.code === "auth/user-not-found") status.textContent = "❌ User not found";
+    else status.textContent = e.message;
   }
 });
-
 // RESET PASSWORD
 resetBtn.addEventListener("click", () => {
   const emailInput = email.value.trim();
