@@ -60,7 +60,7 @@ footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-t
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey:"AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
@@ -81,77 +81,65 @@ const userXP = document.getElementById("userXP");
 const logoutBtn = document.getElementById("logoutBtn");
 const activityContainer = document.getElementById("activityFeed");
 
-let userMap = {}; // cache usernames
+let userCache = {};
 
-onAuthStateChanged(auth, async (user)=>{
+onAuthStateChanged(auth, async user => {
   if(!user){ window.location.href="index.html"; return; }
-  if(!user.emailVerified){ alert("Verify email!"); window.location.href="index.html"; return; }
-
   const userRef = doc(db,"users",user.uid);
   const userSnap = await getDoc(userRef);
-  if(!userSnap.exists()){
-    await setDoc(userRef,{ email:user.email, xp:0, solvedStages:[], role:"Hacker", selectedField:"IT" });
-    window.location.href="selection.html"; return;
-  }
-
-  const data = userSnap.data();
-  if(!data.selectedField || data.selectedField.toUpperCase()!=="IT"){ alert("🚫 Only Cybersecurity track!"); window.location.href="selection.html"; return; }
-
-  const username = data.username || user.email;
-  document.getElementById("userAvatar").textContent = username.charAt(0).toUpperCase();
-  userEmail.innerHTML = "<strong>"+username+"</strong>";
+  const data = userSnap.exists() ? userSnap.data() : { username:user.email, xp:0, solvedStages:[], selectedField:"IT" };
+  document.getElementById("userAvatar").textContent = (data.username||user.email).charAt(0).toUpperCase();
+  userEmail.innerHTML = `<strong>${data.username||user.email}</strong>`;
   userXP.textContent = "XP: "+(data.xp||0);
-
   loadStages(data);
-  loadLiveActivity();
+  loadActivityFeed();
 });
 
 async function loadStages(userData){
-  const q = query(collection(db,"stages"), orderBy("order"));
+  const q = collection(db,"stages");
   const snapshot = await getDocs(q);
-  const solvedStages = userData.solvedStages || [];
   stageContainer.innerHTML = "";
   snapshot.forEach(docSnap=>{
     const stage = docSnap.data();
     const stageId = docSnap.id;
     const card = document.createElement("div");
     card.classList.add("stage-card");
-    if(solvedStages.includes(stageId)) card.classList.add("solved");
-    const isLocked = stage.order>1 && !solvedStages.includes("stage"+(stage.order-1));
-    card.classList.toggle("locked", isLocked);
-    card.innerHTML = `<h3>${stage.title} ${isLocked?"🔒":""}</h3>
-                      <p>${stage.text}</p>
-                      <p>XP: ${stage.xp}</p>
-                      <button ${isLocked?"disabled":`onclick="openStage('${stageId}')"`}>${isLocked?"Locked":"Start"}</button>`;
+    if((userData.solvedStages||[]).includes(stageId)) card.classList.add("solved");
+    const locked = stage.order>1 && !(userData.solvedStages||[]).includes("stage"+(stage.order-1));
+    card.classList.toggle("locked", locked);
+    card.innerHTML = `<h3>${stage.title} ${locked?"🔒":""}</h3><p>${stage.text}</p><p>XP: ${stage.xp}</p>
+      <button ${locked?"disabled":`onclick="openStage('${stageId}')"`}>${locked?"Locked":"Start"}</button>`;
     stageContainer.appendChild(card);
   });
 }
 
-function loadLiveActivity(){
-  const actQuery = query(collection(db,"activity"), orderBy("timestamp","desc"), limit(20));
-  onSnapshot(actQuery, snapshot=>{
+// ✅ Live Activity Feed that works even without timestamp
+function loadActivityFeed(){
+  const actCol = collection(db,"activity");
+  onSnapshot(actCol, async snapshot=>{
     activityContainer.innerHTML = "";
-    snapshot.docs.forEach(act=>{
-      const data = act.data();
-      const username = userMap[data.userId];
+    for(const docSnap of snapshot.docs){
+      const act = docSnap.data();
+      let username = userCache[act.userId];
       const div = document.createElement("div");
       div.className="activity";
-      div.textContent = username ? `⚡ ${username} solved ${data.stageId}` : `⚡ [Loading...] ${data.stageId}`;
-      activityContainer.appendChild(div);
-      if(!userMap[data.userId]){
-        // fetch missing username
-        getDoc(doc(db,"users",data.userId)).then(uSnap=>{
-          if(uSnap.exists()){
-            userMap[data.userId] = uSnap.data().username || uSnap.data().email;
-            div.textContent = `⚡ ${userMap[data.userId]} solved ${data.stageId}`;
-          }
-        });
+      if(username){
+        div.textContent = `⚡ ${username} solved ${act.stageId}`;
+      }else{
+        div.textContent = `⚡ [Loading...] solved ${act.stageId}`;
+        const userSnap = await getDoc(doc(db,"users",act.userId));
+        if(userSnap.exists()){
+          username = userSnap.data().username||userSnap.data().email;
+          userCache[act.userId] = username;
+          div.textContent = `⚡ ${username} solved ${act.stageId}`;
+        }
       }
-    });
+      activityContainer.appendChild(div);
+    }
   });
 }
 
-window.openStage = id => window.location.href="stage.html?id="+id;
+window.openStage = id=>window.location.href="stage.html?id="+id;
 logoutBtn.onclick = ()=>signOut(auth).then(()=>window.location.href="index.html");
 </script>
 </body>
