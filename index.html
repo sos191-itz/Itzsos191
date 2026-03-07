@@ -513,32 +513,7 @@ async function validateUserAndProceed() {
 startBtn.onclick = validateUserAndProceed;
 joinBtn.onclick = validateUserAndProceed;
 
-// Join button control
-async function validateUserAndProceed() {
-  if (!currentUser) {
-    alert("❌ Please login first!");
-    location.href = "#login"; // scroll to login box
-    return;
-  }
 
-  if (!currentUser.emailVerified) {
-    alert("❌ Verify your email first!");
-    await sendEmailVerification(currentUser);
-    return;
-  }
-
-  // Check Firestore for username
-  const userRef = doc(db, "users", currentUser.uid);
-  const snap = await getDoc(userRef);
-
-  if (!snap.exists() || !snap.data().username?.trim()) {
-    alert("❌ Invalid account. Please register a valid username.");
-    return;
-  }
-
-  // ✅ Everything is valid, go to training page
-  window.location.href = "selection.html";
-}
 const params = new URLSearchParams(window.location.search);
 const mode = params.get("mode");
 const oobCode = params.get("oobCode");
