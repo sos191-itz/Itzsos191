@@ -301,7 +301,8 @@ userXP.textContent = "XP: " + (userData.xp || 0);
 /* LOAD STAGES */
 async function loadStages(user, userData) {
 
-  const querySnapshot = await getDocs(collection(db, "stages"));
+  const q = query(collection(db,"stages"),orderBy("order"));
+const querySnapshot = await getDocs(q);
 
   if (querySnapshot.empty) {
     stageContainer.innerHTML = "<p>No stages added yet.</p>";
@@ -363,11 +364,11 @@ orderBy("time","desc"),
 limit(10)
 );
 
-onSnapshot(q, async (snapshot)=>{
+onSnapshot(q,(snapshot)=>{
 
 activityFeed.innerHTML="";
 
-snapshot.forEach(async (docSnap)=>{
+snapshot.forEach((docSnap)=>{
 
 const data = docSnap.data();
 
@@ -379,16 +380,6 @@ div.className="activity";
 div.innerHTML = `
 ⚡ <strong>${username}</strong> ${data.action}
 `;
-
-activityFeed.appendChild(div);
-
-});
-
-});
-
-activityFeed.appendChild(div);
-
-});
 
 activityFeed.appendChild(div);
 
