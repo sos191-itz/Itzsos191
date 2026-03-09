@@ -10,6 +10,8 @@ body {
   font-family: monospace;
   background:#0f111a;
   color:#00ffdd;
+  overflow-x:hidden;
+  transition: background 0.3s ease;
 }
 nav {
   background:#111422;
@@ -26,7 +28,9 @@ nav button {
   padding:8px 15px;
   font-weight:bold;
   cursor:pointer;
+  transition:0.3s;
 }
+nav button:hover { background:#00ffdd; color:#111; }
 .container {
   max-width:800px;
   margin:40px auto;
@@ -34,16 +38,17 @@ nav button {
   background:#111422;
   border:1px solid #00ffdd;
   border-radius:12px;
-  box-shadow: 0 0 20px #00ffdd44;
-  animation: fadeIn 1s ease;
+  box-shadow:0 0 25px rgba(0,255,221,0.2);
+  position:relative;
+  overflow:hidden;
 }
 input {
   width:100%;
   padding:10px;
   margin-top:15px;
-  background:#111;
+  background:black;
   border:1px solid #00ffdd;
-  color:#0ff;
+  color:white;
   border-radius:5px;
 }
 button {
@@ -53,39 +58,41 @@ button {
   cursor:pointer;
   border:none;
   border-radius:5px;
+  transition:0.3s;
 }
-.submit { background:#00ffdd; color:#111; }
-.hintBtn { background:#ff6600; color:#111; }
-#result, #hintBox { margin-top:15px; font-weight:bold; animation: glow 1s infinite alternate; }
+button.submit { background:#00ffdd; color:#111; }
+button.submit:hover { background:#ff6600; color:#111; }
+button.hintBtn { background:#ff6600; }
+#result, #hintBox { margin-top:15px; font-weight:bold; }
+.locked { font-size:1.2rem; color:orange; text-align:center; margin-top:20px; opacity:0.6; }
 #terminalContainer {
   display:none;
   background:black;
-  border:1px solid #00ffdd;
   padding:15px;
-  margin-top:20px;
   border-radius:8px;
-  min-height:200px;
+  border:1px solid #00ffdd;
   max-height:400px;
   overflow-y:auto;
+  margin-top:20px;
+  box-shadow:0 0 15px #00ffdd;
 }
-.prompt { color:#ff6600; margin-right:5px; }
+.prompt {
+  color:#ff6600;
+}
 #terminalInput {
+  background:black;
+  color:#00ffdd;
+  border:none;
+  outline:none;
   flex:1;
-  background:#111;
-  border:1px solid #00ffdd;
-  color:#0ff;
-  padding:5px;
-  border-radius:5px;
+  font-family:monospace;
 }
-#progressWrapper { margin-bottom:20px; }
 #progressBar {
   height:12px;
   width:0%;
-  background:linear-gradient(90deg,#ff6600,#00ffdd);
+  background:linear-gradient(90deg,#00ffdd,#00aa88);
   transition:width 0.5s ease;
 }
-@keyframes glow { from {text-shadow:0 0 5px #ff6600;} to {text-shadow:0 0 15px #00ffdd;} }
-@keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
 </style>
 </head>
 <body>
@@ -96,8 +103,9 @@ button {
 </nav>
 
 <div class="container">
-  <div id="progressWrapper">
-    <div id="progressText" style="margin-bottom:5px;font-weight:bold;">Loading progress...</div>
+  <!-- Progress -->
+  <div id="progressWrapper" style="margin-bottom:20px;">
+    <div id="progressText" style="margin-bottom:5px; font-weight:bold;">Loading progress...</div>
     <div style="background:#222; border-radius:8px; overflow:hidden;">
       <div id="progressBar"></div>
     </div>
@@ -106,6 +114,7 @@ button {
   <h2 id="stageTitle">Loading...</h2>
   <p id="stageText"></p>
 
+  <!-- Normal flag input -->
   <div id="defaultFlagArea">
     <input type="text" id="flagInput" placeholder="Enter flag">
     <button class="submit" id="submitBtn">Submit</button>
@@ -115,6 +124,9 @@ button {
   <div id="result"></div>
   <div id="hintBox"></div>
 
+  <button id="nextStageBtn" style="display:none; background:orange;">Go To Next Stage →</button>
+
+  <!-- Terminal container for Stage 4 -->
   <div id="terminalContainer">
     <div id="terminalOutput"></div>
     <div style="display:flex; align-items:center; margin-top:5px;">
@@ -122,17 +134,16 @@ button {
       <input id="terminalInput" type="text" autofocus>
     </div>
   </div>
-
-  <button id="nextStageBtn" style="display:none; background:orange;">
-    Go To Next Stage →
-  </button>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { 
+  getFirestore, doc, getDoc, updateDoc, arrayUnion, increment 
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -141,20 +152,21 @@ const firebaseConfig = {
   messagingSenderId: "1012826517121",
   appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 const stageId = new URLSearchParams(window.location.search).get("id");
-const TOTAL_STAGES = 50;
-
 let currentUser = null;
-let stageXP = 0;
 let correctAnswer = "";
+let stageXP = 0;
 let stageHint = "";
 let currentOrder = 0;
+const nextStageBtn = document.getElementById("nextStageBtn");
+const TOTAL_STAGES = 50;
 
-const backBtn = document.getElementById("backBtn");
+// Elements
 const stageTitleEl = document.getElementById("stageTitle");
 const stageTextEl = document.getElementById("stageText");
 const defaultFlagArea = document.getElementById("defaultFlagArea");
@@ -162,19 +174,17 @@ const resultEl = document.getElementById("result");
 const hintBoxEl = document.getElementById("hintBox");
 const progressText = document.getElementById("progressText");
 const progressBar = document.getElementById("progressBar");
-const nextStageBtn = document.getElementById("nextStageBtn");
-
 const terminalContainer = document.getElementById("terminalContainer");
 const terminalOutput = document.getElementById("terminalOutput");
 const terminalInput = document.getElementById("terminalInput");
 
 // Back button
-backBtn.onclick = () => window.location.href="stages.html";
+document.getElementById("backBtn").onclick = () => { window.location.href="stages.html"; };
 
-// Terminal typing effect
-function typeTerminal(text, container, speed=30) {
-  let i = 0;
-  const interval = setInterval(() => {
+// Terminal typing animation
+function typeTerminal(text, container, speed=30){
+  let i=0;
+  const interval = setInterval(()=>{
     container.innerHTML += text[i];
     i++;
     if(i>=text.length) clearInterval(interval);
@@ -183,44 +193,50 @@ function typeTerminal(text, container, speed=30) {
 }
 
 // Auth check
-onAuthStateChanged(auth, async (user) => {
-  if(!user) { alert("Login first"); return window.location.href="index.html"; }
+onAuthStateChanged(auth, async (user)=>{
+  if(!user){ alert("Please login first!"); window.location.href="index.html"; return; }
   currentUser = user;
-  if(!user.emailVerified) { alert("Verify email first"); return window.location.href="index.html"; }
+  if(!user.emailVerified){ alert("Verify email!"); window.location.href="index.html"; return; }
 
-  const userRef = doc(db, "users", user.uid);
+  const userRef = doc(db,"users",user.uid);
   const userSnap = await getDoc(userRef);
-  if(!userSnap.exists()) return window.location.href="selection.html";
-
+  if(!userSnap.exists()){ window.location.href="selection.html"; return; }
   const userData = userSnap.data();
-  if(userData.selectedField !== "IT") { alert("🚫 Only Cybersecurity allowed"); return window.location.href="selection.html"; }
+  if(userData.selectedField !== "IT"){ alert("🚫 Only Cybersecurity users allowed."); window.location.href="selection.html"; return; }
+
+  stageXP = 0;
+  correctAnswer = "";
+  stageHint = "";
 
   await loadStage(userData);
 });
 
 // Load stage
 async function loadStage(userData){
-  const stageRef = doc(db, "stages", stageId);
+  const stageRef = doc(db,"stages",stageId);
   const stageSnap = await getDoc(stageRef);
-  if(!stageSnap.exists()) { stageTitleEl.textContent="Stage not found"; return; }
-
+  if(!stageSnap.exists()){ stageTitleEl.textContent="Stage not found"; return; }
   const stageData = stageSnap.data();
   currentOrder = stageData.order;
+  const percentage = Math.round((currentOrder/TOTAL_STAGES)*100);
+  progressText.textContent = `Stage ${currentOrder} / ${TOTAL_STAGES} (${percentage}%)`;
+  progressBar.style.width = percentage+"%";
   stageTitleEl.textContent = stageData.title;
   stageTextEl.textContent = stageData.text;
+
+  correctAnswer = stageData.answer || "";
   stageXP = stageData.xp || 0;
   stageHint = stageData.hint || "No hint available";
-  correctAnswer = stageData.answer || "";
 
-  // Update progress
-  const percentage = Math.round((currentOrder/TOTAL_STAGES)*100);
-  progressText.textContent = `Stage ${currentOrder}/${TOTAL_STAGES} (${percentage}%)`;
-  progressBar.style.width = percentage + "%";
-
-  // Stage lock logic
+  // Lock stages
   let solvedStages = userData.solvedStages || [];
-  let highestSolved = Math.max(...solvedStages.map(s=>parseInt(s.replace("stage",""))).filter(n=>!isNaN(n)), 0);
-  if(currentOrder > highestSolved +1){
+  if(solvedStages.includes("[]")) solvedStages = solvedStages.filter(s=>"[]");
+  let highestSolved=0;
+  for(let s of solvedStages){
+    const num = parseInt(s.replace("stage",""));
+    if(!isNaN(num) && num>highestSolved) highestSolved=num;
+  }
+  if(currentOrder > highestSolved+1){
     defaultFlagArea.style.display="none";
     document.getElementById("hintBtn").style.display="none";
     resultEl.style.display="none";
@@ -229,49 +245,78 @@ async function loadStage(userData){
     return;
   }
 
-  // Stage 4 Terminal
-  if(stageId === "stage4"){
+  // Stage 3: Admin login
+  if(stageId==="stage3"){
+    defaultFlagArea.style.display="none";
+    document.querySelector(".container").innerHTML += `
+      <h3>Admin Login</h3>
+      <input type="text" id="loginUser" placeholder="Username">
+      <input type="password" id="loginPass" placeholder="Password">
+      <button id="loginBtnSim" class="submit">Login</button>
+      <div id="loginResult"></div>
+    `;
+    document.getElementById("loginBtnSim").onclick = async ()=>{
+      const username = document.getElementById("loginUser").value;
+      const userRef = doc(db,"users",currentUser.uid);
+      const userSnap = await getDoc(userRef);
+      const solved = userSnap.exists()?userSnap.data().solvedStages||[]:[];
+      if(solved.includes(stageId)){
+        document.getElementById("loginResult").textContent="⚠️ Already solved!";
+        return;
+      }
+      if(username.includes("' OR 1=1")){
+        document.getElementById("loginResult").innerHTML="🎉 Access Granted!<br>Flag: "+correctAnswer;
+        await updateDoc(userRef,{
+          solvedStages: arrayUnion(stageId),
+          xp: increment(stageXP)
+        });
+      } else {
+        document.getElementById("loginResult").textContent="Access Denied.";
+      }
+    };
+    return;
+  }
+
+  // Stage 4: Terminal
+  if(stageId==="stage4"){
     defaultFlagArea.style.display="none";
     document.getElementById("hintBtn").style.display="none";
     resultEl.style.display="none";
     hintBoxEl.style.display="none";
     terminalContainer.style.display="block";
-
     typeTerminal("Welcome to Kali Lab! Type 'help' for commands.\n", terminalOutput);
 
     terminalInput.addEventListener("keydown", async (e)=>{
-      if(e.key !== "Enter") return;
-      const command = terminalInput.value.trim().toLowerCase();
-      terminalOutput.innerHTML += "\nuser@itzsos:~$ "+command+"\n";
-      terminalInput.value = "";
+      if(e.key==="Enter"){
+        const command = terminalInput.value.trim().toLowerCase();
+        terminalOutput.innerHTML+="\nuser@itzsos:~$ "+command+"\n";
+        terminalInput.value="";
 
-      if(command==="help"){
-        typeTerminal("Available commands: ls, cat flag.txt, clear\n", terminalOutput);
-      } else if(command==="ls"){
-        typeTerminal("flag.txt  notes.txt  secret.key\n", terminalOutput);
-      } else if(command==="cat flag.txt"){
-        const stageSnap = await getDoc(stageRef);
-        typeTerminal(stageSnap.data().answer + "\n", terminalOutput);
-
-        // mark as solved
-        const userRef = doc(db, "users", currentUser.uid);
-        await updateDoc(userRef,{
-          solvedStages: arrayUnion(stageId),
-          xp: increment(stageXP)
-        });
-        resultEl.textContent = `✅ Correct! +${stageXP} XP`;
-        resultEl.style.color="lightgreen";
-      } else if(command==="clear"){
-        terminalOutput.innerHTML="";
-      } else {
-        typeTerminal(`Command not found: ${command}\n`, terminalOutput);
+        const userRef = doc(db,"users",currentUser.uid);
+        const userSnap = await getDoc(userRef);
+        const solved = userSnap.exists()?userSnap.data().solvedStages||[]:[];
+        if(command==="help") typeTerminal("Available commands: ls, cat flag.txt, clear\n",terminalOutput);
+        else if(command==="ls") typeTerminal("flag.txt  notes.txt  secret.key\n",terminalOutput);
+        else if(command==="cat flag.txt"){
+          typeTerminal(correctAnswer+"\n",terminalOutput);
+          if(!solved.includes(stageId)){
+            await updateDoc(userRef,{
+              solvedStages: arrayUnion(stageId),
+              xp: increment(stageXP)
+            });
+            resultEl.textContent="✅ Correct! +"+stageXP+" XP";
+            resultEl.style.color="lightgreen";
+          }
+        }
+        else if(command==="clear") terminalOutput.innerHTML="";
+        else typeTerminal(`Command not found: ${command}\n`,terminalOutput);
       }
     });
     return;
   }
 }
 
-// Show hint
+// Hint button
 document.getElementById("hintBtn").onclick = () => {
   hintBoxEl.textContent = "💡 Hint: "+stageHint;
 };
@@ -288,8 +333,8 @@ document.getElementById("submitBtn").onclick = async ()=>{
 
   const userRef = doc(db,"users",currentUser.uid);
   const userSnap = await getDoc(userRef);
-  const solvedStages = userSnap.exists() ? userSnap.data().solvedStages || [] : [];
-  if(solvedStages.includes(stageId)){
+  const solved = userSnap.exists()?userSnap.data().solvedStages||[]:[];
+  if(solved.includes(stageId)){
     resultEl.textContent="⚠️ Already solved!";
     resultEl.style.color="yellow";
     return;
@@ -299,15 +344,13 @@ document.getElementById("submitBtn").onclick = async ()=>{
     solvedStages: arrayUnion(stageId),
     xp: increment(stageXP)
   });
-
-  resultEl.textContent=`✅ Correct! +${stageXP} XP`;
+  resultEl.textContent="✅ Correct! +"+stageXP+" XP";
   resultEl.style.color="lightgreen";
 
   // Next stage
   const nextStageId = "stage"+(currentOrder+1);
   const nextStageRef = doc(db,"stages",nextStageId);
   const nextStageSnap = await getDoc(nextStageRef);
-
   if(!nextStageSnap.exists()){
     nextStageBtn.style.display="block";
     nextStageBtn.textContent="🏆 Track Completed - Back to Stages";
@@ -316,8 +359,13 @@ document.getElementById("submitBtn").onclick = async ()=>{
   }
 
   nextStageBtn.style.display="block";
-  nextStageBtn.onclick = ()=>window.location.href="stage.html?id="+nextStageId;
+  let timer = setTimeout(()=>window.location.href="stage.html?id="+nextStageId,5000);
+  nextStageBtn.onclick = ()=>{
+    clearTimeout(timer);
+    window.location.href="stage.html?id="+nextStageId;
+  };
 };
 </script>
+
 </body>
 </html>
