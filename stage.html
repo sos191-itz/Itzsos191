@@ -132,6 +132,13 @@ button.hintBtn { background:#ff6600; }
     <div style="display:flex; align-items:center; margin-top:5px;">
       <span class="prompt">user@itzsos:~$</span>
       <input id="terminalInput" type="text" autofocus>
+<div id="terminalContainer">
+  <div id="terminalOutput"></div>
+  <div style="display:flex; align-items:center; margin-top:5px;">
+    <span class="prompt">user@itzsos:~$</span>
+    <input id="terminalInput" type="text" autofocus placeholder="Enter flag">
+  </div>
+</div>
     </div>
   </div>
 </div>
@@ -330,6 +337,31 @@ document.getElementById("submitBtn").onclick = async ()=>{
     resultEl.style.color="red";
     return;
   }
+if(stageId === "stage5"){
+  defaultFlagArea.style.display = "none";
+  terminalContainer.style.display = "block";
+  terminalOutput.innerHTML = "Welcome to the Caesar Cipher Lab!\nType the decoded flag and press Enter.\n";
+
+  terminalInput.addEventListener("keydown", async (e)=>{
+    if(e.key === "Enter"){
+      const input = terminalInput.value.trim().toLowerCase();
+      terminalOutput.innerHTML += "> " + input + "\n";
+      terminalInput.value = "";
+      if(input === correctAnswer.toLowerCase()){
+        terminalOutput.innerHTML += `✅ Correct! +${stageXP} XP\n`;
+        const userRef = doc(db,"users",currentUser.uid);
+        await updateDoc(userRef,{
+          solvedStages: arrayUnion(stageId),
+          xp: increment(stageXP)
+        });
+        nextStageBtn.style.display = "block";
+      } else {
+        terminalOutput.innerHTML += "❌ Wrong flag!\n";
+      }
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    }
+  });
+}
 
   const userRef = doc(db,"users",currentUser.uid);
   const userSnap = await getDoc(userRef);
