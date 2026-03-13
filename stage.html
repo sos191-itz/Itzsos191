@@ -153,16 +153,16 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Global variables
 const stageId = new URLSearchParams(window.location.search).get("id");
 let currentUser = null;
 let correctAnswer = "";
 let stageXP = 0;
 let stageHint = "";
 let currentOrder = 0;
+const nextStageBtn = document.getElementById("nextStageBtn");
 const TOTAL_STAGES = 50;
 
-// DOM elements
+// Elements
 const stageTitleEl = document.getElementById("stageTitle");
 const stageTextEl = document.getElementById("stageText");
 const defaultFlagArea = document.getElementById("defaultFlagArea");
@@ -173,18 +173,17 @@ const progressBar = document.getElementById("progressBar");
 const terminalContainer = document.getElementById("terminalContainer");
 const terminalOutput = document.getElementById("terminalOutput");
 const terminalInput = document.getElementById("terminalInput");
-const nextStageBtn = document.getElementById("nextStageBtn");
 
 // Back button
 document.getElementById("backBtn").onclick = () => { window.location.href="stages.html"; };
 
-// Terminal typing helper
+// Terminal typing animation
 function typeTerminal(text, container, speed=30){
-  let i = 0;
+  let i=0;
   const interval = setInterval(()=>{
     container.innerHTML += text[i];
     i++;
-    if(i >= text.length) clearInterval(interval);
+    if(i>=text.length) clearInterval(interval);
     container.scrollTop = container.scrollHeight;
   }, speed);
 }
@@ -193,13 +192,17 @@ function typeTerminal(text, container, speed=30){
 onAuthStateChanged(auth, async (user)=>{
   if(!user){ alert("Please login first!"); window.location.href="index.html"; return; }
   currentUser = user;
-  if(!user.emailVerified){ alert("Verify your email first!"); window.location.href="index.html"; return; }
+  if(!user.emailVerified){ alert("Verify email!"); window.location.href="index.html"; return; }
 
   const userRef = doc(db,"users",user.uid);
   const userSnap = await getDoc(userRef);
   if(!userSnap.exists()){ window.location.href="selection.html"; return; }
   const userData = userSnap.data();
   if(userData.selectedField !== "IT"){ alert("🚫 Only Cybersecurity users allowed."); window.location.href="selection.html"; return; }
+
+  stageXP = 0;
+  correctAnswer = "";
+  stageHint = "";
 
   await loadStage(userData);
 });
@@ -209,173 +212,163 @@ async function loadStage(userData){
   const stageRef = doc(db,"stages",stageId);
   const stageSnap = await getDoc(stageRef);
   if(!stageSnap.exists()){ stageTitleEl.textContent="Stage not found"; return; }
-
   const stageData = stageSnap.data();
-  currentOrder = stageData.order || 1;
+  currentOrder = stageData.order;
+  const percentage = Math.round((currentOrder/TOTAL_STAGES)*100);
+  progressText.textContent = `Stage ${currentOrder} / ${TOTAL_STAGES} (${percentage}%)`;
+  progressBar.style.width = percentage+"%";
+  stageTitleEl.textContent = stageData.title;
+  stageTextEl.textContent = stageData.text;
+
   correctAnswer = stageData.answer || "";
   stageXP = stageData.xp || 0;
   stageHint = stageData.hint || "No hint available";
-
-  stageTitleEl.textContent = stageData.title || "Stage";
-  stageTextEl.textContent = stageData.text || "";
-
-  // Progress bar
-  const percentage = Math.round((currentOrder/TOTAL_STAGES)*100);
-  progressText.textContent = `Stage ${currentOrder} / ${TOTAL_STAGES} (${percentage}%)`;
-  progressBar.style.width = percentage + "%";
 
   // Lock stages
   let solvedStages = userData.solvedStages || [];
   let highestSolved = 0;
   solvedStages.forEach(s=>{
     const num = parseInt(s.replace("stage",""));
-    if(!isNaN(num) && num > highestSolved) highestSolved = num;
+    if(!isNaN(num) && num>highestSolved) highestSolved=num;
   });
-  if(currentOrder > highestSolved + 1){
-    defaultFlagArea.style.display = "none";
-    document.getElementById("hintBtn").style.display = "none";
-    resultEl.style.display = "none";
-    hintBoxEl.style.display = "none";
+  if(currentOrder > highestSolved+1){
+    defaultFlagArea.style.display="none";
+    document.getElementById("hintBtn").style.display="none";
+    resultEl.style.display="none";
+    hintBoxEl.style.display="none";
     stageTextEl.textContent = stageData.title + " 🔒 Locked";
     return;
   }
 
-  // Stage 3: Admin login simulation
-  if(stageId === "stage3"){
+  // Stage 4: Kali Terminal
+  if(stageId==="stage4"){
     defaultFlagArea.style.display="none";
-    document.querySelector(".container").innerHTML += `
-      <h3>Admin Login</h3>
-      <input type="text" id="loginUser" placeholder="Username">
-      <input type="password" id="loginPass" placeholder="Password">
-      <button id="loginBtnSim" class="submit">Login</button>
-      <div id="loginResult"></div>
-    `;
-    document.getElementById("loginBtnSim").onclick = async ()=>{
-      const username = document.getElementById("loginUser").value;
-      const userRef = doc(db,"users",currentUser.uid);
-      const userSnap = await getDoc(userRef);
-      const solved = userSnap.exists()?userSnap.data().solvedStages||[]:[];
-      if(solved.includes(stageId)){
-        document.getElementById("loginResult").textContent="⚠️ Already solved!";
-        return;
-      }
-      if(username.includes("' OR 1=1")){
-        document.getElementById("loginResult").innerHTML="🎉 Access Granted!<br>Flag: "+correctAnswer;
-        await updateDoc(userRef,{
-          solvedStages: arrayUnion(stageId),
-          xp: increment(stageXP)
-        });
-      } else {
-        document.getElementById("loginResult").textContent="Access Denied.";
-      }
-    };
-    return;
-  }
-
-  // Stage 4: Terminal simulation
-  if(stageId === "stage4"){
-    defaultFlagArea.style.display = "none";
     document.getElementById("hintBtn").style.display="none";
     resultEl.style.display="none";
     hintBoxEl.style.display="none";
-    terminalContainer.style.display = "block";
+    terminalContainer.style.display="block";
     terminalOutput.innerHTML = "";
     typeTerminal("Welcome to Kali Lab! Type 'help' for commands.\n", terminalOutput);
     attachTerminalHandler(["help","ls","cat flag.txt","clear"]);
     return;
   }
 
-  // Stage 5: Caesar cipher terminal
-  if(stageId === "stage5"){
-    defaultFlagArea.style.display = "none";
-    terminalContainer.style.display = "block";
+  // Stage 5: Caesar Cipher Terminal
+  if(stageId==="stage5"){
+    defaultFlagArea.style.display="none";
+    terminalContainer.style.display="block";
     terminalOutput.innerHTML = "Welcome to the Caesar Cipher Lab!\nType the decoded flag and press Enter.\n";
-
-    // Replace terminal input to remove previous listeners
-    const newInput = terminalInput.cloneNode(true);
-    terminalInput.parentNode.replaceChild(newInput, terminalInput);
-    newInput.placeholder = "Enter flag";
-
-    newInput.addEventListener("keydown", async (e)=>{
-      if(e.key !== "Enter") return;
-      const input = e.target.value.trim().toLowerCase();
-      e.target.value = "";
-      terminalOutput.innerHTML += "> " + input + "\n";
-
-      const userRef = doc(db,"users",currentUser.uid);
-      const userSnap = await getDoc(userRef);
-      const solved = userSnap.exists()?userSnap.data().solvedStages||[]:[];
-
-      if(input === correctAnswer.toLowerCase()){
-        terminalOutput.innerHTML += `✅ Correct! +${stageXP} XP\n`;
-        if(!solved.includes(stageId)){
-          await updateDoc(userRef,{
-            solvedStages: arrayUnion(stageId),
-            xp: increment(stageXP)
-          });
-        }
-        nextStageBtn.style.display = "block";
-      } else {
-        terminalOutput.innerHTML += "❌ Wrong flag!\n";
-      }
-      terminalOutput.scrollTop = terminalOutput.scrollHeight;
-    });
-
+    setupStage5Terminal();
     return;
   }
 
-  // Stage 6 placeholder (can customize)
-  if(stageId === "stage6"){
-    defaultFlagArea.style.display = "none";
-    terminalContainer.style.display = "block";
-    terminalOutput.innerHTML = "Stage 6 Terminal placeholder.\nType commands here...\n";
-
-    attachTerminalHandler(["help","ls","cat flag6.txt","clear"]);
+  // Stage 6: Advanced File System Terminal
+  if(stageId==="stage6"){
+    defaultFlagArea.style.display="none";
+    terminalContainer.style.display="block";
+    terminalOutput.innerHTML = "Welcome to Stage 6!\nNavigate the virtual file system to find the flag.\nType 'help' for commands.\n";
+    setupStage6Terminal();
     return;
   }
 }
 
-// Terminal command handler
-function attachTerminalHandler(commands){
-  terminalInput.addEventListener("keydown", async (e)=>{
+// Terminal setup for Stage 5
+function setupStage5Terminal(){
+  const newInput = terminalInput.cloneNode(true);
+  terminalInput.parentNode.replaceChild(newInput, terminalInput);
+
+  newInput.addEventListener("keydown", async (e)=>{
     if(e.key !== "Enter") return;
-    const cmd = terminalInput.value.trim().toLowerCase();
-    terminalOutput.innerHTML += "\nuser@itzsos:~$ " + cmd + "\n";
-    terminalInput.value = "";
+    const input = e.target.value.trim().toLowerCase();
+    terminalOutput.innerHTML += "> " + input + "\n";
+    e.target.value = "";
+
+    if(input === correctAnswer.toLowerCase()){
+      terminalOutput.innerHTML += `✅ Correct! +${stageXP} XP\n`;
+      const userRef = doc(db,"users",currentUser.uid);
+      await updateDoc(userRef,{
+        solvedStages: arrayUnion(stageId),
+        xp: increment(stageXP)
+      });
+      nextStageBtn.style.display = "block";
+    } else {
+      terminalOutput.innerHTML += "❌ Wrong flag!\n";
+    }
+    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+  });
+}
+
+// Terminal setup for Stage 6
+function setupStage6Terminal(){
+  const fs = {
+    "/": ["home","flag.txt"],
+    "/home": ["user.txt","notes.txt"]
+  };
+  let cwd = "/";
+  const flagFile = correctAnswer;
+
+  const newInput = terminalInput.cloneNode(true);
+  terminalInput.parentNode.replaceChild(newInput, terminalInput);
+
+  newInput.addEventListener("keydown", async (e)=>{
+    if(e.key !== "Enter") return;
+    const cmd = e.target.value.trim();
+    terminalOutput.innerHTML += "user@itzsos:~$ " + cmd + "\n";
+    e.target.value = "";
 
     const userRef = doc(db,"users",currentUser.uid);
     const userSnap = await getDoc(userRef);
     const solved = userSnap.exists()?userSnap.data().solvedStages||[]:[];
+    let parts = cmd.split(" ");
 
-    if(cmd === "help") typeTerminal("Available commands: ls, cat flag.txt, clear\n", terminalOutput);
-    else if(cmd === "ls") typeTerminal("flag.txt  notes.txt  secret.key\n", terminalOutput);
-    else if(cmd === "cat flag.txt"){
-      typeTerminal(correctAnswer + "\n", terminalOutput);
-      if(!solved.includes(stageId)){
-        await updateDoc(userRef,{
-          solvedStages: arrayUnion(stageId),
-          xp: increment(stageXP)
-        });
-        resultEl.textContent = `✅ Correct! +${stageXP} XP`;
-        resultEl.style.color = "lightgreen";
-        nextStageBtn.style.display = "block";
-      }
-    } 
-    else if(cmd === "clear") terminalOutput.innerHTML = "";
-    else typeTerminal(`Command not found: ${cmd}\n`, terminalOutput);
+    switch(parts[0]){
+      case "help":
+        typeTerminal("Commands: ls, cd <dir>, cat <file>, clear\n", terminalOutput);
+        break;
+      case "ls":
+        if(fs[cwd]) typeTerminal(fs[cwd].join("  ") + "\n", terminalOutput);
+        else typeTerminal("\n", terminalOutput);
+        break;
+      case "cd":
+        if(parts[1] && fs["/"+parts[1]]) cwd = "/"+parts[1];
+        else typeTerminal("Directory not found\n", terminalOutput);
+        break;
+      case "cat":
+        if(parts[1]==="flag.txt" && cwd==="/"){
+          typeTerminal(flagFile+"\n", terminalOutput);
+          if(!solved.includes(stageId)){
+            await updateDoc(userRef,{
+              solvedStages: arrayUnion(stageId),
+              xp: increment(stageXP)
+            });
+            nextStageBtn.style.display = "block";
+          }
+        } else if(fs[cwd] && fs[cwd].includes(parts[1])){
+          typeTerminal("File content: Lorem Ipsum...\n", terminalOutput);
+        } else {
+          typeTerminal("File not found\n", terminalOutput);
+        }
+        break;
+      case "clear":
+        terminalOutput.innerHTML = "";
+        break;
+      default:
+        typeTerminal(`Command not found: ${cmd}\n`, terminalOutput);
+    }
+    terminalOutput.scrollTop = terminalOutput.scrollHeight;
   });
 }
 
 // Hint button
 document.getElementById("hintBtn").onclick = () => {
-  hintBoxEl.textContent = "💡 Hint: " + stageHint;
+  hintBoxEl.textContent = "💡 Hint: "+stageHint;
 };
 
-// Normal flag submit
+// Normal flag submit (for non-terminal stages)
 document.getElementById("submitBtn").onclick = async ()=>{
   if(!currentUser) return;
   const input = document.getElementById("flagInput").value.trim().toLowerCase();
-  if(input !== correctAnswer.toLowerCase()){
+  if(input !== correctAnswer.trim().toLowerCase()){
     resultEl.textContent="❌ Wrong flag!";
     resultEl.style.color="red";
     return;
@@ -384,7 +377,6 @@ document.getElementById("submitBtn").onclick = async ()=>{
   const userRef = doc(db,"users",currentUser.uid);
   const userSnap = await getDoc(userRef);
   const solved = userSnap.exists()?userSnap.data().solvedStages||[]:[];
-
   if(solved.includes(stageId)){
     resultEl.textContent="⚠️ Already solved!";
     resultEl.style.color="yellow";
@@ -395,21 +387,21 @@ document.getElementById("submitBtn").onclick = async ()=>{
     solvedStages: arrayUnion(stageId),
     xp: increment(stageXP)
   });
-  resultEl.textContent=`✅ Correct! +${stageXP} XP`;
+  resultEl.textContent="✅ Correct! +"+stageXP+" XP";
   resultEl.style.color="lightgreen";
 
-  // Next stage navigation
+  // Next stage
   const nextStageId = "stage"+(currentOrder+1);
   const nextStageRef = doc(db,"stages",nextStageId);
   const nextStageSnap = await getDoc(nextStageRef);
-
-  nextStageBtn.style.display = "block";
   if(!nextStageSnap.exists()){
+    nextStageBtn.style.display="block";
     nextStageBtn.textContent="🏆 Track Completed - Back to Stages";
     nextStageBtn.onclick = ()=>window.location.href="stages.html";
     return;
   }
 
+  nextStageBtn.style.display="block";
   let timer = setTimeout(()=>window.location.href="stage.html?id="+nextStageId,5000);
   nextStageBtn.onclick = ()=>{
     clearTimeout(timer);
