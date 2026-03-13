@@ -136,7 +136,7 @@ button.hintBtn { background:#ff6600; }
   <div id="terminalOutput"></div>
   <div style="display:flex; align-items:center; margin-top:5px;">
     <span class="prompt">user@itzsos:~$</span>
-    <input id="terminalInput" type="text" autofocus placeholder="Enter flag">
+    <input id="terminalInput" type="text" placeholder="Enter flag">
   </div>
 </div>
     </div>
@@ -146,9 +146,7 @@ button.hintBtn { background:#ff6600; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { 
-  getFirestore, doc, getDoc, updateDoc, arrayUnion, increment 
-} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -237,12 +235,11 @@ async function loadStage(userData){
 
   // Lock stages
   let solvedStages = userData.solvedStages || [];
-  if(solvedStages.includes("[]")) solvedStages = solvedStages.filter(s=>"[]");
-  let highestSolved=0;
-  for(let s of solvedStages){
+  let highestSolved = 0;
+  solvedStages.forEach(s=>{
     const num = parseInt(s.replace("stage",""));
     if(!isNaN(num) && num>highestSolved) highestSolved=num;
-  }
+  });
   if(currentOrder > highestSolved+1){
     defaultFlagArea.style.display="none";
     document.getElementById("hintBtn").style.display="none";
@@ -291,36 +288,73 @@ async function loadStage(userData){
     resultEl.style.display="none";
     hintBoxEl.style.display="none";
     terminalContainer.style.display="block";
+    terminalOutput.innerHTML = ""; 
     typeTerminal("Welcome to Kali Lab! Type 'help' for commands.\n", terminalOutput);
 
-    terminalInput.addEventListener("keydown", async (e)=>{
-      if(e.key==="Enter"){
-        const command = terminalInput.value.trim().toLowerCase();
-        terminalOutput.innerHTML+="\nuser@itzsos:~$ "+command+"\n";
-        terminalInput.value="";
+    attachTerminalHandler(["help","ls","cat flag.txt","clear"]);
+    return;
+  }
 
-        const userRef = doc(db,"users",currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        const solved = userSnap.exists()?userSnap.data().solvedStages||[]:[];
-        if(command==="help") typeTerminal("Available commands: ls, cat flag.txt, clear\n",terminalOutput);
-        else if(command==="ls") typeTerminal("flag.txt  notes.txt  secret.key\n",terminalOutput);
-        else if(command==="cat flag.txt"){
-          typeTerminal(correctAnswer+"\n",terminalOutput);
-          if(!solved.includes(stageId)){
-            await updateDoc(userRef,{
-              solvedStages: arrayUnion(stageId),
-              xp: increment(stageXP)
-            });
-            resultEl.textContent="✅ Correct! +"+stageXP+" XP";
-            resultEl.style.color="lightgreen";
-          }
+  // Stage 5: Caesar Cipher Terminal
+  if(stageId==="stage5"){
+    defaultFlagArea.style.display="none";
+    terminalContainer.style.display="block";
+    terminalOutput.innerHTML = "Welcome to the Caesar Cipher Lab!\nType the decoded flag and press Enter.\n";
+
+    // Prevent duplicate listeners
+    const newInput = terminalInput.cloneNode(true);
+    terminalInput.parentNode.replaceChild(newInput, terminalInput);
+
+    newInput.addEventListener("keydown", async (e)=>{
+      if(e.key === "Enter"){
+        const input = e.target.value.trim().toLowerCase();
+        terminalOutput.innerHTML += "> " + input + "\n";
+        e.target.value = "";
+        if(input === correctAnswer.toLowerCase()){
+          terminalOutput.innerHTML += `✅ Correct! +${stageXP} XP\n`;
+          const userRef = doc(db,"users",currentUser.uid);
+          await updateDoc(userRef,{
+            solvedStages: arrayUnion(stageId),
+            xp: increment(stageXP)
+          });
+          nextStageBtn.style.display = "block";
+        } else {
+          terminalOutput.innerHTML += "❌ Wrong flag!\n";
         }
-        else if(command==="clear") terminalOutput.innerHTML="";
-        else typeTerminal(`Command not found: ${command}\n`,terminalOutput);
+        terminalOutput.scrollTop = terminalOutput.scrollHeight;
       }
     });
     return;
   }
+}
+
+// Attach terminal handler for Stage 4 commands
+function attachTerminalHandler(commands){
+  terminalInput.addEventListener("keydown", async (e)=>{
+    if(e.key !== "Enter") return;
+    const cmd = terminalInput.value.trim().toLowerCase();
+    terminalOutput.innerHTML += "\nuser@itzsos:~$ " + cmd + "\n";
+    terminalInput.value = "";
+    const userRef = doc(db,"users",currentUser.uid);
+    const userSnap = await getDoc(userRef);
+    const solved = userSnap.exists()?userSnap.data().solvedStages||[]:[];
+    if(cmd==="help") typeTerminal("Available commands: ls, cat flag.txt, clear\n",terminalOutput);
+    else if(cmd==="ls") typeTerminal("flag.txt  notes.txt  secret.key\n",terminalOutput);
+    else if(cmd==="cat flag.txt"){
+      typeTerminal(correctAnswer+"\n",terminalOutput);
+      if(!solved.includes(stageId)){
+        await updateDoc(userRef,{
+          solvedStages: arrayUnion(stageId),
+          xp: increment(stageXP)
+        });
+        resultEl.textContent="✅ Correct! +"+stageXP+" XP";
+        resultEl.style.color="lightgreen";
+        nextStageBtn.style.display="block";
+      }
+    }
+    else if(cmd==="clear") terminalOutput.innerHTML="";
+    else typeTerminal(`Command not found: ${cmd}\n`,terminalOutput);
+  });
 }
 
 // Hint button
@@ -328,7 +362,7 @@ document.getElementById("hintBtn").onclick = () => {
   hintBoxEl.textContent = "💡 Hint: "+stageHint;
 };
 
-// Flag submit
+// Flag submit (normal stages)
 document.getElementById("submitBtn").onclick = async ()=>{
   if(!currentUser) return;
   const input = document.getElementById("flagInput").value.trim().toLowerCase();
@@ -337,31 +371,6 @@ document.getElementById("submitBtn").onclick = async ()=>{
     resultEl.style.color="red";
     return;
   }
-if(stageId === "stage5"){
-  defaultFlagArea.style.display = "none";
-  terminalContainer.style.display = "block";
-  terminalOutput.innerHTML = "Welcome to the Caesar Cipher Lab!\nType the decoded flag and press Enter.\n";
-
-  terminalInput.addEventListener("keydown", async (e)=>{
-    if(e.key === "Enter"){
-      const input = terminalInput.value.trim().toLowerCase();
-      terminalOutput.innerHTML += "> " + input + "\n";
-      terminalInput.value = "";
-      if(input === correctAnswer.toLowerCase()){
-        terminalOutput.innerHTML += `✅ Correct! +${stageXP} XP\n`;
-        const userRef = doc(db,"users",currentUser.uid);
-        await updateDoc(userRef,{
-          solvedStages: arrayUnion(stageId),
-          xp: increment(stageXP)
-        });
-        nextStageBtn.style.display = "block";
-      } else {
-        terminalOutput.innerHTML += "❌ Wrong flag!\n";
-      }
-      terminalOutput.scrollTop = terminalOutput.scrollHeight;
-    }
-  });
-}
 
   const userRef = doc(db,"users",currentUser.uid);
   const userSnap = await getDoc(userRef);
