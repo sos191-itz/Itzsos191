@@ -3,255 +3,174 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Itzsos Labs Chat</title>
+<!-- Favicon -->
+<link rel="icon" href="assets/images/logo-crop.png">
 
-<title>Itzsos Labs Community Chat</title>
-
+<!-- CSS for green atoms background -->
 <style>
-
-body{
-margin:0;
-font-family:monospace;
-background:#000;
-color:#00ff9c;
-overflow:hidden;
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: black;
+  overflow: hidden;
+  color: #00ff9c;
 }
 
-/* Animated background */
-canvas{
-position:fixed;
-top:0;
-left:0;
-z-index:-1;
+#chat-container {
+  position: relative;
+  z-index: 2;
+  width: 90%;
+  max-width: 600px;
+  margin: 50px auto;
+  background: rgba(0,0,0,0.7);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 0 20px #00ff9c;
 }
 
-/* Chat container */
-.chat-container{
-width:90%;
-max-width:700px;
-margin:auto;
-margin-top:60px;
-background:rgba(0,0,0,0.7);
-border:1px solid #00ff9c;
-border-radius:10px;
-box-shadow:0 0 20px #00ff9c;
-padding:20px;
-animation:fadeIn 1s ease;
+#messages {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 10px;
 }
 
-h1{
-text-align:center;
-text-shadow:0 0 10px #00ff9c;
+.message {
+  margin-bottom: 8px;
+  padding: 5px;
+  border-radius: 5px;
+  background: rgba(0,255,156,0.2);
 }
 
-/* Messages */
-
-#messages{
-height:350px;
-overflow-y:auto;
-border:1px solid #003d28;
-padding:10px;
-margin-bottom:10px;
+input, button {
+  padding: 8px;
+  border-radius: 5px;
+  border: none;
+  margin-right: 5px;
 }
 
-.message{
-padding:6px;
-margin:5px 0;
-border-left:3px solid #00ff9c;
-animation:slideUp 0.3s ease;
+button {
+  background: #00ff9c;
+  cursor: pointer;
 }
 
-/* Inputs */
-
-input{
-width:70%;
-padding:10px;
-background:#000;
-border:1px solid #00ff9c;
-color:#00ff9c;
+/* Green atom animation background */
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1;
 }
-
-button{
-padding:10px;
-background:#00ff9c;
-border:none;
-cursor:pointer;
-font-weight:bold;
-}
-
-button:hover{
-background:#00cc7a;
-}
-
-/* Animations */
-
-@keyframes slideUp{
-from{
-opacity:0;
-transform:translateY(10px);
-}
-to{
-opacity:1;
-transform:translateY(0);
-}
-}
-
-@keyframes fadeIn{
-from{opacity:0}
-to{opacity:1}
-}
-
 </style>
 </head>
-
 <body>
 
-<canvas id="bg"></canvas>
-
-<div class="chat-container">
-
-<h1>💬 Itzsos Labs Chat</h1>
-
-<div id="messages"></div>
-
-<input id="name" placeholder="name">
-<input id="msg" placeholder="message">
-
-<button onclick="send()">Send</button>
-
+<div id="chat-container">
+  <h2>Itzsos Labs Chat</h2>
+  <div id="messages"></div>
+  <input type="text" id="msgInput" placeholder="Type message..." />
+  <button id="sendBtn">Send</button>
 </div>
 
+<canvas id="atoms"></canvas>
+
+<!-- Firebase -->
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-import {
-getFirestore,
-collection,
-addDoc,
-query,
-orderBy,
-onSnapshot
-} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
-
+// Firebase config
 const firebaseConfig = {
-
-apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
-
-authDomain: "itzsos-labs.firebaseapp.com",
-
-projectId: "itzsos-labs",
-
-storageBucket: "itzsos-labs.firebasestorage.app",
-
-messagingSenderId: "1012826517121",
-
-appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
-
+  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  authDomain: "itzsos-labs.firebaseapp.com",
+  projectId: "itzsos-labs",
+  storageBucket: "itzsos-labs.appspot.com",
+  messagingSenderId: "1012826517121",
+  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
 };
 
+// Init Firebase
 const app = initializeApp(firebaseConfig);
-
+const auth = getAuth(app);
 const db = getFirestore(app);
 
-const chatRef = collection(db,"chat");
+const messagesDiv = document.getElementById("messages");
+const msgInput = document.getElementById("msgInput");
+const sendBtn = document.getElementById("sendBtn");
 
-const messages = document.getElementById("messages");
+// Check if user is logged in
+onAuthStateChanged(auth, user => {
+  if (!user) {
+    alert("You must be logged in to access the chat!");
+    window.location.href = "index.html"; // redirect if not logged in
+  } else {
+    // Listen for messages
+    const messagesRef = collection(db, "chat");
+    const q = query(messagesRef, orderBy("timestamp"));
+    onSnapshot(q, snapshot => {
+      messagesDiv.innerHTML = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const div = document.createElement("div");
+        div.className = "message";
+        div.textContent = `${data.user}: ${data.text}`;
+        messagesDiv.appendChild(div);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      });
+    });
 
-const q = query(chatRef, orderBy("time"));
-
-onSnapshot(q,(snapshot)=>{
-
-messages.innerHTML="";
-
-snapshot.forEach(doc=>{
-
-const data = doc.data();
-
-messages.innerHTML += `
-<div class="message">
-<b>${data.name}</b>: ${data.text}
-</div>
-`;
-
+    // Send message
+    sendBtn.onclick = async () => {
+      if(msgInput.value.trim() === "") return;
+      await addDoc(messagesRef, {
+        user: user.displayName || user.email,
+        text: msgInput.value,
+        timestamp: serverTimestamp()
+      });
+      msgInput.value = "";
+    };
+  }
 });
 
-messages.scrollTop = messages.scrollHeight;
-
-});
-
-window.send = async function(){
-
-const name = document.getElementById("name").value || "Anonymous";
-
-const text = document.getElementById("msg").value;
-
-if(!text) return;
-
-await addDoc(chatRef,{
-name:name,
-text:text,
-time:Date.now()
-});
-
-document.getElementById("msg").value="";
-
-}
-
-</script>
-
-<script>
-
-/* Green atoms animated background */
-
-const canvas = document.getElementById("bg");
-
+// Green atoms background animation
+const canvas = document.getElementById("atoms");
 const ctx = canvas.getContext("2d");
-
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-let particles = [];
-
-for(let i=0;i<80;i++){
-
-particles.push({
-x:Math.random()*canvas.width,
-y:Math.random()*canvas.height,
-vx:(Math.random()-0.5)*1,
-vy:(Math.random()-0.5)*1
-});
-
+class Atom {
+  constructor() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.radius = Math.random() * 2 + 1;
+    this.dx = Math.random() * 1 - 0.5;
+    this.dy = Math.random() * 1 - 0.5;
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+    ctx.fillStyle = "#00ff9c";
+    ctx.fill();
+  }
+  update() {
+    if(this.x + this.radius > canvas.width || this.x - this.radius < 0) this.dx *= -1;
+    if(this.y + this.radius > canvas.height || this.y - this.radius < 0) this.dy *= -1;
+    this.x += this.dx;
+    this.y += this.dy;
+    this.draw();
+  }
 }
 
-function animate(){
+const atoms = [];
+for(let i=0; i<150; i++) atoms.push(new Atom());
 
-ctx.fillStyle="rgba(0,0,0,0.2)";
-ctx.fillRect(0,0,canvas.width,canvas.height);
-
-ctx.strokeStyle="#00ff9c";
-
-particles.forEach(p=>{
-
-p.x+=p.vx;
-p.y+=p.vy;
-
-if(p.x<0||p.x>canvas.width) p.vx*=-1;
-if(p.y<0||p.y>canvas.height) p.vy*=-1;
-
-ctx.beginPath();
-ctx.arc(p.x,p.y,2,0,Math.PI*2);
-ctx.fillStyle="#00ff9c";
-ctx.fill();
-
-});
-
-requestAnimationFrame(animate);
-
+function animate() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  atoms.forEach(a => a.update());
+  requestAnimationFrame(animate);
 }
-
 animate();
-
 </script>
-
 </body>
 </html>
