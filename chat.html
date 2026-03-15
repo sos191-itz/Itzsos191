@@ -4,173 +4,199 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Itzsos Labs Chat</title>
-<!-- Favicon -->
-<link rel="icon" href="assets/images/logo-crop.png">
 
-<!-- CSS for green atoms background -->
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+    authDomain: "itzsos-labs.firebaseapp.com",
+    projectId: "itzsos-labs",
+    storageBucket: "itzsos-labs.firebasestorage.app",
+    messagingSenderId: "1012826517121",
+    appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const chatContainer = document.getElementById("chat-messages");
+  const msgInput = document.getElementById("msg-input");
+  const sendBtn = document.getElementById("send-btn");
+  const logoutBtn = document.getElementById("logout-btn");
+  const userDisplay = document.getElementById("username");
+
+  let currentUser;
+
+  // Check if user is logged in
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "index.html"; // redirect if not logged in
+      return;
+    }
+    currentUser = user;
+    const username = user.displayName || user.email.split("@")[0] || "Anonymous";
+    userDisplay.textContent = username;
+
+    // Load chat messages
+    const messagesRef = collection(db, "chatMessages");
+    const q = query(messagesRef, orderBy("timestamp", "asc"));
+    onSnapshot(q, (snapshot) => {
+      chatContainer.innerHTML = ""; // clear
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const msgEl = document.createElement("div");
+        msgEl.className = "message";
+        msgEl.innerHTML = `<strong>${data.user}:</strong> ${data.text}`;
+        chatContainer.appendChild(msgEl);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      });
+    });
+  });
+
+  // Send message
+  sendBtn.addEventListener("click", async () => {
+    if (msgInput.value.trim() === "") return;
+    const username = currentUser.displayName || currentUser.email.split("@")[0] || "Anonymous";
+    await addDoc(collection(db, "chatMessages"), {
+      user: username,
+      text: msgInput.value,
+      timestamp: serverTimestamp()
+    });
+    msgInput.value = "";
+  });
+
+  msgInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") sendBtn.click();
+  });
+
+  // Logout
+  logoutBtn.addEventListener("click", () => {
+    signOut(auth).then(() => {
+      window.location.href = "index.html";
+    });
+  });
+</script>
+
+<!-- Styles -->
 <style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: black;
-  overflow: hidden;
-  color: #00ff9c;
-}
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #000;
+    color: #fff;
+    overflow: hidden;
+  }
 
-#chat-container {
-  position: relative;
-  z-index: 2;
-  width: 90%;
-  max-width: 600px;
-  margin: 50px auto;
-  background: rgba(0,0,0,0.7);
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 0 20px #00ff9c;
-}
+  /* Animated atoms background */
+  canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -1;
+  }
 
-#messages {
-  max-height: 400px;
-  overflow-y: auto;
-  margin-bottom: 10px;
-}
+  #chat-container {
+    position: relative;
+    max-width: 800px;
+    margin: 50px auto;
+    background: rgba(0,0,0,0.7);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 15px #00ff00;
+  }
 
-.message {
-  margin-bottom: 8px;
-  padding: 5px;
-  border-radius: 5px;
-  background: rgba(0,255,156,0.2);
-}
+  #chat-messages {
+    height: 400px;
+    overflow-y: auto;
+    border: 1px solid #00ff00;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+  }
 
-input, button {
-  padding: 8px;
-  border-radius: 5px;
-  border: none;
-  margin-right: 5px;
-}
+  .message {
+    margin-bottom: 8px;
+  }
 
-button {
-  background: #00ff9c;
-  cursor: pointer;
-}
+  #msg-input {
+    width: 75%;
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    outline: none;
+  }
 
-/* Green atom animation background */
-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1;
-}
+  #send-btn, #logout-btn {
+    padding: 8px 12px;
+    margin-left: 5px;
+    border: none;
+    border-radius: 6px;
+    background: #00ff00;
+    color: #000;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  #user-info {
+    margin-bottom: 15px;
+  }
 </style>
 </head>
 <body>
 
 <div id="chat-container">
-  <h2>Itzsos Labs Chat</h2>
-  <div id="messages"></div>
-  <input type="text" id="msgInput" placeholder="Type message..." />
-  <button id="sendBtn">Send</button>
+  <div id="user-info">Logged in as: <span id="username"></span> <button id="logout-btn">Logout</button></div>
+  <div id="chat-messages"></div>
+  <input type="text" id="msg-input" placeholder="Type a message...">
+  <button id="send-btn">Send</button>
 </div>
 
-<canvas id="atoms"></canvas>
-
-<!-- Firebase -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
-
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
-  authDomain: "itzsos-labs.firebaseapp.com",
-  projectId: "itzsos-labs",
-  storageBucket: "itzsos-labs.appspot.com",
-  messagingSenderId: "1012826517121",
-  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
-};
-
-// Init Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-const messagesDiv = document.getElementById("messages");
-const msgInput = document.getElementById("msgInput");
-const sendBtn = document.getElementById("sendBtn");
-
-// Check if user is logged in
-onAuthStateChanged(auth, user => {
-  if (!user) {
-    alert("You must be logged in to access the chat!");
-    window.location.href = "index.html"; // redirect if not logged in
-  } else {
-    // Listen for messages
-    const messagesRef = collection(db, "chat");
-    const q = query(messagesRef, orderBy("timestamp"));
-    onSnapshot(q, snapshot => {
-      messagesDiv.innerHTML = "";
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const div = document.createElement("div");
-        div.className = "message";
-        div.textContent = `${data.user}: ${data.text}`;
-        messagesDiv.appendChild(div);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      });
-    });
-
-    // Send message
-    sendBtn.onclick = async () => {
-      if(msgInput.value.trim() === "") return;
-      await addDoc(messagesRef, {
-        user: user.displayName || user.email,
-        text: msgInput.value,
-        timestamp: serverTimestamp()
-      });
-      msgInput.value = "";
-    };
-  }
-});
-
-// Green atoms background animation
-const canvas = document.getElementById("atoms");
+<!-- Green atoms animation -->
+<canvas id="bg"></canvas>
+<script>
+const canvas = document.getElementById("bg");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-class Atom {
-  constructor() {
-    this.x = Math.random() * canvas.width;
-    this.y = Math.random() * canvas.height;
-    this.radius = Math.random() * 2 + 1;
-    this.dx = Math.random() * 1 - 0.5;
-    this.dy = Math.random() * 1 - 0.5;
-  }
-  draw() {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
-    ctx.fillStyle = "#00ff9c";
-    ctx.fill();
-  }
-  update() {
-    if(this.x + this.radius > canvas.width || this.x - this.radius < 0) this.dx *= -1;
-    if(this.y + this.radius > canvas.height || this.y - this.radius < 0) this.dy *= -1;
-    this.x += this.dx;
-    this.y += this.dy;
-    this.draw();
-  }
+const atoms = [];
+for(let i=0;i<100;i++){
+  atoms.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    radius: Math.random()*2+1,
+    dx: (Math.random()-0.5)*0.5,
+    dy: (Math.random()-0.5)*0.5
+  });
 }
 
-const atoms = [];
-for(let i=0; i<150; i++) atoms.push(new Atom());
-
-function animate() {
+function animate(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  atoms.forEach(a => a.update());
+  for(let a of atoms){
+    ctx.beginPath();
+    ctx.arc(a.x,a.y,a.radius,0,Math.PI*2);
+    ctx.fillStyle="#00ff00";
+    ctx.fill();
+    a.x += a.dx;
+    a.y += a.dy;
+    if(a.x<0 || a.x>canvas.width) a.dx*=-1;
+    if(a.y<0 || a.y>canvas.height) a.dy*=-1;
+  }
   requestAnimationFrame(animate);
 }
 animate();
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
 </script>
+
 </body>
 </html>
