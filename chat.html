@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Itzsos Labs Community Chat</title>
+
+<style>
+
+body{
+margin:0;
+font-family:monospace;
+background:#000;
+color:#00ff9c;
+overflow:hidden;
+}
+
+/* Animated background */
+canvas{
+position:fixed;
+top:0;
+left:0;
+z-index:-1;
+}
+
+/* Chat container */
+.chat-container{
+width:90%;
+max-width:700px;
+margin:auto;
+margin-top:60px;
+background:rgba(0,0,0,0.7);
+border:1px solid #00ff9c;
+border-radius:10px;
+box-shadow:0 0 20px #00ff9c;
+padding:20px;
+animation:fadeIn 1s ease;
+}
+
+h1{
+text-align:center;
+text-shadow:0 0 10px #00ff9c;
+}
+
+/* Messages */
+
+#messages{
+height:350px;
+overflow-y:auto;
+border:1px solid #003d28;
+padding:10px;
+margin-bottom:10px;
+}
+
+.message{
+padding:6px;
+margin:5px 0;
+border-left:3px solid #00ff9c;
+animation:slideUp 0.3s ease;
+}
+
+/* Inputs */
+
+input{
+width:70%;
+padding:10px;
+background:#000;
+border:1px solid #00ff9c;
+color:#00ff9c;
+}
+
+button{
+padding:10px;
+background:#00ff9c;
+border:none;
+cursor:pointer;
+font-weight:bold;
+}
+
+button:hover{
+background:#00cc7a;
+}
+
+/* Animations */
+
+@keyframes slideUp{
+from{
+opacity:0;
+transform:translateY(10px);
+}
+to{
+opacity:1;
+transform:translateY(0);
+}
+}
+
+@keyframes fadeIn{
+from{opacity:0}
+to{opacity:1}
+}
+
+</style>
+</head>
+
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="chat-container">
+
+<h1>💬 Itzsos Labs Chat</h1>
+
+<div id="messages"></div>
+
+<input id="name" placeholder="name">
+<input id="msg" placeholder="message">
+
+<button onclick="send()">Send</button>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+query,
+orderBy,
+onSnapshot
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+const firebaseConfig = {
+
+apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+
+authDomain: "itzsos-labs.firebaseapp.com",
+
+projectId: "itzsos-labs",
+
+storageBucket: "itzsos-labs.firebasestorage.app",
+
+messagingSenderId: "1012826517121",
+
+appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
+
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+const chatRef = collection(db,"chat");
+
+const messages = document.getElementById("messages");
+
+const q = query(chatRef, orderBy("time"));
+
+onSnapshot(q,(snapshot)=>{
+
+messages.innerHTML="";
+
+snapshot.forEach(doc=>{
+
+const data = doc.data();
+
+messages.innerHTML += `
+<div class="message">
+<b>${data.name}</b>: ${data.text}
+</div>
+`;
+
+});
+
+messages.scrollTop = messages.scrollHeight;
+
+});
+
+window.send = async function(){
+
+const name = document.getElementById("name").value || "Anonymous";
+
+const text = document.getElementById("msg").value;
+
+if(!text) return;
+
+await addDoc(chatRef,{
+name:name,
+text:text,
+time:Date.now()
+});
+
+document.getElementById("msg").value="";
+
+}
+
+</script>
+
+<script>
+
+/* Green atoms animated background */
+
+const canvas = document.getElementById("bg");
+
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let particles = [];
+
+for(let i=0;i<80;i++){
+
+particles.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+vx:(Math.random()-0.5)*1,
+vy:(Math.random()-0.5)*1
+});
+
+}
+
+function animate(){
+
+ctx.fillStyle="rgba(0,0,0,0.2)";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ctx.strokeStyle="#00ff9c";
+
+particles.forEach(p=>{
+
+p.x+=p.vx;
+p.y+=p.vy;
+
+if(p.x<0||p.x>canvas.width) p.vx*=-1;
+if(p.y<0||p.y>canvas.height) p.vy*=-1;
+
+ctx.beginPath();
+ctx.arc(p.x,p.y,2,0,Math.PI*2);
+ctx.fillStyle="#00ff9c";
+ctx.fill();
+
+});
+
+requestAnimationFrame(animate);
+
+}
+
+animate();
+
+</script>
+
+</body>
+</html>
