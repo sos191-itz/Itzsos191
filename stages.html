@@ -192,6 +192,18 @@ footer {
 
   <div class="stage-grid" id="stageContainer"></div>
 </div>
+<!-- Chat Section (only visible if logged in) -->
+<div id="chat-container" style="display:none; position:fixed; bottom:20px; right:20px; width:300px; max-height:400px; background:rgba(0,0,0,0.85); border:1px solid #00ffdd; border-radius:12px; padding:10px; overflow:hidden; z-index:20; box-shadow:0 0 20px #00ffdd;">
+  <div id="chat-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+    <span id="username">User</span>
+    <button id="chat-close" style="background:#ff6600;border:none;padding:2px 6px;color:black;cursor:pointer;">X</button>
+  </div>
+  <div id="chat-messages" style="height:280px; overflow-y:auto; background:#111422; padding:5px; border-radius:8px;"></div>
+  <div style="display:flex; gap:5px; margin-top:5px;">
+    <input type="text" id="msg-input" placeholder="Type a message..." style="flex:1; padding:5px; border-radius:6px; border:none;">
+    <button id="send-btn" style="padding:5px 8px; background:#00ffdd; border:none; border-radius:6px; cursor:pointer;">Send</button>
+  </div>
+</div>
 
 <footer>© 2026 Itzsos Labs</footer>
 
@@ -284,6 +296,62 @@ for(let i=0;i<80;i++){
   span.style.opacity = Math.random();
   particles.appendChild(span);
 }
+</script>
+<script type="module">
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+const auth = getAuth();
+const db = getFirestore();
+
+const chatContainer = document.getElementById("chat-container");
+const chatMessages = document.getElementById("chat-messages");
+const msgInput = document.getElementById("msg-input");
+const sendBtn = document.getElementById("send-btn");
+const usernameDisplay = document.getElementById("username");
+const chatClose = document.getElementById("chat-close");
+
+let currentUser;
+
+onAuthStateChanged(auth, user => {
+  if (!user) return; // hide chat if not logged in
+  currentUser = user;
+  chatContainer.style.display = "block";
+  const username = user.displayName || user.email.split("@")[0];
+  usernameDisplay.textContent = username;
+
+  // Load messages
+  const messagesRef = collection(db, "chatMessages");
+  const q = query(messagesRef, orderBy("timestamp", "asc"));
+  onSnapshot(q, snapshot => {
+    chatMessages.innerHTML = "";
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const msgEl = document.createElement("div");
+      msgEl.innerHTML = `<strong>${data.user}:</strong> ${data.text}`;
+      msgEl.style.padding = "2px 0";
+      chatMessages.appendChild(msgEl);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+  });
+});
+
+sendBtn.addEventListener("click", async () => {
+  if (!currentUser || msgInput.value.trim() === "") return;
+  const username = currentUser.displayName || currentUser.email.split("@")[0];
+  await addDoc(collection(db, "chatMessages"), {
+    user: username,
+    text: msgInput.value,
+    timestamp: serverTimestamp()
+  });
+  msgInput.value = "";
+});
+
+msgInput.addEventListener("keypress", e => {
+  if (e.key === "Enter") sendBtn.click();
+});
+
+chatClose.addEventListener("click", () => chatContainer.style.display = "none");
 </script>
 
 </body>
