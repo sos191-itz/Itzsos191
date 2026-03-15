@@ -3,199 +3,193 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Itzsos Labs Chat</title>
+<title>Itzsos Labs Chat | Cyber Arena</title>
 
-<!-- Firebase -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
-
-  // Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
-    authDomain: "itzsos-labs.firebaseapp.com",
-    projectId: "itzsos-labs",
-    storageBucket: "itzsos-labs.firebasestorage.app",
-    messagingSenderId: "1012826517121",
-    appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  const chatContainer = document.getElementById("chat-messages");
-  const msgInput = document.getElementById("msg-input");
-  const sendBtn = document.getElementById("send-btn");
-  const logoutBtn = document.getElementById("logout-btn");
-  const userDisplay = document.getElementById("username");
-
-  let currentUser;
-
-  // Check if user is logged in
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = "index.html"; // redirect if not logged in
-      return;
-    }
-    currentUser = user;
-    const username = user.displayName || user.email.split("@")[0] || "Anonymous";
-    userDisplay.textContent = username;
-
-    // Load chat messages
-    const messagesRef = collection(db, "chatMessages");
-    const q = query(messagesRef, orderBy("timestamp", "asc"));
-    onSnapshot(q, (snapshot) => {
-      chatContainer.innerHTML = ""; // clear
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const msgEl = document.createElement("div");
-        msgEl.className = "message";
-        msgEl.innerHTML = `<strong>${data.user}:</strong> ${data.text}`;
-        chatContainer.appendChild(msgEl);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-      });
-    });
-  });
-
-  // Send message
-  sendBtn.addEventListener("click", async () => {
-    if (msgInput.value.trim() === "") return;
-    const username = currentUser.displayName || currentUser.email.split("@")[0] || "Anonymous";
-    await addDoc(collection(db, "chatMessages"), {
-      user: username,
-      text: msgInput.value,
-      timestamp: serverTimestamp()
-    });
-    msgInput.value = "";
-  });
-
-  msgInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") sendBtn.click();
-  });
-
-  // Logout
-  logoutBtn.addEventListener("click", () => {
-    signOut(auth).then(() => {
-      window.location.href = "index.html";
-    });
-  });
-</script>
+<!-- SEO & Meta -->
+<meta name="description" content="Chat with other hackers at Itzsos Labs. Real-time, beginner-friendly, and secure.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://sos191-itz.github.io/Itzsos191/chat.html">
 
 <!-- Styles -->
 <style>
   body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #000;
-    color: #fff;
-    overflow: hidden;
+    margin:0;
+    font-family: monospace;
+    background:#0f111a;
+    color:#00ffdd;
+    overflow-x:hidden;
+    position:relative;
   }
 
-  /* Animated atoms background */
-  canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: -1;
+  /* Floating particles */
+  .particles {
+    position:fixed;
+    top:0; left:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    z-index:1;
+  }
+  .particles span {
+    position:absolute;
+    width:3px; height:3px;
+    background:#00ffdd;
+    border-radius:50%;
+    animation:float 8s linear infinite;
+    opacity:0.5;
+  }
+  @keyframes float {
+    0% { transform:translateY(0) translateX(0); opacity:0.3; }
+    50% { transform:translateY(-50px) translateX(20px); opacity:0.6; }
+    100% { transform:translateY(0) translateX(-10px); opacity:0.3; }
   }
 
+  /* Chat Container */
   #chat-container {
-    position: relative;
-    max-width: 800px;
-    margin: 50px auto;
-    background: rgba(0,0,0,0.7);
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 0 15px #00ff00;
+    display:none;
+    position:fixed;
+    bottom:20px; right:20px;
+    width:350px;
+    background:#111422;
+    color:#00ffdd;
+    border:1px solid #00ffdd;
+    border-radius:12px;
+    padding:10px;
+    z-index:999;
+    box-shadow:0 0 20px #00ffdd44 inset, 0 0 25px #ff660044;
+  }
+  #chat-container header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:5px;
+  }
+  #username { font-weight:bold; }
+  #chat-close {
+    background:#ff6600; border:none; color:black; cursor:pointer; padding:2px 6px; border-radius:5px;
   }
 
   #chat-messages {
-    height: 400px;
-    overflow-y: auto;
-    border: 1px solid #00ff00;
-    padding: 10px;
-    margin-bottom: 10px;
-    background: rgba(0,0,0,0.3);
-    border-radius: 8px;
+    height:250px;
+    overflow-y:auto;
+    border-top:1px solid #00ffdd;
+    border-bottom:1px solid #00ffdd;
+    padding:5px;
+    margin:5px 0;
   }
+  #chat-messages div { padding:2px 0; }
 
-  .message {
-    margin-bottom: 8px;
-  }
+  #msg-input { width:calc(100% - 60px); padding:5px; border-radius:5px; border:none; }
+  #send-btn { width:50px; padding:5px; background:#00ffdd; border:none; cursor:pointer; font-weight:bold; }
+  #send-btn:hover { background:#ff6600; color:black; }
 
-  #msg-input {
-    width: 75%;
-    padding: 8px;
-    border-radius: 6px;
-    border: none;
-    outline: none;
-  }
-
-  #send-btn, #logout-btn {
-    padding: 8px 12px;
-    margin-left: 5px;
-    border: none;
-    border-radius: 6px;
-    background: #00ff00;
-    color: #000;
-    cursor: pointer;
-    font-weight: bold;
-  }
-
-  #user-info {
-    margin-bottom: 15px;
-  }
 </style>
 </head>
 <body>
 
+<!-- Particles Background -->
+<div class="particles" id="particles"></div>
+
+<!-- Chat Box -->
 <div id="chat-container">
-  <div id="user-info">Logged in as: <span id="username"></span> <button id="logout-btn">Logout</button></div>
+  <header>
+    <div id="username">Username</div>
+    <button id="chat-close">X</button>
+  </header>
   <div id="chat-messages"></div>
-  <input type="text" id="msg-input" placeholder="Type a message...">
-  <button id="send-btn">Send</button>
+  <div style="display:flex; gap:5px; margin-top:5px;">
+    <input id="msg-input" type="text" placeholder="Type a message..." />
+    <button id="send-btn">Send</button>
+  </div>
 </div>
 
-<!-- Green atoms animation -->
-<canvas id="bg"></canvas>
-<script>
-const canvas = document.getElementById("bg");
-const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+<!-- Firebase Chat Script -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-const atoms = [];
-for(let i=0;i<100;i++){
-  atoms.push({
-    x: Math.random()*canvas.width,
-    y: Math.random()*canvas.height,
-    radius: Math.random()*2+1,
-    dx: (Math.random()-0.5)*0.5,
-    dy: (Math.random()-0.5)*0.5
+const firebaseConfig = {
+  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  authDomain: "itzsos-labs.firebaseapp.com",
+  projectId: "itzsos-labs",
+  storageBucket: "itzsos-labs.firebasestorage.app",
+  messagingSenderId: "1012826517121",
+  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const chatContainer = document.getElementById("chat-container");
+const chatMessages = document.getElementById("chat-messages");
+const msgInput = document.getElementById("msg-input");
+const sendBtn = document.getElementById("send-btn");
+const usernameDisplay = document.getElementById("username");
+const chatClose = document.getElementById("chat-close");
+
+let currentUser;
+let currentUsername;
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return; // hide chat if not logged in
+  currentUser = user;
+
+  // Fetch username from Firestore
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+  if (!userSnap.exists()) return;
+
+  currentUsername = userSnap.data().username || user.email.split("@")[0];
+  usernameDisplay.textContent = currentUsername;
+
+  chatContainer.style.display = "block";
+
+  // Load messages
+  const messagesRef = collection(db, "chatMessages");
+  const q = query(messagesRef, orderBy("timestamp", "asc"));
+  onSnapshot(q, snapshot => {
+    chatMessages.innerHTML = "";
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const msgEl = document.createElement("div");
+      msgEl.innerHTML = `<strong>${data.user}:</strong> ${data.text}`;
+      chatMessages.appendChild(msgEl);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
   });
-}
-
-function animate(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  for(let a of atoms){
-    ctx.beginPath();
-    ctx.arc(a.x,a.y,a.radius,0,Math.PI*2);
-    ctx.fillStyle="#00ff00";
-    ctx.fill();
-    a.x += a.dx;
-    a.y += a.dy;
-    if(a.x<0 || a.x>canvas.width) a.dx*=-1;
-    if(a.y<0 || a.y>canvas.height) a.dy*=-1;
-  }
-  requestAnimationFrame(animate);
-}
-animate();
-window.addEventListener('resize', () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
 });
+
+sendBtn.addEventListener("click", async () => {
+  if (!currentUser || msgInput.value.trim() === "") return;
+  await addDoc(collection(db, "chatMessages"), {
+    user: currentUsername,
+    text: msgInput.value,
+    timestamp: serverTimestamp()
+  });
+  msgInput.value = "";
+});
+
+msgInput.addEventListener("keypress", e => {
+  if (e.key === "Enter") sendBtn.click();
+});
+
+chatClose.addEventListener("click", () => chatContainer.style.display = "none");
+
+/* === PARTICLES === */
+const particles = document.getElementById('particles');
+for(let i=0;i<80;i++){
+  const span = document.createElement('span');
+  const size = Math.random()*3+2;
+  span.style.width = `${size}px`;
+  span.style.height = `${size}px`;
+  span.style.top = `${Math.random()*100}%`;
+  span.style.left = `${Math.random()*100}%`;
+  span.style.animationDuration = `${Math.random()*5+5}s`;
+  span.style.opacity = Math.random();
+  particles.appendChild(span);
+}
 </script>
 
 </body>
