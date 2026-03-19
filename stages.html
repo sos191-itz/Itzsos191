@@ -6,185 +6,50 @@
 <title>Cybersecurity Stages | Itzsos Labs</title>
 <style>
 /* === Base Body === */
-body {
-  margin:0;
-  font-family: monospace;
-  background:#0f111a;
-  color:#00ffdd;
-  overflow-x:hidden;
-  position:relative;
-}
-
+body { margin:0; font-family:monospace; background:#0f111a; color:#00ffdd; overflow-x:hidden; position:relative; }
 /* === NAV === */
-nav {
-  background:#111422;
-  border-bottom:1px solid #00ffdd;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:15px 30px;
-  box-shadow:0 0 15px #00ffdd44 inset;
-}
-
+nav { background:#111422; border-bottom:1px solid #00ffdd; display:flex; justify-content:space-between; align-items:center; padding:15px 30px; box-shadow:0 0 15px #00ffdd44 inset; }
 nav h2 { color:#ff6600; font-size:1.2rem; text-shadow:0 0 10px #ff6600; }
-
-nav button {
-  background:#ff6600;
-  border:none;
-  padding:8px 15px;
-  font-weight:bold;
-  cursor:pointer;
-  transition:0.3s;
-  box-shadow:0 0 10px #ff6600,0 0 20px #00ffdd;
-}
+nav button { background:#ff6600; border:none; padding:8px 15px; font-weight:bold; cursor:pointer; transition:0.3s; box-shadow:0 0 10px #ff6600,0 0 20px #00ffdd; }
 nav button:hover { background:#00ffdd; color:black; transform:scale(1.05); }
-
 /* === USER BOX === */
 .container { max-width:1100px; margin:40px auto; padding:20px; position:relative; z-index:10; }
-#userBox {
-  margin-bottom:30px;
-  padding:20px;
-  background:linear-gradient(145deg,#111422,#1a1f35);
-  border:1px solid #00ffdd;
-  border-radius:12px;
-  box-shadow:0 0 20px #00ffdd66 inset,0 0 25px #ff660044;
-  position:relative;
-}
+#userBox { margin-bottom:30px; padding:20px; background:linear-gradient(145deg,#111422,#1a1f35); border:1px solid #00ffdd; border-radius:12px; box-shadow:0 0 20px #00ffdd66 inset,0 0 25px #ff660044; position:relative; }
 .user-info { display:flex; align-items:center; gap:15px; }
-.avatar {
-  width:55px;
-  height:55px;
-  border-radius:50%;
-  background:linear-gradient(45deg,#ff6600,#00ffdd);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:1.5rem;
-  font-weight:bold;
-  color:#0f111a;
-  text-shadow:0 0 5px #fff;
-}
+.avatar { width:55px; height:55px; border-radius:50%; background:linear-gradient(45deg,#ff6600,#00ffdd); display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:bold; color:#0f111a; text-shadow:0 0 5px #fff; }
 .user-details { display:flex; flex-direction:column; gap:6px; }
-.xp-badge {
-  background:#00ffdd;
-  color:#0f111a;
-  padding:5px 10px;
-  border-radius:20px;
-  font-weight:bold;
-  width:fit-content;
-  text-shadow:0 0 5px #111;
-}
-
+.xp-badge { background:#00ffdd; color:#0f111a; padding:5px 10px; border-radius:20px; font-weight:bold; width:fit-content; text-shadow:0 0 5px #111; }
 /* === STAGE GRID === */
-.stage-grid {
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-  gap:20px;
-}
-
+.stage-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px; }
 /* === STAGE CARD === */
-.stage-card {
-  background:#111422;
-  border:1px solid #00ffdd;
-  padding:20px;
-  border-radius:12px;
-  transition:0.3s;
-  transform:translateY(20px) rotateX(5deg);
-  opacity:0;
-  position:relative;
-  box-shadow:0 0 15px #00ffdd33 inset;
-}
+.stage-card { background:#111422; border:1px solid #00ffdd; padding:20px; border-radius:12px; transition:0.3s; transform:translateY(20px) rotateX(5deg); opacity:0; position:relative; box-shadow:0 0 15px #00ffdd33 inset; }
 .stage-card.show { transform:translateY(0) rotateX(0); opacity:1; }
-.stage-card:hover {
-  transform:scale(1.05) rotateY(3deg);
-  border-color:#ff6600;
-  box-shadow:0 0 25px #ff6600,0 0 40px #00ffdd;
-}
-
+.stage-card:hover { transform:scale(1.05) rotateY(3deg); border-color:#ff6600; box-shadow:0 0 25px #ff6600,0 0 40px #00ffdd; }
 .stage-card h3 { color:#ff6600; margin:0 0 10px 0; text-shadow:0 0 5px #ff6600; }
-
 .stage-card p { color:#ccc; line-height:1.4; }
-
-.stage-card button {
-  margin-top:10px;
-  padding:8px 12px;
-  background:#00ffdd;
-  border:none;
-  cursor:pointer;
-  font-weight:bold;
-  transition:0.3s;
-  box-shadow:0 0 5px #00ffdd,0 0 10px #ff6600;
-}
+.stage-card button { margin-top:10px; padding:8px 12px; background:#00ffdd; border:none; cursor:pointer; font-weight:bold; transition:0.3s; box-shadow:0 0 5px #00ffdd,0 0 10px #ff6600; }
 .stage-card button:hover { background:#ff6600; color:black; transform:scale(1.05); }
 .stage-card button:disabled { background:gray; cursor:not-allowed; }
-
 .locked { opacity:0.4; filter:blur(0.5px); }
-.solved {
-  border-color:#00ff99 !important;
-  animation: solvedGlow 1.5s infinite alternate;
-}
-
-/* === ANIMATIONS === */
-@keyframes solvedGlow {
-  0% { box-shadow:0 0 10px #00ff99; transform:scale(1); }
-  50% { box-shadow:0 0 25px #00ff99; transform:scale(1.02); }
-  100% { box-shadow:0 0 10px #00ff99; transform:scale(1); }
-}
-
+.solved { border-color:#00ff99 !important; animation: solvedGlow 1.5s infinite alternate; }
+@keyframes solvedGlow { 0% { box-shadow:0 0 10px #00ff99; transform:scale(1); } 50% { box-shadow:0 0 25px #00ff99; transform:scale(1.02); } 100% { box-shadow:0 0 10px #00ff99; transform:scale(1); } }
 /* === FOOTER === */
-footer {
-  text-align:center;
-  padding:20px;
-  border-top:1px solid #00ffdd;
-  margin-top:40px;
-  text-shadow:0 0 10px #00ffdd;
-}
-
-/* === GHOST VIBE PARTICLES === */
-.particles {
-  position:fixed;
-  top:0; left:0;
-  width:100%;
-  height:100%;
-  pointer-events:none;
-  z-index:1;
-}
-.particles span {
-  position:absolute;
-  width:3px; height:3px;
-  background:#00ffdd;
-  border-radius:50%;
-  animation:float 8s linear infinite;
-  opacity:0.5;
-}
-@keyframes float {
-  0% { transform:translateY(0) translateX(0); opacity:0.3; }
-  50% { transform:translateY(-50px) translateX(20px); opacity:0.6; }
-  100% { transform:translateY(0) translateX(-10px); opacity:0.3; }
-}
-
+footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-top:40px; text-shadow:0 0 10px #00ffdd; }
+/* === PARTICLES === */
+.particles { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1; }
+.particles span { position:absolute; width:3px; height:3px; background:#00ffdd; border-radius:50%; animation:float 8s linear infinite; opacity:0.5; }
+@keyframes float { 0% { transform:translateY(0) translateX(0); opacity:0.3; } 50% { transform:translateY(-50px) translateX(20px); opacity:0.6; } 100% { transform:translateY(0) translateX(-10px); opacity:0.3; }
 /* === CHAT BUTTON === */
-#chat-toggle {
-  position:fixed;
-  bottom:20px;
-  right:340px;
-  padding:10px 15px;
-  border:none;
-  background:#ff6600;
-  color:black;
-  font-weight:bold;
-  cursor:pointer;
-  border-radius:12px;
-  z-index:25;
-  box-shadow:0 0 15px #ff6600,0 0 20px #00ffdd;
-  transition:0.3s;
-}
-#chat-toggle:hover { background:#00ffdd; color:black; transform:scale(1.05);}
+#chat-toggle { position:fixed; bottom:20px; right:340px; padding:10px 15px; border:none; background:#ff6600; color:black; font-weight:bold; cursor:pointer; border-radius:12px; z-index:25; box-shadow:0 0 15px #ff6600,0 0 20px #00ffdd; transition:0.3s; }
+#chat-toggle:hover { background:#00ffdd; color:black; transform:scale(1.05); }
+/* === DONATION MODAL === */
+#donationModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:50; justify-content:center; align-items:center; }
+#donationModal .modal-content { background:#111422; padding:20px; border:1px solid #00ffdd; border-radius:12px; width:300px; text-align:center; }
+#donationModal button { margin-top:10px; padding:8px 12px; background:#00ffdd; border:none; border-radius:6px; cursor:pointer; font-weight:bold; }
 </style>
 </head>
 <body>
 
-<!-- Ghost particles background -->
 <div class="particles" id="particles"></div>
 
 <nav>
@@ -197,19 +62,14 @@ footer {
 </nav>
 
 <div class="container">
-<div id="userBox">
-  <div class="user-info">
-    <div class="avatar" id="userAvatar">U</div>
-    <div class="user-details">
-      <div id="userName">Loading user...</div>
-      <div id="userXP" class="xp-badge">XP: 0</div>
-      <!-- Full Chat Button -->
-      <button id="full-chat-btn" style="margin-top:8px; background:#ff6600; color:black; padding:5px 10px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow:0 0 10px #ff6600;">
-        Open Full Chat
-      </button>
-    </div>
-  </div>
-</div>
+  <div id="userBox">
+    <div class="user-info">
+      <div class="avatar" id="userAvatar">U</div>
+      <div class="user-details">
+        <div id="userName">Loading user...</div>
+        <div id="userXP" class="xp-badge">XP: 0</div>
+        <button id="buy-xp-btn">Buy XP / Unlock Stage</button>
+        <button id="donate-btn">Donate</button>
       </div>
     </div>
   </div>
@@ -217,11 +77,9 @@ footer {
   <div class="stage-grid" id="stageContainer"></div>
 </div>
 
-<!-- Chat toggle button -->
+<!-- Chat -->
 <button id="chat-toggle">Open Chat</button>
-
-<!-- Chat Section -->
-<div id="chat-container" style="display:none; position:fixed; bottom:20px; right:20px; width:300px; max-height:400px; background:rgba(0,0,0,0.85); border:1px solid #00ffdd; border-radius:12px; padding:10px; overflow:hidden; z-index:20; box-shadow:0 0 20px #00ffdd;">
+<div id="chat-container" style="display:none; position:fixed; bottom:20px; right:20px; width:300px; max-height:400px; background:rgba(0,0,0,0.85); border:1px solid #00ffdd; border-radius:12px; padding:10px; overflow:hidden; z-index:20;">
   <div id="chat-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
     <span id="username">User</span>
     <button id="chat-close" style="background:#ff6600;border:none;padding:2px 6px;color:black;cursor:pointer;">X</button>
@@ -233,6 +91,17 @@ footer {
   </div>
 </div>
 
+<!-- Donation Modal -->
+<div id="donationModal">
+  <div class="modal-content">
+    <h3>Support Itzsos Labs</h3>
+    <button id="donatePaypal">Donate via PayPal</button>
+    <button id="donateStripe">Donate via Stripe</button>
+    <br><br>
+    <button id="donation-close">Close</button>
+  </div>
+</div>
+
 <footer>© 2026 Itzsos Labs</footer>
 
 <script type="module">
@@ -240,7 +109,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebas
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy, setDoc, addDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* === Firebase === */
+/* === Firebase Keys === */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -268,29 +137,27 @@ const usernameDisplay = document.getElementById("username");
 const chatClose = document.getElementById("chat-close");
 const chatToggle = document.getElementById("chat-toggle");
 
-let currentUser;
-let currentUsername;
+const buyXPBtn = document.getElementById("buy-xp-btn");
+const donateBtn = document.getElementById("donate-btn");
+const donationModal = document.getElementById("donationModal");
+const donationClose = document.getElementById("donation-close");
+const donatePaypal = document.getElementById("donatePaypal");
+const donateStripe = document.getElementById("donateStripe");
 
-/* =========================
-   🔐 AUTH + LOAD EVERYTHING
-========================= */
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return window.location.href="index.html";
-  if (!user.emailVerified) {
-    alert("Verify your email first!");
-    return window.location.href="index.html";
-  }
+let currentUser, currentUsername;
+
+/* === AUTH & LOAD USER === */
+onAuthStateChanged(auth, async (user)=>{
+  if(!user) return window.location.href="index.html";
+  if(!user.emailVerified){ alert("Verify your email!"); return window.location.href="index.html"; }
 
   currentUser = user;
-
-  const userRef = doc(db, "users", user.uid);
+  const userRef = doc(db,"users",user.uid);
   let userSnap = await getDoc(userRef);
-
-  // Create user if not exists
-  if (!userSnap.exists()) {
-    await setDoc(userRef, {
+  if(!userSnap.exists()){
+    await setDoc(userRef,{
       email:user.email,
-      username:"Xtrove", // 🔥 force your username
+      username:"Xtrove",
       xp:0,
       solvedStages:[],
       role:"New Hacker"
@@ -301,144 +168,93 @@ onAuthStateChanged(auth, async (user) => {
   const data = userSnap.data();
   currentUsername = data.username || "Xtrove";
 
-  /* === UI Update === */
   document.getElementById("userAvatar").textContent = currentUsername.charAt(0).toUpperCase();
   userName.innerHTML = `<strong>${currentUsername}</strong>`;
-  userXP.textContent = "XP: " + (data.xp || 0);
+  userXP.textContent = "XP: "+(data.xp||0);
 
   usernameDisplay.textContent = currentUsername;
-  chatContainer.style.display = "block";
 
   loadStages(data);
-  loadChat(); // 🔥 only load chat AFTER user is ready
+  loadChat();
 });
 
-/* === Logout === */
-logoutBtn.onclick = () => signOut(auth).then(()=>window.location.href="index.html");
+/* === LOGOUT === */
+logoutBtn.onclick = ()=>signOut(auth).then(()=>window.location.href="index.html");
 
-/* =========================
-   🧠 STAGES
-========================= */
+/* === LOAD STAGES === */
 async function loadStages(userData){
-  stageContainer.innerHTML = "";
-  const snapshot = await getDocs(query(collection(db,"stages"), orderBy("order")));
-  const solved = userData.solvedStages || [];
-
+  stageContainer.innerHTML="";
+  const snapshot = await getDocs(query(collection(db,"stages"),orderBy("order")));
+  const solved = userData.solvedStages||[];
   let delay = 0;
-
-  snapshot.forEach(docSnap => {
+  snapshot.forEach(docSnap=>{
     const stage = docSnap.data();
     const stageId = docSnap.id;
-
     const card = document.createElement("div");
     card.classList.add("stage-card");
-
     if(solved.includes(stageId)) card.classList.add("solved");
-
-    let locked = stage.order > 1 && !solved.includes("stage"+(stage.order-1));
-    card.classList.toggle("locked", locked);
-
+    let locked = stage.order>1 && !solved.includes("stage"+(stage.order-1));
+    card.classList.toggle("locked",locked);
     card.innerHTML = `
-      <h3>${stage.title} ${locked ? "🔒" : ""}</h3>
+      <h3>${stage.title} ${locked?"🔒":""}</h3>
       <p>${stage.text}</p>
       <p>XP: ${stage.xp}</p>
-      <button ${locked ? "disabled" : `onclick="openStage('${stageId}')"`}>
-        ${locked ? "Locked" : "Start"}
+      <button ${locked?"disabled":`onclick="openStage('${stageId}')"`}>
+        ${locked?"Locked":"Start"}
       </button>
     `;
-
     stageContainer.appendChild(card);
-
-    setTimeout(()=>card.classList.add("show"), delay);
-    delay += 120;
+    setTimeout(()=>card.classList.add("show"),delay);
+    delay+=120;
   });
 }
+window.openStage=id=>window.location.href="stage.html?id="+id;
 
-window.openStage = id => window.location.href = "stage.html?id=" + id;
-
-/* =========================
-   💬 CHAT SYSTEM
-========================= */
+/* === CHAT SYSTEM === */
 function loadChat(){
-  const q = query(collection(db,"chatMessages"), orderBy("timestamp","asc"));
-
-  onSnapshot(q, snapshot => {
-    chatMessages.innerHTML = "";
-
-    snapshot.forEach(doc => {
-      const data = doc.data();
-
-      const msgEl = document.createElement("div");
-
-      msgEl.style.padding = "6px";
-      msgEl.style.marginBottom = "6px";
-      msgEl.style.background = "#0f111a";
-      msgEl.style.borderRadius = "6px";
-      msgEl.style.borderLeft = "3px solid #00ffdd";
-
-      msgEl.innerHTML = `
-        <div style="color:#00ffdd;font-weight:bold;">${data.user}</div>
-        <div style="color:#ccc;">${data.text}</div>
-      `;
-
+  const q=query(collection(db,"chatMessages"),orderBy("timestamp","asc"));
+  onSnapshot(q,snapshot=>{
+    chatMessages.innerHTML="";
+    snapshot.forEach(doc=>{
+      const data=doc.data();
+      const msgEl=document.createElement("div");
+      msgEl.style.padding="6px"; msgEl.style.marginBottom="6px";
+      msgEl.style.background="#0f111a"; msgEl.style.borderRadius="6px";
+      msgEl.style.borderLeft="3px solid #00ffdd";
+      msgEl.innerHTML=`<div style="color:#00ffdd;font-weight:bold;">${data.user}</div><div style="color:#ccc;">${data.text}</div>`;
       chatMessages.appendChild(msgEl);
     });
-
-    // ✅ auto scroll
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    chatMessages.scrollTop=chatMessages.scrollHeight;
   });
 }
-
-/* === Send message === */
-sendBtn.addEventListener("click", async () => {
-  if (!currentUser || msgInput.value.trim() === "") return;
-
-  await addDoc(collection(db, "chatMessages"), {
-    user: currentUsername,
-    text: msgInput.value,
-    timestamp: serverTimestamp()
-  });
-
-  msgInput.value = "";
+sendBtn.addEventListener("click",async()=>{
+  if(!currentUser||msgInput.value.trim()==="")return;
+  await addDoc(collection(db,"chatMessages"),{ user:currentUsername, text:msgInput.value, timestamp:serverTimestamp() });
+  msgInput.value="";
 });
+msgInput.addEventListener("keypress",e=>{ if(e.key==="Enter") sendBtn.click(); });
+chatClose.onclick=()=>chatContainer.style.display="none";
+chatToggle.onclick=()=>{ chatContainer.style.display=chatContainer.style.display==="none"?"block":"none"; }
 
-msgInput.addEventListener("keypress", e => {
-  if(e.key==="Enter") sendBtn.click();
-});
+/* === BUY XP / UNLOCK STAGE === */
+buyXPBtn.onclick=()=>alert("Integrate Stripe/PayPal checkout here to buy XP");
 
-/* =========================
-   🎮 CHAT UI
-========================= */
-chatClose.onclick = () => chatContainer.style.display = "none";
+/* === DONATION MODAL === */
+donateBtn.onclick=()=>donationModal.style.display="flex";
+donationClose.onclick=()=>donationModal.style.display="none";
+donatePaypal.onclick=()=>window.open("https://www.paypal.com/donate?hosted_button_id=YOUR_BUTTON_ID","_blank");
+donateStripe.onclick=()=>alert("Integrate Stripe Checkout here");
 
-chatToggle.onclick = () => {
-  chatContainer.style.display =
-    chatContainer.style.display === "none" ? "block" : "none";
-};
-const fullChatBtn = document.getElementById("full-chat-btn");
-
-// Option 1: Open a separate chat.html page
-fullChatBtn.onclick = () => {
-  window.location.href = "chat.html"; // create chat.html for full advanced chat
-};
-
-// Option 2: Or toggle the in-page chat
-// fullChatBtn.onclick = () => {
-//   chatContainer.style.display = chatContainer.style.display === "none" ? "block" : "none";
-// };
-
-/* =========================
-   ✨ PARTICLES
-========================= */
-const particles = document.getElementById('particles');
+/* === PARTICLES === */
+const particles=document.getElementById('particles');
 for(let i=0;i<80;i++){
-  const span = document.createElement('span');
-  span.style.width = `${Math.random()*3+2}px`;
-  span.style.height = span.style.width;
-  span.style.top = `${Math.random()*100}%`;
-  span.style.left = `${Math.random()*100}%`;
-  span.style.animationDuration = `${Math.random()*5+5}s`;
-  span.style.opacity = Math.random();
+  const span=document.createElement('span');
+  span.style.width=`${Math.random()*3+2}px`;
+  span.style.height=span.style.width;
+  span.style.top=`${Math.random()*100}%`;
+  span.style.left=`${Math.random()*100}%`;
+  span.style.animationDuration=`${Math.random()*5+5}s`;
+  span.style.opacity=Math.random();
   particles.appendChild(span);
 }
 </script>
