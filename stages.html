@@ -233,7 +233,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebas
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy, setDoc, addDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* === Firebase config === */
+/* === Firebase === */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -247,80 +247,12 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* === Stages & user info === */
+/* === Elements === */
 const stageContainer = document.getElementById("stageContainer");
 const userName = document.getElementById("userName");
 const userXP = document.getElementById("userXP");
 const logoutBtn = document.getElementById("logoutBtn");
 
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return window.location.href="index.html";
-  if (!user.emailVerified) { alert("Verify your email first!"); return window.location.href="index.html"; }
-
-  const userRef = doc(db, "users", user.uid);
-  let userSnap = await getDoc(userRef);
-
-  if (!userSnap.exists()) {
-    await setDoc(userRef, { email:user.email, username:user.email.split('@')[0], xp:0, solvedStages:[], role:"New Hacker" });
-    userSnap = await getDoc(userRef);
-  }
-
-  const data = userSnap.data();
-  document.getElementById("userAvatar").textContent = data.username.charAt(0).toUpperCase();
-  userName.innerHTML = `<strong>${data.username}</strong>`;
-  userXP.textContent = "XP: " + (data.xp || 0);
-
-  loadStages(data);
-});
-
-async function loadStages(userData){
-  stageContainer.innerHTML = "";
-  const snapshot = await getDocs(query(collection(db,"stages"), orderBy("order")));
-  const solved = userData.solvedStages || [];
-
-  let delay = 0;
-  snapshot.forEach(docSnap => {
-    const stage = docSnap.data();
-    const stageId = docSnap.id;
-
-    const card = document.createElement("div");
-    card.classList.add("stage-card");
-    if(solved.includes(stageId)) card.classList.add("solved");
-
-    let locked = stage.order > 1 && !solved.includes("stage"+(stage.order-1));
-    card.classList.toggle("locked", locked);
-
-    card.innerHTML = `
-      <h3>${stage.title} ${locked ? "🔒" : ""}</h3>
-      <p>${stage.text}</p>
-      <p>XP: ${stage.xp}</p>
-      <button ${locked ? "disabled" : `onclick="openStage('${stageId}')"`}>${locked ? "Locked" : "Start"}</button>
-    `;
-    stageContainer.appendChild(card);
-
-    setTimeout(()=>card.classList.add("show"), delay);
-    delay += 120;
-  });
-}
-
-window.openStage = id => window.location.href = "stage.html?id=" + id;
-logoutBtn.onclick = () => signOut(auth).then(() => window.location.href="index.html");
-
-/* === PARTICLES === */
-const particles = document.getElementById('particles');
-for(let i=0;i<80;i++){
-  const span = document.createElement('span');
-  const size = Math.random()*3+2;
-  span.style.width = `${size}px`;
-  span.style.height = `${size}px`;
-  span.style.top = `${Math.random()*100}%`;
-  span.style.left = `${Math.random()*100}%`;
-  span.style.animationDuration = `${Math.random()*5+5}s`;
-  span.style.opacity = Math.random();
-  particles.appendChild(span);
-}
-
-/* === Chat system === */
 const chatContainer = document.getElementById("chat-container");
 const chatMessages = document.getElementById("chat-messages");
 const msgInput = document.getElementById("msg-input");
@@ -332,54 +264,165 @@ const chatToggle = document.getElementById("chat-toggle");
 let currentUser;
 let currentUsername;
 
+/* =========================
+   🔐 AUTH + LOAD EVERYTHING
+========================= */
 onAuthStateChanged(auth, async (user) => {
-  if (!user) return;
+  if (!user) return window.location.href="index.html";
+  if (!user.emailVerified) {
+    alert("Verify your email first!");
+    return window.location.href="index.html";
+  }
+
   currentUser = user;
 
-  // ✅ Get username from Firestore
   const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
-  currentUsername = userSnap.exists() ? userSnap.data().username : user.email.split("@")[0];
+  let userSnap = await getDoc(userRef);
+
+  // Create user if not exists
+  if (!userSnap.exists()) {
+    await setDoc(userRef, {
+      email:user.email,
+      username:"Xtrove", // 🔥 force your username
+      xp:0,
+      solvedStages:[],
+      role:"New Hacker"
+    });
+    userSnap = await getDoc(userRef);
+  }
+
+  const data = userSnap.data();
+  currentUsername = data.username || "Xtrove";
+
+  /* === UI Update === */
+  document.getElementById("userAvatar").textContent = currentUsername.charAt(0).toUpperCase();
+  userName.innerHTML = `<strong>${currentUsername}</strong>`;
+  userXP.textContent = "XP: " + (data.xp || 0);
 
   usernameDisplay.textContent = currentUsername;
   chatContainer.style.display = "block";
 
-  // Load chat messages
-  const messagesRef = collection(db, "chatMessages");
-  const q = query(messagesRef, orderBy("timestamp", "asc"));
-  onSnapshot(q, snapshot => {
-    chatMessages.innerHTML = "";
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const msgEl = document.createElement("div");
-      msgEl.innerHTML = `<strong>${data.user}:</strong> ${data.text}`;
-      msgEl.style.padding = "2px 0";
-      chatMessages.appendChild(msgEl);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    });
-  });
+  loadStages(data);
+  loadChat(); // 🔥 only load chat AFTER user is ready
 });
 
-// Send message
+/* === Logout === */
+logoutBtn.onclick = () => signOut(auth).then(()=>window.location.href="index.html");
+
+/* =========================
+   🧠 STAGES
+========================= */
+async function loadStages(userData){
+  stageContainer.innerHTML = "";
+  const snapshot = await getDocs(query(collection(db,"stages"), orderBy("order")));
+  const solved = userData.solvedStages || [];
+
+  let delay = 0;
+
+  snapshot.forEach(docSnap => {
+    const stage = docSnap.data();
+    const stageId = docSnap.id;
+
+    const card = document.createElement("div");
+    card.classList.add("stage-card");
+
+    if(solved.includes(stageId)) card.classList.add("solved");
+
+    let locked = stage.order > 1 && !solved.includes("stage"+(stage.order-1));
+    card.classList.toggle("locked", locked);
+
+    card.innerHTML = `
+      <h3>${stage.title} ${locked ? "🔒" : ""}</h3>
+      <p>${stage.text}</p>
+      <p>XP: ${stage.xp}</p>
+      <button ${locked ? "disabled" : `onclick="openStage('${stageId}')"`}>
+        ${locked ? "Locked" : "Start"}
+      </button>
+    `;
+
+    stageContainer.appendChild(card);
+
+    setTimeout(()=>card.classList.add("show"), delay);
+    delay += 120;
+  });
+}
+
+window.openStage = id => window.location.href = "stage.html?id=" + id;
+
+/* =========================
+   💬 CHAT SYSTEM
+========================= */
+function loadChat(){
+  const q = query(collection(db,"chatMessages"), orderBy("timestamp","asc"));
+
+  onSnapshot(q, snapshot => {
+    chatMessages.innerHTML = "";
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+
+      const msgEl = document.createElement("div");
+
+      msgEl.style.padding = "6px";
+      msgEl.style.marginBottom = "6px";
+      msgEl.style.background = "#0f111a";
+      msgEl.style.borderRadius = "6px";
+      msgEl.style.borderLeft = "3px solid #00ffdd";
+
+      msgEl.innerHTML = `
+        <div style="color:#00ffdd;font-weight:bold;">${data.user}</div>
+        <div style="color:#ccc;">${data.text}</div>
+      `;
+
+      chatMessages.appendChild(msgEl);
+    });
+
+    // ✅ auto scroll
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  });
+}
+
+/* === Send message === */
 sendBtn.addEventListener("click", async () => {
   if (!currentUser || msgInput.value.trim() === "") return;
+
   await addDoc(collection(db, "chatMessages"), {
     user: currentUsername,
     text: msgInput.value,
     timestamp: serverTimestamp()
   });
+
   msgInput.value = "";
 });
 
-msgInput.addEventListener("keypress", e => { if(e.key==="Enter") sendBtn.click(); });
-
-// Close chat
-chatClose.addEventListener("click", () => chatContainer.style.display="none");
-
-// Toggle chat with button
-chatToggle.addEventListener("click", () => {
-  chatContainer.style.display = chatContainer.style.display === "none" ? "block" : "none";
+msgInput.addEventListener("keypress", e => {
+  if(e.key==="Enter") sendBtn.click();
 });
+
+/* =========================
+   🎮 CHAT UI
+========================= */
+chatClose.onclick = () => chatContainer.style.display = "none";
+
+chatToggle.onclick = () => {
+  chatContainer.style.display =
+    chatContainer.style.display === "none" ? "block" : "none";
+};
+
+/* =========================
+   ✨ PARTICLES
+========================= */
+const particles = document.getElementById('particles');
+for(let i=0;i<80;i++){
+  const span = document.createElement('span');
+  span.style.width = `${Math.random()*3+2}px`;
+  span.style.height = span.style.width;
+  span.style.top = `${Math.random()*100}%`;
+  span.style.left = `${Math.random()*100}%`;
+  span.style.animationDuration = `${Math.random()*5+5}s`;
+  span.style.opacity = Math.random();
+  particles.appendChild(span);
+}
 </script>
 </body>
 </html>
