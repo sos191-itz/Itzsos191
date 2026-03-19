@@ -203,6 +203,19 @@ footer {
       <div class="user-details">
         <div id="userName">Loading user...</div>
         <div id="userXP" class="xp-badge">XP: 0</div>
+<div id="userBox">
+  <div class="user-info">
+    <div class="avatar" id="userAvatar">U</div>
+    <div class="user-details">
+      <div id="userName">Loading user...</div>
+      <div id="userXP" class="xp-badge">XP: 0</div>
+      <!-- Full Chat Button -->
+      <button id="full-chat-btn" style="margin-top:8px; background:#ff6600; color:black; padding:5px 10px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow:0 0 10px #ff6600;">
+        Open Full Chat
+      </button>
+    </div>
+  </div>
+</div>
       </div>
     </div>
   </div>
@@ -408,6 +421,17 @@ chatToggle.onclick = () => {
   chatContainer.style.display =
     chatContainer.style.display === "none" ? "block" : "none";
 };
+const fullChatBtn = document.getElementById("full-chat-btn");
+
+// Option 1: Open a separate chat.html page
+fullChatBtn.onclick = () => {
+  window.location.href = "chat.html"; // create chat.html for full advanced chat
+};
+
+// Option 2: Or toggle the in-page chat
+// fullChatBtn.onclick = () => {
+//   chatContainer.style.display = chatContainer.style.display === "none" ? "block" : "none";
+// };
 
 /* =========================
    ✨ PARTICLES
