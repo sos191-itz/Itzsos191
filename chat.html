@@ -3,194 +3,327 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Itzsos Labs Chat | Cyber Arena</title>
+<title>Advanced Chat | Itzsos Labs</title>
 
-<!-- SEO & Meta -->
-<meta name="description" content="Chat with other hackers at Itzsos Labs. Real-time, beginner-friendly, and secure.">
-<meta name="robots" content="index, follow">
-<link rel="canonical" href="https://sos191-itz.github.io/Itzsos191/chat.html">
-
-<!-- Styles -->
 <style>
-  body {
-    margin:0;
-    font-family: monospace;
-    background:#0f111a;
-    color:#00ffdd;
-    overflow-x:hidden;
-    position:relative;
-  }
+body {
+  margin:0;
+  font-family:monospace;
+  background:#0f111a;
+  color:#00ffdd;
+  display:flex;
+  height:100vh;
+  overflow:hidden;
+}
 
-  /* Floating particles */
-  .particles {
-    position:fixed;
-    top:0; left:0;
-    width:100%;
-    height:100%;
-    pointer-events:none;
-    z-index:1;
-  }
-  .particles span {
-    position:absolute;
-    width:3px; height:3px;
-    background:#00ffdd;
-    border-radius:50%;
-    animation:float 8s linear infinite;
-    opacity:0.5;
-  }
-  @keyframes float {
-    0% { transform:translateY(0) translateX(0); opacity:0.3; }
-    50% { transform:translateY(-50px) translateX(20px); opacity:0.6; }
-    100% { transform:translateY(0) translateX(-10px); opacity:0.3; }
-  }
+/* SIDEBAR */
+#sidebar{
+  width:240px;
+  background:#111422;
+  border-right:1px solid #00ffdd;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+}
+#sidebar h3{margin-top:0;}
+.user{
+  padding:6px;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+}
+.user:hover{background:#1a1f35;}
+.online{color:#00ff99;}
+.offline{color:#555;}
 
-  /* Chat Container */
-  #chat-container {
-    display:none;
-    position:fixed;
-    bottom:20px; right:20px;
-    width:350px;
-    background:#111422;
-    color:#00ffdd;
-    border:1px solid #00ffdd;
-    border-radius:12px;
-    padding:10px;
-    z-index:999;
-    box-shadow:0 0 20px #00ffdd44 inset, 0 0 25px #ff660044;
-  }
-  #chat-container header {
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:5px;
-  }
-  #username { font-weight:bold; }
-  #chat-close {
-    background:#ff6600; border:none; color:black; cursor:pointer; padding:2px 6px; border-radius:5px;
-  }
+/* MAIN CHAT */
+#main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
 
-  #chat-messages {
-    height:250px;
-    overflow-y:auto;
-    border-top:1px solid #00ffdd;
-    border-bottom:1px solid #00ffdd;
-    padding:5px;
-    margin:5px 0;
-  }
-  #chat-messages div { padding:2px 0; }
+#header{
+  padding:10px;
+  border-bottom:1px solid #00ffdd;
+}
 
-  #msg-input { width:calc(100% - 60px); padding:5px; border-radius:5px; border:none; }
-  #send-btn { width:50px; padding:5px; background:#00ffdd; border:none; cursor:pointer; font-weight:bold; }
-  #send-btn:hover { background:#ff6600; color:black; }
+#messages{
+  flex:1;
+  overflow-y:auto;
+  padding:10px;
+}
 
+.msg{
+  margin-bottom:8px;
+  padding:6px;
+  border-left:3px solid #00ffdd;
+  background:#111422;
+  position:relative;
+}
+
+.msg .reactions{
+  display:flex;
+  gap:5px;
+  margin-top:3px;
+}
+
+.reaction{
+  cursor:pointer;
+}
+
+.read{
+  font-size:10px;
+  position:absolute;
+  right:5px;
+  bottom:2px;
+  color:#00ff99;
+}
+
+.typing{
+  font-size:12px;
+  color:#aaa;
+  padding-left:10px;
+}
+
+/* INPUT */
+#inputBox{
+  display:flex;
+  padding:10px;
+  gap:10px;
+  border-top:1px solid #00ffdd;
+}
+
+input{
+  flex:1;
+  padding:8px;
+  border:none;
+  border-radius:6px;
+}
+
+button{
+  background:#00ffdd;
+  border:none;
+  padding:8px;
+  cursor:pointer;
+  border-radius:6px;
+  font-weight:bold;
+}
+button:hover{background:#ff6600; color:black;}
 </style>
 </head>
 <body>
 
-<!-- Particles Background -->
-<div class="particles" id="particles"></div>
+<!-- Sidebar -->
+<div id="sidebar">
+  <h3>🟢 Online Users</h3>
+  <div id="usersList"></div>
+  <hr style="border-color:#00ffdd;">
+  <button id="globalBtn">🌐 Global Chat</button>
+</div>
 
-<!-- Chat Box -->
-<div id="chat-container">
-  <header>
-    <div id="username">Username</div>
-    <button id="chat-close">X</button>
-  </header>
-  <div id="chat-messages"></div>
-  <div style="display:flex; gap:5px; margin-top:5px;">
-    <input id="msg-input" type="text" placeholder="Type a message..." />
-    <button id="send-btn">Send</button>
+<!-- Main Chat -->
+<div id="main">
+  <div id="header">
+    <span id="chatTitle">Global Chat</span>
+  </div>
+  <div id="messages"></div>
+  <div id="typing" class="typing"></div>
+  <div id="inputBox">
+    <input id="msg" placeholder="Type a message...">
+    <button id="send">Send</button>
   </div>
 </div>
 
-<!-- Firebase Chat Script -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import {
+  getFirestore, collection, addDoc, serverTimestamp,
+  query, orderBy, onSnapshot, doc, getDoc, updateDoc, where
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-const firebaseConfig = {
+/* Firebase config */
+const app = initializeApp({
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
   projectId: "itzsos-labs",
   storageBucket: "itzsos-labs.firebasestorage.app",
   messagingSenderId: "1012826517121",
   appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
-};
+});
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const auth = getAuth();
+const db = getFirestore();
 
-const chatContainer = document.getElementById("chat-container");
-const chatMessages = document.getElementById("chat-messages");
-const msgInput = document.getElementById("msg-input");
-const sendBtn = document.getElementById("send-btn");
-const usernameDisplay = document.getElementById("username");
-const chatClose = document.getElementById("chat-close");
+let currentUser, username;
+let currentChat="global";
+let currentDMUser=null;
 
-let currentUser;
-let currentUsername;
+/* Elements */
+const messagesDiv = document.getElementById("messages");
+const usersList = document.getElementById("usersList");
+const typingDiv = document.getElementById("typing");
+const chatTitle = document.getElementById("chatTitle");
+const inputMsg = document.getElementById("msg");
 
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return; // hide chat if not logged in
+/* AUTH */
+onAuthStateChanged(auth, async (user)=>{
+  if(!user) return location.href="index.html";
+
   currentUser = user;
+  const userRef = doc(db,"users",user.uid);
+  const snap = await getDoc(userRef);
 
-  // Fetch username from Firestore
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
-  if (!userSnap.exists()) return;
+  username = snap.exists() ? snap.data().username : user.email.split("@")[0];
 
-  currentUsername = userSnap.data().username || user.email.split("@")[0];
-  usernameDisplay.textContent = currentUsername;
+  await updateDoc(userRef,{online:true,lastSeen:serverTimestamp()});
+  loadUsers();
+  loadMessages();
+});
 
-  chatContainer.style.display = "block";
-
-  // Load messages
-  const messagesRef = collection(db, "chatMessages");
-  const q = query(messagesRef, orderBy("timestamp", "asc"));
-  onSnapshot(q, snapshot => {
-    chatMessages.innerHTML = "";
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const msgEl = document.createElement("div");
-      msgEl.innerHTML = `<strong>${data.user}:</strong> ${data.text}`;
-      chatMessages.appendChild(msgEl);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
+/* ONLINE USERS LIST */
+function loadUsers(){
+  const q = query(collection(db,"users"), where("online","==",true));
+  onSnapshot(q, snap=>{
+    usersList.innerHTML="";
+    snap.forEach(docSnap=>{
+      const data = docSnap.data();
+      const div=document.createElement("div");
+      div.className="user online";
+      div.innerHTML=`<span>${data.username}</span><span>${data.role||""}</span>`;
+      div.onclick=()=>{
+        currentChat="dm";
+        currentDMUser=docSnap.id;
+        chatTitle.innerText="DM: "+data.username;
+        loadMessages();
+      };
+      usersList.appendChild(div);
     });
   });
-});
-
-sendBtn.addEventListener("click", async () => {
-  if (!currentUser || msgInput.value.trim() === "") return;
-  await addDoc(collection(db, "chatMessages"), {
-    user: currentUsername,
-    text: msgInput.value,
-    timestamp: serverTimestamp()
-  });
-  msgInput.value = "";
-});
-
-msgInput.addEventListener("keypress", e => {
-  if (e.key === "Enter") sendBtn.click();
-});
-
-chatClose.addEventListener("click", () => chatContainer.style.display = "none");
-
-/* === PARTICLES === */
-const particles = document.getElementById('particles');
-for(let i=0;i<80;i++){
-  const span = document.createElement('span');
-  const size = Math.random()*3+2;
-  span.style.width = `${size}px`;
-  span.style.height = `${size}px`;
-  span.style.top = `${Math.random()*100}%`;
-  span.style.left = `${Math.random()*100}%`;
-  span.style.animationDuration = `${Math.random()*5+5}s`;
-  span.style.opacity = Math.random();
-  particles.appendChild(span);
 }
-</script>
 
+/* CHAT ID FOR DMs */
+function getChatId(uid1, uid2){
+  return [uid1,uid2].sort().join("_");
+}
+
+/* LOAD MESSAGES */
+function loadMessages(){
+  const q = query(collection(db,"messages"), orderBy("timestamp"));
+  onSnapshot(q, snap=>{
+    messagesDiv.innerHTML="";
+    snap.forEach(docSnap=>{
+      const data=docSnap.data();
+
+      // FILTER
+      if(currentChat==="global" && data.type!=="global") return;
+      if(currentChat==="dm"){
+        const chatId=getChatId(currentUser.uid,currentDMUser);
+        if(data.chatId!==chatId) return;
+      }
+
+      // Message div
+      const div=document.createElement("div");
+      div.className="msg";
+      div.innerHTML=`<b>${data.username}</b>: ${data.text}`;
+
+      // Reactions
+      const reactionsDiv=document.createElement("div");
+      reactionsDiv.className="reactions";
+      ["👍","❤️","😂"].forEach(r=>{
+        const btn=document.createElement("span");
+        btn.className="reaction";
+        btn.innerText=r;
+        btn.onclick=()=> addReaction(docSnap.id,r);
+        reactionsDiv.appendChild(btn);
+      });
+      div.appendChild(reactionsDiv);
+
+      // Read receipts
+      const read=document.createElement("div");
+      read.className="read";
+      read.innerText=(data.readBy||[]).includes(currentUser.uid)?"✓":"";
+      div.appendChild(read);
+
+      messagesDiv.appendChild(div);
+
+      // Notifications for DMs
+      if(data.to===currentUser.uid && data.sender!==currentUser.uid) alert("New DM from "+data.username);
+    });
+
+    // Scroll
+    messagesDiv.scroll({top:messagesDiv.scrollHeight,behavior:"smooth"});
+  });
+}
+
+/* ADD REACTION */
+async function addReaction(msgId,reaction){
+  const msgRef=doc(db,"messages",msgId);
+  const msgSnap=await getDoc(msgRef);
+  const data=msgSnap.data();
+  const reactions=data.reactions||{};
+  reactions[reaction]=reactions[reaction]||[];
+  if(!reactions[reaction].includes(currentUser.uid)) reactions[reaction].push(currentUser.uid);
+  await updateDoc(msgRef,{reactions});
+}
+
+/* TYPING INDICATOR */
+let typingTimeout;
+inputMsg.addEventListener("input", async ()=>{
+  const chatId = currentChat==="dm"?getChatId(currentUser.uid,currentDMUser):"global";
+  await addDoc(collection(db,"typing"),{chatId,user:username,timestamp:serverTimestamp()});
+  clearTimeout(typingTimeout);
+  typingTimeout=setTimeout(()=>typingDiv.innerText="",2000);
+});
+
+onSnapshot(collection(db,"typing"), snap=>{
+  snap.forEach(docSnap=>{
+    const data=docSnap.data();
+    const chatId = currentChat==="dm"?getChatId(currentUser.uid,currentDMUser):"global";
+    if(data.chatId===chatId && data.user!==username) typingDiv.innerText=data.user+" is typing...";
+  });
+});
+
+/* SEND MESSAGE */
+document.getElementById("send").onclick=async ()=>{
+  const text=inputMsg.value;
+  if(!text) return;
+
+  if(currentChat==="global"){
+    await addDoc(collection(db,"messages"),{
+      type:"global", username, text,
+      sender:currentUser.uid,
+      timestamp:serverTimestamp(),
+      readBy:[currentUser.uid]
+    });
+  }
+
+  if(currentChat==="dm"){
+    const chatId=getChatId(currentUser.uid,currentDMUser);
+    await addDoc(collection(db,"messages"),{
+      type:"dm", chatId, username, text,
+      sender:currentUser.uid,
+      to:currentDMUser,
+      timestamp:serverTimestamp(),
+      readBy:[currentUser.uid]
+    });
+  }
+
+  inputMsg.value="";
+};
+
+inputMsg.addEventListener("keypress", e=>{
+  if(e.key==="Enter") document.getElementById("send").click();
+});
+
+/* GLOBAL CHAT BUTTON */
+document.getElementById("globalBtn").onclick=()=>{
+  currentChat="global";
+  currentDMUser=null;
+  chatTitle.innerText="Global Chat";
+  loadMessages();
+};
+</script>
 </body>
 </html>
