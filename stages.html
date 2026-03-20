@@ -3,73 +3,83 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Itzsos Labs - Cybersecurity Stages</title>
-
+<title>Cybersecurity Stages | Itzsos Labs</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
+/* === BASE === */
 body {
   margin:0;
   font-family: 'Share Tech Mono', monospace;
   background:#0f111a;
   color:#00ffdd;
   overflow-x:hidden;
-  transition: background 0.5s;
 }
+a { text-decoration:none; color:inherit; }
 
-/* NAV */
+/* === NAV === */
 nav {
-  background: rgba(17,20,34,0.95);
-  border-bottom:1px solid #00ffdd;
   display:flex;
   justify-content:space-between;
   align-items:center;
   padding:15px 30px;
-  box-shadow:0 0 15px #00ffdd44 inset;
+  background: rgba(17,20,34,0.95);
+  border-bottom:1px solid #00ffdd;
+  box-shadow: 0 0 15px #00ffdd44 inset;
 }
 nav h2 { color:#ff6600; text-shadow:0 0 10px #ff6600; }
-nav .nav-buttons button {
+nav button {
   background:#ff6600;
   border:none;
-  padding:8px 12px;
+  padding:8px 15px;
   font-weight:bold;
   cursor:pointer;
   border-radius:8px;
-  margin-left:10px;
+  box-shadow:0 0 10px #ff6600,0 0 20px #00ffdd;
   transition:0.3s;
 }
-nav .nav-buttons button:hover { background:#00ffdd; color:black; transform:scale(1.05); }
+nav button:hover { background:#00ffdd; color:black; transform:scale(1.05); }
 
-/* CONTAINER */
-.container {
-  max-width:1100px;
-  margin:40px auto;
-  padding:20px;
-}
-
-/* USER BOX */
+/* === USER BOX === */
+.container { max-width:1100px; margin:40px auto; padding:0 20px; }
 #userBox {
-  margin-bottom:30px;
-  padding:20px;
-  background:linear-gradient(145deg,#111422,#1a1f35);
+  background: rgba(17,20,34,0.85);
   border:1px solid #00ffdd;
-  border-radius:12px;
-  box-shadow:0 0 15px rgba(0,255,221,0.2);
+  border-radius:15px;
+  padding:20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:30px;
+  box-shadow:0 0 25px #00ffdd55 inset;
+  backdrop-filter:blur(10px);
 }
 .user-info { display:flex; align-items:center; gap:15px; }
 .avatar {
-  width:60px; height:60px; border-radius:50%;
+  width:60px;
+  height:60px;
+  border-radius:50%;
   background: linear-gradient(45deg,#ff6600,#00ffdd);
-  display:flex; justify-content:center; align-items:center;
-  font-weight:bold; font-size:1.8rem; color:#0f111a; text-shadow:0 0 5px #fff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-weight:bold;
+  font-size:1.8rem;
+  color:#0f111a;
+  text-shadow:0 0 5px #fff;
 }
 .user-details { display:flex; flex-direction:column; gap:6px; }
 .xp-badge { background:#00ffdd; color:#0f111a; padding:5px 12px; border-radius:20px; font-weight:bold; width:fit-content; text-shadow:0 0 5px #111; }
+#buyXpBtn { margin-top:8px; padding:8px 12px; border:none; border-radius:6px; background:#ff6600; color:black; font-weight:bold; cursor:pointer; transition:0.3s; }
+#buyXpBtn:hover { background:#00ffdd; }
 
-/* STAGE GRID */
+/* === STAGE GRID === */
 .stage-grid {
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
   gap:20px;
 }
+
+/* === STAGE CARD === */
 .stage-card {
   background: rgba(17,20,34,0.7);
   border:1px solid #00ffdd;
@@ -77,7 +87,7 @@ nav .nav-buttons button:hover { background:#00ffdd; color:black; transform:scale
   padding:20px;
   transform:translateY(20px);
   opacity:0;
-  transition:0.5s, transform 0.5s;
+  transition:0.5s;
   box-shadow:0 0 15px #00ffdd33 inset;
   cursor:pointer;
   backdrop-filter:blur(5px);
@@ -100,20 +110,26 @@ nav .nav-buttons button:hover { background:#00ffdd; color:black; transform:scale
   100% { box-shadow:0 0 10px #00ff99; transform:scale(1); }
 }
 
-/* FOOTER */
+/* === FOOTER === */
 footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-top:40px; text-shadow:0 0 10px #00ffdd; }
+
+/* === CHAT BUTTON === */
+#chatBtn { position:fixed; bottom:20px; right:20px; padding:10px 15px; border:none; background:#ff6600; color:black; font-weight:bold; cursor:pointer; border-radius:12px; z-index:25; box-shadow:0 0 15px #ff6600,0 0 20px #00ffdd; transition:0.3s; }
+#chatBtn:hover { background:#00ffdd; }
+
+/* === PAYPAL BUTTON === */
+#paypal-container { margin-top:15px; }
 </style>
 </head>
 
 <body>
 
 <nav>
-  <h2>Itzsos Labs</h2>
-  <div class="nav-buttons">
+  <h2>Itzsos Labs - Cybersecurity Track</h2>
+  <div>
     <button onclick="window.location.href='profile.html'">Profile</button>
     <button onclick="window.location.href='leaderboard.html'">Leaderboard</button>
     <button id="logoutBtn">Logout</button>
-    <button onclick="window.location.href='chat.html'">Chat</button>
   </div>
 </nav>
 
@@ -125,6 +141,8 @@ footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-t
       <div class="user-details">
         <div id="userName">Loading user...</div>
         <div id="userXP" class="xp-badge">XP: 0</div>
+        <button id="buyXpBtn">Buy XP / Donate</button>
+        <div id="paypal-container"></div>
       </div>
     </div>
   </div>
@@ -133,14 +151,16 @@ footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-t
 
 </div>
 
+<button id="chatBtn" onclick="window.location.href='chat.html'">Chat</button>
+
 <footer>© 2026 Itzsos Labs</footer>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* FIREBASE */
+/* FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -154,73 +174,83 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+/* ELEMENTS */
 const stageContainer = document.getElementById("stageContainer");
 const userName = document.getElementById("userName");
 const userXP = document.getElementById("userXP");
-const userAvatar = document.getElementById("userAvatar");
 const logoutBtn = document.getElementById("logoutBtn");
+const userAvatar = document.getElementById("userAvatar");
+const buyXpBtn = document.getElementById("buyXpBtn");
 
-let currentUser;
-
-/* AUTH + LOAD */
-onAuthStateChanged(auth, async(user)=>{
-  if(!user) return window.location.href="index.html";
-  currentUser = user;
+/* AUTH */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return window.location.href="index.html";
+  if (!user.emailVerified){ alert("Verify email first!"); window.location.href="index.html"; return; }
 
   const userRef = doc(db,"users",user.uid);
-  const snap = await getDoc(userRef);
-  if(!snap.exists()){
-    window.location.href="selection.html";
-    return;
+  let userSnap = await getDoc(userRef);
+  if(!userSnap.exists()){
+    alert("User not found!"); return;
   }
-  const data = snap.data();
 
+  const data = userSnap.data();
   userName.textContent = data.username || user.email;
-  userXP.textContent = "XP: "+(data.xp||0);
-  userAvatar.textContent = user.email[0].toUpperCase();
+  userXP.textContent = "XP: " + (data.xp||0);
+  userAvatar.textContent = data.username ? data.username.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase();
 
-  loadStages(data.solvedStages||[]);
+  loadStages(data);
 });
 
-/* LOGOUT */
-logoutBtn.onclick = ()=>signOut(auth).then(()=>window.location.href="index.html");
-
-/* LOAD STAGES */
-async function loadStages(solved){
-  const snapshot = await getDocs(collection(db,"stages"));
-  let stages = [];
-  snapshot.forEach(docSnap=>stages.push({id:docSnap.id,...docSnap.data()}));
-  stages.sort((a,b)=>a.order-b.order);
-
+/* LOAD STAGES WITH LOCK LOGIC + ANIMATION */
+async function loadStages(userData){
   stageContainer.innerHTML="";
+  const q = query(collection(db,"stages"), orderBy("order"));
+  const snapshot = await getDocs(q);
+  const solved = userData.solvedStages||[];
   let delay=0;
-  stages.forEach((stage,index)=>{
-    const card=document.createElement("div");
+
+  snapshot.forEach(docSnap=>{
+    const stage = docSnap.data();
+    const stageId = docSnap.id;
+    const card = document.createElement("div");
     card.classList.add("stage-card");
 
-    let locked = false;
-    if(index>0){
-      const prevId = stages[index-1].id;
-      if(!solved.includes(prevId)) locked = true;
-    }
+    if(solved.includes(stageId)) card.classList.add("solved");
 
-    if(solved.includes(stage.id)) card.classList.add("solved");
-    if(locked) card.classList.add("locked");
+    let locked = stage.order>1 && !solved.includes("stage"+(stage.order-1));
+    card.classList.toggle("locked",locked);
 
-    card.innerHTML=`
-      <h3>${stage.title} ${locked?"🔒":""}</h3>
+    card.innerHTML = `
+      <h3>${stage.title}${locked?" 🔒":""}</h3>
       <p>${stage.text}</p>
       <p>XP: ${stage.xp}</p>
-      <button ${locked?"disabled":`onclick="openStage('${stage.id}')"`}>${locked?"Locked":"Start"}</button>
+      <button ${locked? "disabled" : `onclick="openStage('${stageId}')"`}>${locked?"Locked":"Start"}</button>
     `;
 
     stageContainer.appendChild(card);
     setTimeout(()=>card.classList.add("show"),delay);
-    delay+=100;
+    delay+=120;
   });
 }
 
 window.openStage=id=>window.location.href="stage.html?id="+id;
+
+/* LOGOUT */
+logoutBtn.onclick = ()=>signOut(auth).then(()=>window.location.href="index.html");
+
+/* PAYPAL BUTTON */
+buyXpBtn.onclick = ()=>{
+  const container = document.getElementById("paypal-container");
+  container.scrollIntoView({behavior:"smooth"});
+  alert("PayPal button below. Complete your purchase to gain XP!");
+};
 </script>
+
+<!-- PAYPAL SDK -->
+<script src="https://www.paypal.com/sdk/js?client-id=BAANEM-ym-VkUny86qGnLGSCrXAuYaQlr4XDgcjJtB1A65tn9qFJIAaH61r-Pi5c0kzDKGdfgj5EIKjfuY&components=hosted-buttons&disable-funding=venmo&currency=USD"></script>
+<script>
+  paypal.HostedButtons({ hostedButtonId: "JG97CC8L5EH3W" }).render("#paypal-container");
+</script>
+
 </body>
 </html>
