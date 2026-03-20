@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cybersecurity Stages | Itzsos Labs</title>
+<title>Itzsos Labs - Stages</title>
 
 <style>
 body {
@@ -16,26 +16,17 @@ body {
 /* NAV */
 nav {
   background:#111422;
-  border-bottom:1px solid #00ffdd;
   display:flex;
   justify-content:space-between;
-  align-items:center;
   padding:15px 30px;
+  border-bottom:1px solid #00ffdd;
 }
 nav h2 { color:#ff6600; }
-
-nav .nav-buttons {
-  display:flex;
-  gap:10px;
-}
-
 nav button {
   background:#ff6600;
   border:none;
-  padding:8px 12px;
-  font-weight:bold;
+  padding:8px 15px;
   cursor:pointer;
-  border-radius:6px;
 }
 
 /* CONTAINER */
@@ -47,57 +38,24 @@ nav button {
 
 /* USER BOX */
 #userBox {
-  margin-bottom:30px;
+  background:#111422;
   padding:20px;
-  background:linear-gradient(145deg,#111422,#1a1f35);
+  border-radius:10px;
+  margin-bottom:30px;
   border:1px solid #00ffdd;
-  border-radius:12px;
-  box-shadow:0 0 15px rgba(0,255,221,0.2);
 }
 
-.user-info {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-}
-
-.left {
-  display:flex;
-  align-items:center;
-  gap:15px;
-}
-
+/* AVATAR */
 .avatar {
-  width:55px;
-  height:55px;
+  width:50px;
+  height:50px;
   border-radius:50%;
   background:linear-gradient(45deg,#ff6600,#00ffdd);
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:1.5rem;
   font-weight:bold;
-  color:#0f111a;
-}
-
-.user-details {
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-
-.xp-badge {
-  background:#00ffdd;
-  color:#0f111a;
-  padding:5px 10px;
-  border-radius:20px;
-  font-weight:bold;
-  width:fit-content;
-}
-
-/* ACTION BUTTONS */
-.actions button {
-  margin-left:10px;
+  color:#000;
 }
 
 /* STAGES */
@@ -109,11 +67,12 @@ nav button {
 
 .stage-card {
   background:#111422;
-  border:1px solid #00ffdd;
   padding:20px;
   border-radius:10px;
+  border:1px solid #00ffdd;
   transition:0.3s;
 }
+
 .stage-card:hover {
   transform:scale(1.05);
   border-color:#ff6600;
@@ -121,33 +80,41 @@ nav button {
 
 .stage-card h3 { color:#ff6600; }
 
-.stage-card button {
+button.start {
   margin-top:10px;
-  padding:8px 12px;
+  padding:8px;
   background:#00ffdd;
   border:none;
   cursor:pointer;
-  font-weight:bold;
 }
 
-.stage-card button:disabled {
+button.start:disabled {
   background:gray;
+  cursor:not-allowed;
 }
 
-.locked { opacity:0.5; }
-.solved { border-color:lightgreen !important; }
+.locked {
+  opacity:0.5;
+}
 
 /* PAYPAL */
-#paypal-box {
-  margin-top:15px;
+#paypalBox {
+  margin-top:20px;
+  padding:15px;
+  border:1px solid #ff6600;
+  border-radius:10px;
+  text-align:center;
 }
 
-/* FOOTER */
-footer {
-  text-align:center;
-  padding:20px;
-  border-top:1px solid #00ffdd;
-  margin-top:40px;
+/* CHAT BUTTON */
+#chatBtn {
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#ff6600;
+  padding:10px;
+  border:none;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -156,55 +123,54 @@ footer {
 
 <nav>
   <h2>Itzsos Labs</h2>
-  <div class="nav-buttons">
-    <button onclick="window.location.href='chat.html'">Chat 💬</button>
-    <button onclick="window.location.href='leaderboard.html'">Leaderboard</button>
+  <div>
+    <button onclick="window.location.href='chat.html'">Chat</button>
     <button id="logoutBtn">Logout</button>
   </div>
 </nav>
 
 <div class="container">
 
+  <!-- USER -->
   <div id="userBox">
-    <div class="user-info">
-
-      <div class="left">
-        <div class="avatar" id="userAvatar">U</div>
-        <div class="user-details">
-          <div id="userEmail">Loading...</div>
-          <div id="userXP" class="xp-badge">XP: 0</div>
-        </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <div class="avatar" id="avatar">U</div>
+      <div>
+        <div id="email">Loading...</div>
+        <div id="xp">XP: 0</div>
       </div>
-
-      <div class="actions">
-        <button onclick="window.location.href='chat.html'">Open Chat</button>
-      </div>
-
     </div>
 
-    <!-- PAYPAL BUTTON -->
-    <div id="paypal-box">
+    <!-- PAYPAL -->
+    <div id="paypalBox">
+      <h3>🔥 Buy 300 XP</h3>
+
       <script src="https://www.paypal.com/sdk/js?client-id=BAANEM-ym-VkUny86qGnLGSCrXAuYaQlr4XDgcjJtB1A65tn9qFJIAaH61r-Pi5c0kzDKGdfgj5EIKjfuY&components=hosted-buttons&currency=USD"></script>
+
       <div id="paypal-container-JG97CC8L5EH3W"></div>
+
       <script>
         paypal.HostedButtons({
-          hostedButtonId: "JG97CC8L5EH3W",
+          hostedButtonId: "JG97CC8L5EH3W"
         }).render("#paypal-container-JG97CC8L5EH3W");
       </script>
-    </div>
 
+      <br>
+      <button id="verifyBtn">I Paid 💰</button>
+    </div>
   </div>
 
-  <div class="stage-grid" id="stageContainer"></div>
+  <!-- STAGES -->
+  <div class="stage-grid" id="stages"></div>
 
 </div>
 
-<footer>© 2026 Itzsos Labs</footer>
+<button id="chatBtn" onclick="window.location.href='chat.html'">Open Chat</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 /* FIREBASE */
 const firebaseConfig = {
@@ -220,68 +186,105 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const stageContainer = document.getElementById("stageContainer");
-const userEmail = document.getElementById("userEmail");
-const userXP = document.getElementById("userXP");
+const stagesDiv = document.getElementById("stages");
 const logoutBtn = document.getElementById("logoutBtn");
 
+let currentUser;
+
 /* AUTH */
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return window.location.href="index.html";
-  if (!user.emailVerified) {
-    alert("Verify email first!");
-    return window.location.href="index.html";
-  }
+onAuthStateChanged(auth, async(user)=>{
+  if(!user) return window.location.href="index.html";
+
+  currentUser = user;
+
+  document.getElementById("email").innerHTML = "<b>"+user.email+"</b>";
+  document.getElementById("avatar").textContent = user.email[0].toUpperCase();
 
   const userRef = doc(db,"users",user.uid);
-  const userSnap = await getDoc(userRef);
+  const snap = await getDoc(userRef);
 
-  if (!userSnap.exists()) return window.location.href="selection.html";
+  let xp = 0;
+  let solved = [];
 
-  const data = userSnap.data();
+  if(snap.exists()){
+    xp = snap.data().xp || 0;
+    solved = snap.data().solvedStages || [];
+  }
 
-  document.getElementById("userAvatar").textContent = user.email[0].toUpperCase();
-  userEmail.innerHTML = "<strong>"+user.email+"</strong>";
-  userXP.textContent = "XP: " + (data.xp || 0);
+  document.getElementById("xp").textContent = "XP: "+xp;
 
-  loadStages(data);
+  loadStages(solved);
 });
 
-/* LOAD STAGES */
-async function loadStages(userData){
-  const snapshot = await getDocs(collection(db,"stages"));
-  const solved = userData.solvedStages || [];
+/* LOAD STAGES (FIXED LOCK SYSTEM) */
+async function loadStages(solved){
 
-  snapshot.forEach(docSnap=>{
-    const data = docSnap.data();
-    const id = docSnap.id;
+  const querySnapshot = await getDocs(collection(db,"stages"));
+
+  let stages = [];
+
+  querySnapshot.forEach(docSnap=>{
+    stages.push({
+      id: docSnap.id,
+      ...docSnap.data()
+    });
+  });
+
+  // SORT
+  stages.sort((a,b)=>a.order - b.order);
+
+  stagesDiv.innerHTML = "";
+
+  stages.forEach((stage,index)=>{
 
     const card = document.createElement("div");
     card.classList.add("stage-card");
 
-    if(solved.includes(id)) card.classList.add("solved");
+    let locked = false;
 
-    let locked = data.order>1 && !solved.includes("stage"+(data.order-1));
+    if(index > 0){
+      const prevId = stages[index-1].id;
+      if(!solved.includes(prevId)) locked = true;
+    }
+
     if(locked) card.classList.add("locked");
 
     card.innerHTML = `
-      <h3>${data.title} ${locked?"🔒":""}</h3>
-      <p>${data.text}</p>
-      <p>XP: ${data.xp}</p>
-      <button ${locked?"disabled":`onclick="openStage('${id}')"`}>
+      <h3>${stage.title} ${locked?"🔒":""}</h3>
+      <p>${stage.text}</p>
+      <p>XP: ${stage.xp}</p>
+      ${locked ? "<p style='color:red;'>Complete previous stage</p>" : ""}
+      <button class="start"
+        ${locked?"disabled":""}
+        onclick="window.location.href='stage.html?id=${stage.id}'">
         ${locked?"Locked":"Start"}
       </button>
     `;
 
-    stageContainer.appendChild(card);
+    stagesDiv.appendChild(card);
   });
 }
 
-/* OPEN */
-window.openStage = id => window.location.href="stage.html?id="+id;
+/* VERIFY PAYMENT */
+document.getElementById("verifyBtn").onclick = async ()=>{
+  if(!currentUser) return;
+
+  const userRef = doc(db,"users",currentUser.uid);
+  const snap = await getDoc(userRef);
+
+  let xp = snap.data().xp || 0;
+
+  await setDoc(userRef,{
+    xp: xp + 300
+  },{merge:true});
+
+  alert("🔥 XP Added!");
+  location.reload();
+};
 
 /* LOGOUT */
 logoutBtn.onclick = ()=>signOut(auth).then(()=>window.location.href="index.html");
+
 </script>
 
 </body>
