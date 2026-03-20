@@ -3,142 +3,200 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Itzsos Labs - Cybersecurity Stages</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<title>Cybersecurity Stages | Itzsos Labs</title>
+
 <style>
 body {
   margin:0;
-  font-family: 'Share Tech Mono', monospace;
+  font-family:monospace;
   background:#0f111a;
   color:#00ffdd;
-  overflow-x:hidden;
-  position:relative;
 }
-a { text-decoration:none; color:inherit; }
 
 /* NAV */
 nav {
-  display:flex; justify-content:space-between; align-items:center;
-  padding:15px 30px; background: rgba(17,20,34,0.95); border-bottom:1px solid #00ffdd;
-  box-shadow: 0 0 15px #00ffdd44 inset;
+  background:#111422;
+  border-bottom:1px solid #00ffdd;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 30px;
 }
-nav h2 { color:#ff6600; text-shadow:0 0 10px #ff6600; }
+nav h2 { color:#ff6600; }
+
+nav .nav-buttons {
+  display:flex;
+  gap:10px;
+}
+
 nav button {
-  background:#ff6600; border:none; padding:8px 15px; font-weight:bold; cursor:pointer;
-  border-radius:8px; box-shadow:0 0 10px #ff6600,0 0 20px #00ffdd; transition:0.3s;
+  background:#ff6600;
+  border:none;
+  padding:8px 12px;
+  font-weight:bold;
+  cursor:pointer;
+  border-radius:6px;
 }
-nav button:hover { background:#00ffdd; color:black; transform:scale(1.05); }
+
+/* CONTAINER */
+.container {
+  max-width:1100px;
+  margin:40px auto;
+  padding:20px;
+}
 
 /* USER BOX */
-.container { max-width:1100px; margin:40px auto; padding:0 20px; }
 #userBox {
-  background: rgba(17,20,34,0.85); border:1px solid #00ffdd; border-radius:15px; padding:20px;
-  display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;
-  box-shadow:0 0 25px #00ffdd55 inset; backdrop-filter:blur(10px);
+  margin-bottom:30px;
+  padding:20px;
+  background:linear-gradient(145deg,#111422,#1a1f35);
+  border:1px solid #00ffdd;
+  border-radius:12px;
+  box-shadow:0 0 15px rgba(0,255,221,0.2);
 }
-.user-info { display:flex; align-items:center; gap:15px; }
+
+.user-info {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.left {
+  display:flex;
+  align-items:center;
+  gap:15px;
+}
+
 .avatar {
-  width:60px; height:60px; border-radius:50%;
-  background: linear-gradient(45deg,#ff6600,#00ffdd);
-  display:flex; justify-content:center; align-items:center; font-weight:bold;
-  font-size:1.8rem; color:#0f111a; text-shadow:0 0 5px #fff;
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  background:linear-gradient(45deg,#ff6600,#00ffdd);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.5rem;
+  font-weight:bold;
+  color:#0f111a;
 }
-.user-details { display:flex; flex-direction:column; gap:6px; }
-.xp-badge { background:#00ffdd; color:#0f111a; padding:5px 12px; border-radius:20px; font-weight:bold; width:fit-content; text-shadow:0 0 5px #111; }
-#xp-bar { height:10px; width:100%; background:#111422; border-radius:6px; overflow:hidden; margin-top:6px; }
-#xp-bar-fill { height:100%; width:0%; background:#ff6600; transition:width 1s ease; }
 
-/* STAGE GRID */
-.stage-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px; }
+.user-details {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.xp-badge {
+  background:#00ffdd;
+  color:#0f111a;
+  padding:5px 10px;
+  border-radius:20px;
+  font-weight:bold;
+  width:fit-content;
+}
+
+/* ACTION BUTTONS */
+.actions button {
+  margin-left:10px;
+}
+
+/* STAGES */
+.stage-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
+}
+
 .stage-card {
-  background: rgba(17,20,34,0.7); border:1px solid #00ffdd; border-radius:12px; padding:20px;
-  transform:translateY(20px); opacity:0; transition:0.5s; box-shadow:0 0 15px #00ffdd33 inset;
-  cursor:pointer; backdrop-filter:blur(5px); position:relative; overflow:hidden;
+  background:#111422;
+  border:1px solid #00ffdd;
+  padding:20px;
+  border-radius:10px;
+  transition:0.3s;
 }
-.stage-card.show { transform:translateY(0); opacity:1; }
-.stage-card:hover { transform:scale(1.05) rotateY(3deg); border-color:#ff6600; box-shadow:0 0 25px #ff6600,0 0 40px #00ffdd; }
-.stage-card h3 { color:#ff6600; margin-bottom:10px; text-shadow:0 0 5px #ff6600; }
-.stage-card p { color:#ccc; line-height:1.4; }
+.stage-card:hover {
+  transform:scale(1.05);
+  border-color:#ff6600;
+}
+
+.stage-card h3 { color:#ff6600; }
+
 .stage-card button {
-  margin-top:10px; padding:8px 12px; background:#00ffdd; border:none; border-radius:6px;
-  font-weight:bold; cursor:pointer; transition:0.3s; box-shadow:0 0 5px #00ffdd,0 0 10px #ff6600;
+  margin-top:10px;
+  padding:8px 12px;
+  background:#00ffdd;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
 }
-.stage-card button:hover { background:#ff6600; color:black; transform:scale(1.05); }
-.stage-card button:disabled { background:gray; cursor:not-allowed; }
-.locked { opacity:0.4; filter:blur(0.5px); }
-.solved { border-color:#00ff99 !important; animation: solvedGlow 1.5s infinite alternate; }
-@keyframes solvedGlow {0% {box-shadow:0 0 10px #00ff99; transform:scale(1);}50%{box-shadow:0 0 25px #00ff99;transform:scale(1.02);}100%{box-shadow:0 0 10px #00ff99;transform:scale(1);}}
 
-/* CHAT */
-#chat-toggle { position:fixed; bottom:20px; right:340px; padding:10px 15px; border:none; background:#ff6600; color:black; font-weight:bold; cursor:pointer; border-radius:12px; z-index:25; box-shadow:0 0 15px #ff6600,0 0 20px #00ffdd; transition:0.3s; }
-#chat-toggle:hover { background:#00ffdd; color:black; transform:scale(1.05);}
-#chat-container { display:none; position:fixed; bottom:20px; right:20px; width:300px; max-height:400px; background:rgba(0,0,0,0.85); border:1px solid #00ffdd; border-radius:12px; padding:10px; overflow:hidden; z-index:20; }
+.stage-card button:disabled {
+  background:gray;
+}
 
-/* DONATION MODAL */
-#donationModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:50; justify-content:center; align-items:center; }
-#donationModal .modal-content { background:#111422; padding:20px; border:1px solid #00ffdd; border-radius:12px; width:300px; text-align:center; }
+.locked { opacity:0.5; }
+.solved { border-color:lightgreen !important; }
 
-/* PARTICLES */
-.particles { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1; }
-.particles span { position:absolute; width:3px; height:3px; background:#00ffdd; border-radius:50%; animation:float 8s linear infinite; opacity:0.5; }
-@keyframes float {0%{transform:translateY(0) translateX(0);opacity:0.3;}50%{transform:translateY(-50px) translateX(20px);opacity:0.6;}100%{transform:translateY(0) translateX(-10px);opacity:0.3;}}
+/* PAYPAL */
+#paypal-box {
+  margin-top:15px;
+}
 
-footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-top:40px; text-shadow:0 0 10px #00ffdd;}
-.confetti { position:absolute; width:8px; height:8px; background:#ff6600; pointer-events:none; z-index:100; }
+/* FOOTER */
+footer {
+  text-align:center;
+  padding:20px;
+  border-top:1px solid #00ffdd;
+  margin-top:40px;
+}
 </style>
 </head>
+
 <body>
 
-<div class="particles" id="particles"></div>
-
 <nav>
-  <h2>Itzsos Labs - Cybersecurity Track</h2>
-  <div>
-    <button onclick="window.location.href='profile.html'">Profile</button>
+  <h2>Itzsos Labs</h2>
+  <div class="nav-buttons">
+    <button onclick="window.location.href='chat.html'">Chat 💬</button>
     <button onclick="window.location.href='leaderboard.html'">Leaderboard</button>
     <button id="logoutBtn">Logout</button>
   </div>
 </nav>
 
 <div class="container">
+
   <div id="userBox">
     <div class="user-info">
-      <div class="avatar" id="userAvatar">U</div>
-      <div class="user-details">
-        <div id="userName">Loading user...</div>
-        <div id="userXP" class="xp-badge">XP: 0</div>
-        <div id="xp-bar"><div id="xp-bar-fill"></div></div>
-        <button id="buy-xp-btn">Buy XP / Unlock Stage</button>
-        <button id="donate-btn">Donate</button>
+
+      <div class="left">
+        <div class="avatar" id="userAvatar">U</div>
+        <div class="user-details">
+          <div id="userEmail">Loading...</div>
+          <div id="userXP" class="xp-badge">XP: 0</div>
+        </div>
       </div>
+
+      <div class="actions">
+        <button onclick="window.location.href='chat.html'">Open Chat</button>
+      </div>
+
     </div>
+
+    <!-- PAYPAL BUTTON -->
+    <div id="paypal-box">
+      <script src="https://www.paypal.com/sdk/js?client-id=BAANEM-ym-VkUny86qGnLGSCrXAuYaQlr4XDgcjJtB1A65tn9qFJIAaH61r-Pi5c0kzDKGdfgj5EIKjfuY&components=hosted-buttons&currency=USD"></script>
+      <div id="paypal-container-JG97CC8L5EH3W"></div>
+      <script>
+        paypal.HostedButtons({
+          hostedButtonId: "JG97CC8L5EH3W",
+        }).render("#paypal-container-JG97CC8L5EH3W");
+      </script>
+    </div>
+
   </div>
 
   <div class="stage-grid" id="stageContainer"></div>
-</div>
 
-<!-- CHAT -->
-<button id="chat-toggle">Open Chat</button>
-<div id="chat-container">
-  <div id="chat-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-    <span id="username">User</span>
-    <button id="chat-close" style="background:#ff6600;border:none;padding:2px 6px;color:black;cursor:pointer;">X</button>
-  </div>
-  <div id="chat-messages" style="height:280px; overflow-y:auto; background:#111422; padding:5px; border-radius:8px;"></div>
-  <div style="display:flex; gap:5px; margin-top:5px;">
-    <input type="text" id="msg-input" placeholder="Type a message..." style="flex:1; padding:5px; border-radius:6px; border:none;">
-    <button id="send-btn" style="padding:5px 8px; background:#00ffdd; border:none; border-radius:6px; cursor:pointer;">Send</button>
-  </div>
-</div>
-
-<!-- DONATION MODAL -->
-<div id="donationModal">
-  <div class="modal-content">
-    <h3>Support Itzsos Labs</h3>
-    <button id="donatePaypal">Donate via PayPal</button>
-    <br><br>
-    <button id="donation-close">Close</button>
-  </div>
 </div>
 
 <footer>© 2026 Itzsos Labs</footer>
@@ -146,9 +204,9 @@ footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-t
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy, setDoc, addDoc, serverTimestamp, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* FIREBASE KEYS */
+/* FIREBASE */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -162,162 +220,69 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* ELEMENTS */
 const stageContainer = document.getElementById("stageContainer");
-const userName = document.getElementById("userName");
+const userEmail = document.getElementById("userEmail");
 const userXP = document.getElementById("userXP");
-const xpFill = document.getElementById("xp-bar-fill");
 const logoutBtn = document.getElementById("logoutBtn");
 
-const chatContainer = document.getElementById("chat-container");
-const chatMessages = document.getElementById("chat-messages");
-const msgInput = document.getElementById("msg-input");
-const sendBtn = document.getElementById("send-btn");
-const usernameDisplay = document.getElementById("username");
-const chatClose = document.getElementById("chat-close");
-const chatToggle = document.getElementById("chat-toggle");
-
-const buyXPBtn = document.getElementById("buy-xp-btn");
-const donateBtn = document.getElementById("donate-btn");
-const donationModal = document.getElementById("donationModal");
-const donationClose = document.getElementById("donation-close");
-const donatePaypal = document.getElementById("donatePaypal");
-
-let currentUser, currentUsername;
-
-/* AUTH + LOAD */
-onAuthStateChanged(auth, async(user)=>{
-  if(!user) return window.location.href="index.html";
-  if(!user.emailVerified){ alert("Verify your email!"); return window.location.href="index.html"; }
-  currentUser = user;
-  const userRef = doc(db,"users",user.uid);
-  let userSnap = await getDoc(userRef);
-  if(!userSnap.exists()){
-    await setDoc(userRef,{
-      email:user.email,
-      username:"Xtrove",
-      xp:0,
-      solvedStages:[],
-      role:"New Hacker"
-    });
-    userSnap = await getDoc(userRef);
+/* AUTH */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return window.location.href="index.html";
+  if (!user.emailVerified) {
+    alert("Verify email first!");
+    return window.location.href="index.html";
   }
-  const data = userSnap.data();
-  currentUsername = data.username || "Xtrove";
 
-  document.getElementById("userAvatar").textContent = currentUsername.charAt(0).toUpperCase();
-  userName.innerHTML = `<strong>${currentUsername}</strong>`;
-  userXP.textContent = "XP: "+(data.xp||0);
-  xpFill.style.width = Math.min(data.xp||0,100)+"%";
-  usernameDisplay.textContent = currentUsername;
+  const userRef = doc(db,"users",user.uid);
+  const userSnap = await getDoc(userRef);
+
+  if (!userSnap.exists()) return window.location.href="selection.html";
+
+  const data = userSnap.data();
+
+  document.getElementById("userAvatar").textContent = user.email[0].toUpperCase();
+  userEmail.innerHTML = "<strong>"+user.email+"</strong>";
+  userXP.textContent = "XP: " + (data.xp || 0);
 
   loadStages(data);
-  loadChat();
 });
-
-/* LOGOUT */
-logoutBtn.onclick = ()=>signOut(auth).then(()=>window.location.href="index.html");
 
 /* LOAD STAGES */
 async function loadStages(userData){
-  stageContainer.innerHTML="";
-  const snapshot = await getDocs(query(collection(db,"stages"),orderBy("order")));
-  const solved = userData.solvedStages||[];
-  let delay=0;
+  const snapshot = await getDocs(collection(db,"stages"));
+  const solved = userData.solvedStages || [];
+
   snapshot.forEach(docSnap=>{
-    const stage=docSnap.data();
-    const stageId=docSnap.id;
-    const card=document.createElement("div");
+    const data = docSnap.data();
+    const id = docSnap.id;
+
+    const card = document.createElement("div");
     card.classList.add("stage-card");
-    if(solved.includes(stageId)) card.classList.add("solved");
-    let locked = stage.order>1 && !solved.includes("stage"+(stage.order-1));
-    card.classList.toggle("locked",locked);
-    card.innerHTML=`
-      <h3>${stage.title} ${locked?"🔒":""}</h3>
-      <p>${stage.text}</p>
-      <p>XP: ${stage.xp}</p>
-      <button ${locked?"disabled":""}>${locked?"Locked":"Start"}</button>
+
+    if(solved.includes(id)) card.classList.add("solved");
+
+    let locked = data.order>1 && !solved.includes("stage"+(data.order-1));
+    if(locked) card.classList.add("locked");
+
+    card.innerHTML = `
+      <h3>${data.title} ${locked?"🔒":""}</h3>
+      <p>${data.text}</p>
+      <p>XP: ${data.xp}</p>
+      <button ${locked?"disabled":`onclick="openStage('${id}')"`}>
+        ${locked?"Locked":"Start"}
+      </button>
     `;
-    if(!locked){
-      card.querySelector("button").onclick=()=>solveStage(stageId,stage.xp,card);
-    }
+
     stageContainer.appendChild(card);
-    setTimeout(()=>card.classList.add("show"),delay);
-    delay+=120;
   });
 }
 
-/* SOLVE STAGE + REWARD */
-async function solveStage(stageId,xp,card){
-  card.classList.add("solved");
-  await updateDoc(doc(db,"users",currentUser.uid),{
-    xp: serverTimestamp(),
-    solvedStages: [...(card.dataset.solved||[]), stageId]
-  });
-  userXP.textContent = "XP: "+(parseInt(userXP.textContent.split(" ")[1])+xp);
-  xpFill.style.width = Math.min(parseInt(userXP.textContent.split(" ")[1]),100)+"%";
-  showConfetti(card);
-  chatContainer.style.display="block"; // auto open chat
-}
+/* OPEN */
+window.openStage = id => window.location.href="stage.html?id="+id;
 
-/* CONFETTI EFFECT */
-function showConfetti(card){
-  for(let i=0;i<30;i++){
-    const c=document.createElement("div");
-    c.classList.add("confetti");
-    c.style.left=Math.random()*card.offsetWidth+"px";
-    c.style.top=Math.random()*card.offsetHeight+"px";
-    document.body.appendChild(c);
-    const anim=c.animate([{transform:"translateY(0)"},{transform:"translateY(-100px)"}],{duration:800+Math.random()*500,iterations:1});
-    anim.onfinish=()=>c.remove();
-  }
-}
-
-/* CHAT */
-function loadChat(){
-  const q=query(collection(db,"chatMessages"),orderBy("timestamp","asc"));
-  onSnapshot(q,snapshot=>{
-    chatMessages.innerHTML="";
-    snapshot.forEach(doc=>{
-      const data=doc.data();
-      const msgEl=document.createElement("div");
-      msgEl.style.padding="6px"; msgEl.style.marginBottom="6px";
-      msgEl.style.background="#0f111a"; msgEl.style.borderRadius="6px";
-      msgEl.style.borderLeft="3px solid #00ffdd";
-      msgEl.innerHTML=`<div style="color:#00ffdd;font-weight:bold;">${data.user}</div><div style="color:#ccc;">${data.text}</div>`;
-      chatMessages.appendChild(msgEl);
-    });
-    chatMessages.scrollTop=chatMessages.scrollHeight;
-  });
-}
-sendBtn.addEventListener("click",async()=>{
-  if(!currentUser||msgInput.value.trim()==="")return;
-  await addDoc(collection(db,"chatMessages"),{user:currentUsername,text:msgInput.value,timestamp:serverTimestamp()});
-  msgInput.value="";
-});
-msgInput.addEventListener("keypress",e=>{ if(e.key==="Enter") sendBtn.click(); });
-chatClose.onclick=()=>chatContainer.style.display="none";
-chatToggle.onclick=()=>chatContainer.style.display=chatContainer.style.display==="none"?"block":"none";
-
-/* BUY XP / DONATE */
-buyXPBtn.onclick=()=>window.open("https://www.paypal.com/donate?hosted_button_id=YOUR_BUTTON_ID","_blank");
-donateBtn.onclick=()=>donationModal.style.display="flex";
-donationClose.onclick=()=>donationModal.style.display="none";
-donatePaypal.onclick=()=>window.open("https://www.paypal.com/donate?hosted_button_id=YOUR_BUTTON_ID","_blank");
-
-
-/* === PARTICLES === */
-const particles=document.getElementById('particles');
-for(let i=0;i<80;i++){
-  const span=document.createElement('span');
-  span.style.width=`${Math.random()*3+2}px`;
-  span.style.height=span.style.width;
-  span.style.top=`${Math.random()*100}%`;
-  span.style.left=`${Math.random()*100}%`;
-  span.style.animationDuration=`${Math.random()*5+5}s`;
-  span.style.opacity=Math.random();
-  particles.appendChild(span);
-}
+/* LOGOUT */
+logoutBtn.onclick = ()=>signOut(auth).then(()=>window.location.href="index.html");
 </script>
+
 </body>
 </html>
