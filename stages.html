@@ -3,31 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Itzsos Labs - Stages</title>
+<title>Itzsos Labs - Cybersecurity Stages</title>
 
 <style>
 body {
   margin:0;
-  font-family:monospace;
+  font-family: 'Share Tech Mono', monospace;
   background:#0f111a;
   color:#00ffdd;
+  overflow-x:hidden;
+  transition: background 0.5s;
 }
 
 /* NAV */
 nav {
-  background:#111422;
+  background: rgba(17,20,34,0.95);
+  border-bottom:1px solid #00ffdd;
   display:flex;
   justify-content:space-between;
+  align-items:center;
   padding:15px 30px;
-  border-bottom:1px solid #00ffdd;
+  box-shadow:0 0 15px #00ffdd44 inset;
 }
-nav h2 { color:#ff6600; }
-nav button {
+nav h2 { color:#ff6600; text-shadow:0 0 10px #ff6600; }
+nav .nav-buttons button {
   background:#ff6600;
   border:none;
-  padding:8px 15px;
+  padding:8px 12px;
+  font-weight:bold;
   cursor:pointer;
+  border-radius:8px;
+  margin-left:10px;
+  transition:0.3s;
 }
+nav .nav-buttons button:hover { background:#00ffdd; color:black; transform:scale(1.05); }
 
 /* CONTAINER */
 .container {
@@ -38,84 +47,61 @@ nav button {
 
 /* USER BOX */
 #userBox {
-  background:#111422;
-  padding:20px;
-  border-radius:10px;
   margin-bottom:30px;
+  padding:20px;
+  background:linear-gradient(145deg,#111422,#1a1f35);
   border:1px solid #00ffdd;
+  border-radius:12px;
+  box-shadow:0 0 15px rgba(0,255,221,0.2);
 }
-
-/* AVATAR */
+.user-info { display:flex; align-items:center; gap:15px; }
 .avatar {
-  width:50px;
-  height:50px;
-  border-radius:50%;
-  background:linear-gradient(45deg,#ff6600,#00ffdd);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-  color:#000;
+  width:60px; height:60px; border-radius:50%;
+  background: linear-gradient(45deg,#ff6600,#00ffdd);
+  display:flex; justify-content:center; align-items:center;
+  font-weight:bold; font-size:1.8rem; color:#0f111a; text-shadow:0 0 5px #fff;
 }
+.user-details { display:flex; flex-direction:column; gap:6px; }
+.xp-badge { background:#00ffdd; color:#0f111a; padding:5px 12px; border-radius:20px; font-weight:bold; width:fit-content; text-shadow:0 0 5px #111; }
 
-/* STAGES */
+/* STAGE GRID */
 .stage-grid {
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
   gap:20px;
 }
-
 .stage-card {
-  background:#111422;
-  padding:20px;
-  border-radius:10px;
+  background: rgba(17,20,34,0.7);
   border:1px solid #00ffdd;
-  transition:0.3s;
-}
-
-.stage-card:hover {
-  transform:scale(1.05);
-  border-color:#ff6600;
-}
-
-.stage-card h3 { color:#ff6600; }
-
-button.start {
-  margin-top:10px;
-  padding:8px;
-  background:#00ffdd;
-  border:none;
+  border-radius:12px;
+  padding:20px;
+  transform:translateY(20px);
+  opacity:0;
+  transition:0.5s, transform 0.5s;
+  box-shadow:0 0 15px #00ffdd33 inset;
   cursor:pointer;
+  backdrop-filter:blur(5px);
+}
+.stage-card.show { transform:translateY(0); opacity:1; }
+.stage-card:hover { transform:scale(1.05) rotateY(3deg); border-color:#ff6600; box-shadow:0 0 25px #ff6600,0 0 40px #00ffdd; }
+.stage-card h3 { color:#ff6600; margin-bottom:10px; text-shadow:0 0 5px #ff6600; }
+.stage-card p { color:#ccc; line-height:1.4; }
+.stage-card button {
+  margin-top:10px; padding:8px 12px; background:#00ffdd; border:none; border-radius:6px; font-weight:bold;
+  cursor:pointer; transition:0.3s; box-shadow:0 0 5px #00ffdd,0 0 10px #ff6600;
+}
+.stage-card button:hover { background:#ff6600; color:black; transform:scale(1.05); }
+.stage-card button:disabled { background:gray; cursor:not-allowed; }
+.locked { opacity:0.4; filter:blur(0.5px); }
+.solved { border-color:#00ff99 !important; animation: solvedGlow 1.5s infinite alternate; }
+@keyframes solvedGlow {
+  0% { box-shadow:0 0 10px #00ff99; transform:scale(1); }
+  50% { box-shadow:0 0 25px #00ff99; transform:scale(1.02); }
+  100% { box-shadow:0 0 10px #00ff99; transform:scale(1); }
 }
 
-button.start:disabled {
-  background:gray;
-  cursor:not-allowed;
-}
-
-.locked {
-  opacity:0.5;
-}
-
-/* PAYPAL */
-#paypalBox {
-  margin-top:20px;
-  padding:15px;
-  border:1px solid #ff6600;
-  border-radius:10px;
-  text-align:center;
-}
-
-/* CHAT BUTTON */
-#chatBtn {
-  position:fixed;
-  bottom:20px;
-  right:20px;
-  background:#ff6600;
-  padding:10px;
-  border:none;
-  cursor:pointer;
-}
+/* FOOTER */
+footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-top:40px; text-shadow:0 0 10px #00ffdd; }
 </style>
 </head>
 
@@ -123,54 +109,36 @@ button.start:disabled {
 
 <nav>
   <h2>Itzsos Labs</h2>
-  <div>
-    <button onclick="window.location.href='chat.html'">Chat</button>
+  <div class="nav-buttons">
+    <button onclick="window.location.href='profile.html'">Profile</button>
+    <button onclick="window.location.href='leaderboard.html'">Leaderboard</button>
     <button id="logoutBtn">Logout</button>
+    <button onclick="window.location.href='chat.html'">Chat</button>
   </div>
 </nav>
 
 <div class="container">
 
-  <!-- USER -->
   <div id="userBox">
-    <div style="display:flex; gap:10px; align-items:center;">
-      <div class="avatar" id="avatar">U</div>
-      <div>
-        <div id="email">Loading...</div>
-        <div id="xp">XP: 0</div>
+    <div class="user-info">
+      <div class="avatar" id="userAvatar">U</div>
+      <div class="user-details">
+        <div id="userName">Loading user...</div>
+        <div id="userXP" class="xp-badge">XP: 0</div>
       </div>
-    </div>
-
-    <!-- PAYPAL -->
-    <div id="paypalBox">
-      <h3>🔥 Buy 300 XP</h3>
-
-      <script src="https://www.paypal.com/sdk/js?client-id=BAANEM-ym-VkUny86qGnLGSCrXAuYaQlr4XDgcjJtB1A65tn9qFJIAaH61r-Pi5c0kzDKGdfgj5EIKjfuY&components=hosted-buttons&currency=USD"></script>
-
-      <div id="paypal-container-JG97CC8L5EH3W"></div>
-
-      <script>
-        paypal.HostedButtons({
-          hostedButtonId: "JG97CC8L5EH3W"
-        }).render("#paypal-container-JG97CC8L5EH3W");
-      </script>
-
-      <br>
-      <button id="verifyBtn">I Paid 💰</button>
     </div>
   </div>
 
-  <!-- STAGES -->
-  <div class="stage-grid" id="stages"></div>
+  <div class="stage-grid" id="stageContainer"></div>
 
 </div>
 
-<button id="chatBtn" onclick="window.location.href='chat.html'">Open Chat</button>
+<footer>© 2026 Itzsos Labs</footer>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 /* FIREBASE */
 const firebaseConfig = {
@@ -186,106 +154,73 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const stagesDiv = document.getElementById("stages");
+const stageContainer = document.getElementById("stageContainer");
+const userName = document.getElementById("userName");
+const userXP = document.getElementById("userXP");
+const userAvatar = document.getElementById("userAvatar");
 const logoutBtn = document.getElementById("logoutBtn");
 
 let currentUser;
 
-/* AUTH */
+/* AUTH + LOAD */
 onAuthStateChanged(auth, async(user)=>{
   if(!user) return window.location.href="index.html";
-
   currentUser = user;
-
-  document.getElementById("email").innerHTML = "<b>"+user.email+"</b>";
-  document.getElementById("avatar").textContent = user.email[0].toUpperCase();
 
   const userRef = doc(db,"users",user.uid);
   const snap = await getDoc(userRef);
-
-  let xp = 0;
-  let solved = [];
-
-  if(snap.exists()){
-    xp = snap.data().xp || 0;
-    solved = snap.data().solvedStages || [];
+  if(!snap.exists()){
+    window.location.href="selection.html";
+    return;
   }
+  const data = snap.data();
 
-  document.getElementById("xp").textContent = "XP: "+xp;
+  userName.textContent = data.username || user.email;
+  userXP.textContent = "XP: "+(data.xp||0);
+  userAvatar.textContent = user.email[0].toUpperCase();
 
-  loadStages(solved);
+  loadStages(data.solvedStages||[]);
 });
-
-/* LOAD STAGES (FIXED LOCK SYSTEM) */
-async function loadStages(solved){
-
-  const querySnapshot = await getDocs(collection(db,"stages"));
-
-  let stages = [];
-
-  querySnapshot.forEach(docSnap=>{
-    stages.push({
-      id: docSnap.id,
-      ...docSnap.data()
-    });
-  });
-
-  // SORT
-  stages.sort((a,b)=>a.order - b.order);
-
-  stagesDiv.innerHTML = "";
-
-  stages.forEach((stage,index)=>{
-
-    const card = document.createElement("div");
-    card.classList.add("stage-card");
-
-    let locked = false;
-
-    if(index > 0){
-      const prevId = stages[index-1].id;
-      if(!solved.includes(prevId)) locked = true;
-    }
-
-    if(locked) card.classList.add("locked");
-
-    card.innerHTML = `
-      <h3>${stage.title} ${locked?"🔒":""}</h3>
-      <p>${stage.text}</p>
-      <p>XP: ${stage.xp}</p>
-      ${locked ? "<p style='color:red;'>Complete previous stage</p>" : ""}
-      <button class="start"
-        ${locked?"disabled":""}
-        onclick="window.location.href='stage.html?id=${stage.id}'">
-        ${locked?"Locked":"Start"}
-      </button>
-    `;
-
-    stagesDiv.appendChild(card);
-  });
-}
-
-/* VERIFY PAYMENT */
-document.getElementById("verifyBtn").onclick = async ()=>{
-  if(!currentUser) return;
-
-  const userRef = doc(db,"users",currentUser.uid);
-  const snap = await getDoc(userRef);
-
-  let xp = snap.data().xp || 0;
-
-  await setDoc(userRef,{
-    xp: xp + 300
-  },{merge:true});
-
-  alert("🔥 XP Added!");
-  location.reload();
-};
 
 /* LOGOUT */
 logoutBtn.onclick = ()=>signOut(auth).then(()=>window.location.href="index.html");
 
-</script>
+/* LOAD STAGES */
+async function loadStages(solved){
+  const snapshot = await getDocs(collection(db,"stages"));
+  let stages = [];
+  snapshot.forEach(docSnap=>stages.push({id:docSnap.id,...docSnap.data()}));
+  stages.sort((a,b)=>a.order-b.order);
 
+  stageContainer.innerHTML="";
+  let delay=0;
+  stages.forEach((stage,index)=>{
+    const card=document.createElement("div");
+    card.classList.add("stage-card");
+
+    let locked = false;
+    if(index>0){
+      const prevId = stages[index-1].id;
+      if(!solved.includes(prevId)) locked = true;
+    }
+
+    if(solved.includes(stage.id)) card.classList.add("solved");
+    if(locked) card.classList.add("locked");
+
+    card.innerHTML=`
+      <h3>${stage.title} ${locked?"🔒":""}</h3>
+      <p>${stage.text}</p>
+      <p>XP: ${stage.xp}</p>
+      <button ${locked?"disabled":`onclick="openStage('${stage.id}')"`}>${locked?"Locked":"Start"}</button>
+    `;
+
+    stageContainer.appendChild(card);
+    setTimeout(()=>card.classList.add("show"),delay);
+    delay+=100;
+  });
+}
+
+window.openStage=id=>window.location.href="stage.html?id="+id;
+</script>
 </body>
 </html>
