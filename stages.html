@@ -6,17 +6,18 @@
 <title>Itzsos Labs - Cybersecurity Stages</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-/* === BASE === */
+/* BASE STYLES */
 body {
   margin:0;
-  font-family: 'Share Tech Mono', monospace;
+  font-family:'Share Tech Mono', monospace;
   background:#0f111a;
   color:#00ffdd;
   overflow-x:hidden;
 }
+
 a { text-decoration:none; color:inherit; }
 
-/* === NAV === */
+/* NAV */
 nav {
   display:flex;
   justify-content:space-between;
@@ -39,8 +40,10 @@ nav button {
 }
 nav button:hover { background:#00ffdd; color:black; transform:scale(1.05); }
 
-/* === USER BOX === */
+/* CONTAINER */
 .container { max-width:1100px; margin:40px auto; padding:0 20px; }
+
+/* USER BOX */
 #userBox {
   background: rgba(17,20,34,0.85);
   border:1px solid #00ffdd;
@@ -72,14 +75,14 @@ nav button:hover { background:#00ffdd; color:black; transform:scale(1.05); }
 #xp-bar { height:10px; width:100%; background:#111422; border-radius:6px; overflow:hidden; margin-top:6px; }
 #xp-bar-fill { height:100%; width:0%; background:#ff6600; transition:width 1s ease; }
 
-/* === STAGE GRID === */
+/* STAGE GRID */
 .stage-grid {
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
   gap:20px;
 }
 
-/* === STAGE CARD === */
+/* STAGE CARD */
 .stage-card {
   background: rgba(17,20,34,0.7);
   border:1px solid #00ffdd;
@@ -110,19 +113,23 @@ nav button:hover { background:#00ffdd; color:black; transform:scale(1.05); }
   100% { box-shadow:0 0 10px #00ff99; transform:scale(1); }
 }
 
-/* === CHAT === */
+/* CHAT BUTTON */
 #chat-toggle { position:fixed; bottom:20px; right:20px; padding:10px 15px; border:none; background:#ff6600; color:black; font-weight:bold; cursor:pointer; border-radius:12px; z-index:25; box-shadow:0 0 15px #ff6600,0 0 20px #00ffdd; transition:0.3s; }
 #chat-toggle:hover { background:#00ffdd; color:black; transform:scale(1.05);}
-#chat-container { display:none; position:fixed; bottom:70px; right:20px; width:300px; max-height:400px; background:rgba(0,0,0,0.85); border:1px solid #00ffdd; border-radius:12px; padding:10px; overflow:hidden; z-index:20; }
+#chat-container { display:none; position:fixed; bottom:60px; right:20px; width:300px; max-height:400px; background:rgba(0,0,0,0.85); border:1px solid #00ffdd; border-radius:12px; padding:10px; overflow:hidden; z-index:20; }
 
-/* === DONATION MODAL === */
-#donationModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:50; justify-content:center; align-items:center; }
-#donationModal .modal-content { background:#111422; padding:20px; border:1px solid #00ffdd; border-radius:12px; width:300px; text-align:center; }
+/* PARTICLES */
+.particles { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1; }
+.particles span { position:absolute; width:3px; height:3px; background:#00ffdd; border-radius:50%; animation:float 8s linear infinite; opacity:0.5; }
+@keyframes float { 0%{transform:translateY(0) translateX(0);opacity:0.3;}50%{transform:translateY(-50px) translateX(20px);opacity:0.6;}100%{transform:translateY(0) translateX(-10px);opacity:0.3;} }
 
 footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-top:40px; text-shadow:0 0 10px #00ffdd; }
 </style>
 </head>
 <body>
+
+<!-- Particles -->
+<div class="particles" id="particles"></div>
 
 <nav>
   <h2>Itzsos Labs - Cybersecurity Track</h2>
@@ -134,7 +141,7 @@ footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-t
 </nav>
 
 <div class="container">
-
+  <!-- User Info -->
   <div id="userBox">
     <div class="user-info">
       <div class="avatar" id="userAvatar">U</div>
@@ -142,13 +149,17 @@ footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-t
         <div id="userName">Loading user...</div>
         <div id="userXP" class="xp-badge">XP: 0</div>
         <div id="xp-bar"><div id="xp-bar-fill"></div></div>
-        <button id="donate-btn">Donate</button>
       </div>
     </div>
   </div>
 
-  <div class="stage-grid" id="stageContainer"></div>
+  <!-- Daily Challenges -->
+  <h2 style="color:#ff6600; margin-bottom:10px;">🔥 Daily Challenges</h2>
+  <div class="stage-grid" id="dailyContainer"></div>
 
+  <!-- Regular Stages -->
+  <h2 style="color:#ff6600; margin-bottom:10px;">🎯 Stages</h2>
+  <div class="stage-grid" id="stageContainer"></div>
 </div>
 
 <!-- Chat -->
@@ -165,22 +176,22 @@ footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-t
   </div>
 </div>
 
-<!-- Donation Modal -->
-<div id="donationModal">
-  <div class="modal-content">
-    <h3>Support Itzsos Labs</h3>
-    <!-- Example PayPal hosted button -->
-    <div id="paypal-container-BSAK5P9RZ486S"></div>
-    <button id="donation-close">Close</button>
-  </div>
-</div>
+<!-- Donation -->
+<div id="paypal-container-BSAK5P9RZ486S" style="margin:20px 0;"></div>
+<script 
+  src="https://www.paypal.com/sdk/js?client-id=BAANEM-ym-VkUny86qGnLGSCrXAuYaQlr4XDgcjJtB1A65tn9qFJIAaH61r-Pi5c0kzDKGdfgj5EIKjfuY&components=hosted-buttons&disable-funding=venmo&currency=USD">
+</script>
+<script>
+  paypal.HostedButtons({ hostedButtonId: "BSAK5P9RZ486S" })
+        .render("#paypal-container-BSAK5P9RZ486S");
+</script>
 
 <footer>© 2026 Itzsos Labs</footer>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy, addDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, orderBy, addDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 /* === FIREBASE CONFIG === */
 const firebaseConfig = {
@@ -198,6 +209,7 @@ const db = getFirestore(app);
 
 /* === ELEMENTS === */
 const stageContainer = document.getElementById("stageContainer");
+const dailyContainer = document.getElementById("dailyContainer");
 const userName = document.getElementById("userName");
 const userXP = document.getElementById("userXP");
 const xpFill = document.getElementById("xp-bar-fill");
@@ -211,43 +223,45 @@ const usernameDisplay = document.getElementById("username");
 const chatClose = document.getElementById("chat-close");
 const chatToggle = document.getElementById("chat-toggle");
 
-const donateBtn = document.getElementById("donate-btn");
-const donationModal = document.getElementById("donationModal");
-const donationClose = document.getElementById("donation-close");
-
 let currentUser, currentUsername;
 
-/* === AUTH + LOAD === */
+/* === AUTH + LOAD USER === */
 onAuthStateChanged(auth, async(user)=>{
   if(!user) return window.location.href="index.html";
   if(!user.emailVerified){ alert("Verify your email!"); return window.location.href="index.html"; }
 
-  currentUser=user;
-  const userRef=doc(db,"users",user.uid);
+  currentUser = user;
+  const userRef = doc(db,"users",user.uid);
   let userSnap = await getDoc(userRef);
-
   if(!userSnap.exists()){
-    await setDoc(userRef,{email:user.email, username:"Hacker", xp:0, solvedStages:[], solvedDaily:{}});
+    await setDoc(userRef,{
+      email:user.email,
+      username:user.email.split("@")[0],
+      xp:0,
+      solvedStages:[],
+      solvedDaily:{},
+      role:"New Hacker"
+    });
     userSnap = await getDoc(userRef);
   }
-
   const data = userSnap.data();
-  currentUsername = data.username || "Hacker";
+  currentUsername = data.username || "Xtrove";
 
   document.getElementById("userAvatar").textContent = currentUsername.charAt(0).toUpperCase();
   userName.innerHTML = `<strong>${currentUsername}</strong>`;
-  userXP.textContent = "XP: " + (data.xp||0);
+  userXP.textContent = "XP: "+(data.xp||0);
   xpFill.style.width = Math.min(data.xp||0,100)+"%";
   usernameDisplay.textContent = currentUsername;
 
   loadStages(data);
+  loadDailyChallenges(data);
   loadChat();
 });
 
 /* === LOGOUT === */
 logoutBtn.onclick = ()=>signOut(auth).then(()=>window.location.href="index.html");
 
-/* === LOAD STAGES === */
+/* === LOAD REGULAR STAGES === */
 async function loadStages(userData){
   stageContainer.innerHTML="";
   const snapshot = await getDocs(query(collection(db,"stages"),orderBy("order")));
@@ -272,8 +286,48 @@ async function loadStages(userData){
     delay+=120;
   });
 }
-
 window.openStage=id=>window.location.href="stage.html?id="+id;
+
+/* === LOAD DAILY CHALLENGES === */
+async function loadDailyChallenges(userData){
+  dailyContainer.innerHTML="";
+  const snapshot = await getDocs(query(collection(db,"dailyChallenges"), orderBy("order")));
+  const solvedDaily = userData.solvedDaily || {};
+  const today = new Date().toISOString().slice(0,10);
+  snapshot.forEach(docSnap=>{
+    const challenge = docSnap.data();
+    const challengeId = docSnap.id;
+    const completedToday = solvedDaily[today]?.includes(challengeId);
+    const card = document.createElement("div");
+    card.classList.add("stage-card");
+    if(completedToday) card.classList.add("solved");
+    card.innerHTML = `
+      <h3>${challenge.title} ${completedToday?"✅":""}</h3>
+      <p>${challenge.text}</p>
+      <p>XP: ${challenge.xp}</p>
+      <button ${completedToday?"disabled":`onclick="completeDailyChallenge('${challengeId}',${challenge.xp})"`}>${completedToday?"Completed":"Complete"}</button>
+    `;
+    dailyContainer.appendChild(card);
+    setTimeout(()=>card.classList.add("show"), Math.random()*300);
+  });
+}
+
+/* === COMPLETE DAILY CHALLENGE === */
+async function completeDailyChallenge(id,xp){
+  if(!currentUser) return;
+  const today = new Date().toISOString().slice(0,10);
+  const userRef = doc(db,"users",currentUser.uid);
+  const userSnap = await getDoc(userRef);
+  const data = userSnap.data();
+  const solvedDaily = data.solvedDaily || {};
+  if(!solvedDaily[today]) solvedDaily[today]=[];
+  solvedDaily[today].push(id);
+  await setDoc(userRef,{solvedDaily, xp:(data.xp||0)+xp},{merge:true});
+  alert("Daily challenge completed! +"+xp+" XP");
+  loadDailyChallenges({...data, solvedDaily});
+  userXP.textContent = "XP: "+((data.xp||0)+xp);
+  xpFill.style.width = Math.min((data.xp||0)+xp,100)+"%";
+}
 
 /* === CHAT === */
 function loadChat(){
@@ -292,30 +346,36 @@ function loadChat(){
     chatMessages.scrollTop=chatMessages.scrollHeight;
   });
 }
-sendBtn.addEventListener("click",async()=>{if(!currentUser||msgInput.value.trim()==="")return; await addDoc(collection(db,"chatMessages"),{user:currentUsername,text:msgInput.value,timestamp:serverTimestamp()}); msgInput.value="";});
-msgInput.addEventListener("keypress",e=>{ if(e.key==="Enter") sendBtn.click(); });
-chatClose.onclick=()=>chatContainer.style.display="none";
-chatToggle.onclick=()=>chatContainer.style.display=chatContainer.style.display==="none"?"block":"none";
+sendBtn.addEventListener("click",async()=>{
+  if(!currentUser||msgInput.value.trim()==="") return;
+  await addDoc(collection(db,"chatMessages"),{
+    user:currentUsername,
+    text:msgInput.value,
+    timestamp:serverTimestamp()
+  });
+  msgInput.value = "";
+});
 
-/* === DONATION MODAL === */
-donateBtn.onclick=()=>donationModal.style.display="flex";
-donationClose.onclick=()=>donationModal.style.display="none";
+/* Chat toggle */
+chatToggle.addEventListener("click", () => {
+  chatContainer.style.display = "block";
+});
+chatClose.addEventListener("click", () => {
+  chatContainer.style.display = "none";
+});
 
-/* === PAYPAL BUTTON === */
-const script = document.createElement('script');
-script.src="https://www.paypal.com/sdk/js?client-id=BAANEM-ym-VkUny86qGnLGSCrXAuYaQlr4XDgcjJtB1A65tn9qFJIAaH61r-Pi5c0kzDKGdfgj5EIKjfuY&currency=USD";
-script.onload = () => {
-  paypal.Buttons({
-    style:{layout:'vertical', color:'gold', shape:'pill', label:'donate'},
-    createOrder: function(data, actions){ return actions.order.create({ purchase_units:[{amount:{value:'1'}}]}); },
-    onApprove: function(data, actions){ return actions.order.capture().then(()=>alert('Thanks for donating!')); }
-  }).render('#paypal-container-BSAK5P9RZ486S');
-};
-document.body.appendChild(script);
+/* === PARTICLES EFFECT === */
+const particlesContainer = document.getElementById("particles");
+for(let i=0;i<50;i++){
+  const span = document.createElement("span");
+  span.style.left = Math.random()*100+"%";
+  span.style.top = Math.random()*100+"%";
+  span.style.width = span.style.height = Math.random()*3+2+"px";
+  span.style.animationDuration = (5 + Math.random()*5)+"s";
+  particlesContainer.appendChild(span);
+}
 
-/* === PARTICLES === */
-const particles=document.createElement('div'); particles.classList.add('particles'); document.body.appendChild(particles);
-for(let i=0;i<80;i++){ const span=document.createElement('span'); span.style.width=`${Math.random()*3+2}px`; span.style.height=span.style.width; span.style.top=`${Math.random()*100}%`; span.style.left=`${Math.random()*100}%`; span.style.animationDuration=`${Math.random()*5+5}s`; span.style.opacity=Math.random(); particles.appendChild(span); }
 </script>
+
 </body>
 </html>
