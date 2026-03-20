@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cybersecurity Stages | Itzsos Labs</title>
+<title>Itzsos Labs - Cybersecurity Stages</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-/* === BASE === */
 body {
   margin:0;
   font-family: 'Share Tech Mono', monospace;
@@ -16,7 +15,6 @@ body {
 }
 a { text-decoration:none; color:inherit; }
 
-/* === NAV === */
 nav {
   display:flex;
   justify-content:space-between;
@@ -39,8 +37,8 @@ nav button {
 }
 nav button:hover { background:#00ffdd; color:black; transform:scale(1.05); }
 
-/* === USER BOX === */
 .container { max-width:1100px; margin:40px auto; padding:0 20px; }
+
 #userBox {
   background: rgba(17,20,34,0.85);
   border:1px solid #00ffdd;
@@ -69,17 +67,13 @@ nav button:hover { background:#00ffdd; color:black; transform:scale(1.05); }
 }
 .user-details { display:flex; flex-direction:column; gap:6px; }
 .xp-badge { background:#00ffdd; color:#0f111a; padding:5px 12px; border-radius:20px; font-weight:bold; width:fit-content; text-shadow:0 0 5px #111; }
-#buyXpBtn { margin-top:8px; padding:8px 12px; border:none; border-radius:6px; background:#ff6600; color:black; font-weight:bold; cursor:pointer; transition:0.3s; }
-#buyXpBtn:hover { background:#00ffdd; }
 
-/* === STAGE GRID === */
-.stage-grid {
+#stageContainer {
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
   gap:20px;
 }
 
-/* === STAGE CARD === */
 .stage-card {
   background: rgba(17,20,34,0.7);
   border:1px solid #00ffdd;
@@ -110,18 +104,16 @@ nav button:hover { background:#00ffdd; color:black; transform:scale(1.05); }
   100% { box-shadow:0 0 10px #00ff99; transform:scale(1); }
 }
 
-/* === FOOTER === */
-footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-top:40px; text-shadow:0 0 10px #00ffdd; }
+/* CHAT */
+#chat-toggle { position:fixed; bottom:20px; right:340px; padding:10px 15px; border:none; background:#ff6600; color:black; font-weight:bold; cursor:pointer; border-radius:12px; z-index:25; box-shadow:0 0 15px #ff6600,0 0 20px #00ffdd; transition:0.3s; }
+#chat-toggle:hover { background:#00ffdd; color:black; transform:scale(1.05);}
+#chat-container { display:none; position:fixed; bottom:20px; right:20px; width:300px; max-height:400px; background:rgba(0,0,0,0.85); border:1px solid #00ffdd; border-radius:12px; padding:10px; overflow:hidden; z-index:20; }
 
-/* === CHAT BUTTON === */
-#chatBtn { position:fixed; bottom:20px; right:20px; padding:10px 15px; border:none; background:#ff6600; color:black; font-weight:bold; cursor:pointer; border-radius:12px; z-index:25; box-shadow:0 0 15px #ff6600,0 0 20px #00ffdd; transition:0.3s; }
-#chatBtn:hover { background:#00ffdd; }
-
-/* === PAYPAL BUTTON === */
+/* PAYPAL */
 #paypal-container { margin-top:15px; }
+footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-top:40px; text-shadow:0 0 10px #00ffdd; }
 </style>
 </head>
-
 <body>
 
 <nav>
@@ -130,37 +122,47 @@ footer { text-align:center; padding:20px; border-top:1px solid #00ffdd; margin-t
     <button onclick="window.location.href='profile.html'">Profile</button>
     <button onclick="window.location.href='leaderboard.html'">Leaderboard</button>
     <button id="logoutBtn">Logout</button>
+    <button id="chat-toggle">Chat</button>
   </div>
 </nav>
 
 <div class="container">
-
   <div id="userBox">
     <div class="user-info">
       <div class="avatar" id="userAvatar">U</div>
       <div class="user-details">
-        <div id="userName">Loading user...</div>
+        <div id="userEmail">Loading...</div>
         <div id="userXP" class="xp-badge">XP: 0</div>
-        <button id="buyXpBtn">Buy XP / Donate</button>
+        <button id="donateBtn">Donate via PayPal</button>
         <div id="paypal-container"></div>
       </div>
     </div>
   </div>
 
-  <div class="stage-grid" id="stageContainer"></div>
-
+  <div id="stageContainer"></div>
 </div>
 
-<button id="chatBtn" onclick="window.location.href='chat.html'">Chat</button>
+<!-- Chat -->
+<div id="chat-container">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+    <span id="chatUsername">User</span>
+    <button id="chat-close" style="background:#ff6600;border:none;padding:2px 6px;color:black;cursor:pointer;">X</button>
+  </div>
+  <div id="chat-messages" style="height:280px; overflow-y:auto; background:#111422; padding:5px; border-radius:8px;"></div>
+  <div style="display:flex; gap:5px; margin-top:5px;">
+    <input type="text" id="msg-input" placeholder="Type a message..." style="flex:1; padding:5px; border-radius:6px; border:none;">
+    <button id="send-btn" style="padding:5px 8px; background:#00ffdd; border:none; border-radius:6px; cursor:pointer;">Send</button>
+  </div>
+</div>
 
 <footer>© 2026 Itzsos Labs</footer>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy, addDoc, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* FIREBASE CONFIG */
+/* FIREBASE */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -169,88 +171,150 @@ const firebaseConfig = {
   messagingSenderId: "1012826517121",
   appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 /* ELEMENTS */
 const stageContainer = document.getElementById("stageContainer");
-const userName = document.getElementById("userName");
+const userEmail = document.getElementById("userEmail");
 const userXP = document.getElementById("userXP");
 const logoutBtn = document.getElementById("logoutBtn");
-const userAvatar = document.getElementById("userAvatar");
-const buyXpBtn = document.getElementById("buyXpBtn");
+
+const chatContainer = document.getElementById("chat-container");
+const chatMessages = document.getElementById("chat-messages");
+const msgInput = document.getElementById("msg-input");
+const sendBtn = document.getElementById("send-btn");
+const chatClose = document.getElementById("chat-close");
+const chatToggle = document.getElementById("chat-toggle");
+
+/* PAYPAL */
+const donateBtn = document.getElementById("donateBtn");
 
 /* AUTH */
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return window.location.href="index.html";
-  if (!user.emailVerified){ alert("Verify email first!"); window.location.href="index.html"; return; }
+let currentUser, currentUsername;
 
-  const userRef = doc(db,"users",user.uid);
-  let userSnap = await getDoc(userRef);
-  if(!userSnap.exists()){
-    alert("User not found!"); return;
-  }
+onAuthStateChanged(auth, async user => {
+  if(!user) return window.location.href="index.html";
+  currentUser = user;
+  currentUsername = user.email.split("@")[0];
 
-  const data = userSnap.data();
-  userName.textContent = data.username || user.email;
-  userXP.textContent = "XP: " + (data.xp||0);
-  userAvatar.textContent = data.username ? data.username.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase();
+  userEmail.textContent = user.email;
+  document.getElementById("userAvatar").textContent = currentUsername.charAt(0).toUpperCase();
 
-  loadStages(data);
+  await loadStages(user);
+  loadChat();
+  loadDailyChallenge(user.uid);
 });
 
-/* LOAD STAGES WITH LOCK LOGIC + ANIMATION */
-async function loadStages(userData){
-  stageContainer.innerHTML="";
-  const q = query(collection(db,"stages"), orderBy("order"));
-  const snapshot = await getDocs(q);
-  const solved = userData.solvedStages||[];
-  let delay=0;
+/* LOGOUT */
+logoutBtn.onclick = ()=>signOut(auth).then(()=>window.location.href="index.html");
 
-  snapshot.forEach(docSnap=>{
+/* STAGES */
+async function loadStages(user){
+  const stageSnap = await getDocs(query(collection(db,"stages"),orderBy("order")));
+  const userSnap = await getDoc(doc(db,"users",user.uid));
+  const userData = userSnap.data();
+  const solved = userData.solvedStages||[];
+
+  stageContainer.innerHTML="";
+  let delay=0;
+  stageSnap.forEach(docSnap=>{
     const stage = docSnap.data();
     const stageId = docSnap.id;
     const card = document.createElement("div");
     card.classList.add("stage-card");
-
     if(solved.includes(stageId)) card.classList.add("solved");
 
     let locked = stage.order>1 && !solved.includes("stage"+(stage.order-1));
     card.classList.toggle("locked",locked);
 
     card.innerHTML = `
-      <h3>${stage.title}${locked?" 🔒":""}</h3>
+      <h3>${stage.title} ${locked?"🔒":""}</h3>
       <p>${stage.text}</p>
       <p>XP: ${stage.xp}</p>
-      <button ${locked? "disabled" : `onclick="openStage('${stageId}')"`}>${locked?"Locked":"Start"}</button>
+      <button ${locked?"disabled":`onclick="openStage('${stageId}')"`}>${locked?"Locked":"Start"}</button>
     `;
-
     stageContainer.appendChild(card);
     setTimeout(()=>card.classList.add("show"),delay);
-    delay+=120;
+    delay+=100;
   });
 }
 
-window.openStage=id=>window.location.href="stage.html?id="+id;
+window.openStage = id=> window.location.href="stage.html?id="+id;
 
-/* LOGOUT */
-logoutBtn.onclick = ()=>signOut(auth).then(()=>window.location.href="index.html");
+/* CHAT */
+function loadChat(){
+  const q=query(collection(db,"chatMessages"),orderBy("timestamp","asc"));
+  q.onSnapshot(snapshot=>{
+    chatMessages.innerHTML="";
+    snapshot.forEach(doc=>{
+      const data = doc.data();
+      const div = document.createElement("div");
+      div.style.padding="6px"; div.style.marginBottom="6px"; div.style.background="#0f111a"; div.style.borderRadius="6px";
+      div.style.borderLeft="3px solid #00ffdd";
+      div.innerHTML=`<div style="color:#00ffdd;font-weight:bold;">${data.user}</div><div style="color:#ccc;">${data.text}</div>`;
+      chatMessages.appendChild(div);
+    });
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  });
+}
+sendBtn.onclick = async ()=>{
+  if(!currentUser || msgInput.value.trim()==="") return;
+  await addDoc(collection(db,"chatMessages"),{
+    user: currentUsername,
+    text: msgInput.value,
+    timestamp: serverTimestamp()
+  });
+  msgInput.value="";
+};
+msgInput.addEventListener("keypress",e=>{ if(e.key==="Enter") sendBtn.click(); });
+chatClose.onclick = ()=>chatContainer.style.display="none";
+chatToggle.onclick = ()=> chatContainer.style.display = chatContainer.style.display==="none"?"block":"none";
 
-/* PAYPAL BUTTON */
-buyXpBtn.onclick = ()=>{
-  const container = document.getElementById("paypal-container");
-  container.scrollIntoView({behavior:"smooth"});
-  alert("PayPal button below. Complete your purchase to gain XP!");
+/* DAILY CHALLENGE */
+async function loadDailyChallenge(userId){
+  const today = new Date().toISOString().slice(0,10);
+  const challengeRef = doc(db,"dailyChallenges",today);
+  const challengeSnap = await getDoc(challengeRef);
+  if(!challengeSnap.exists()) return;
+  const challenge = challengeSnap.data();
+
+  const container = document.createElement("div");
+  container.classList.add("stage-card");
+  container.innerHTML = `
+    <h3>Daily Challenge: ${challenge.title}</h3>
+    <p>${challenge.description}</p>
+    <p>XP: ${challenge.xp}</p>
+    <button id="dailyBtn">Start</button>
+  `;
+  stageContainer.prepend(container);
+
+  document.getElementById("dailyBtn").onclick = async ()=>{
+    await updateDoc(challengeRef,{solvedBy: arrayUnion(userId)});
+    await updateDoc(doc(db,"users",userId),{xp: (challenge.xp || 0) + (await getDoc(doc(db,"users",userId))).data().xp});
+    alert("Daily challenge completed! XP added.");
+  };
+}
+
+/* PAYPAL */
+donateBtn.onclick = ()=>{
+  if(document.getElementById("paypal-button-container")) return;
+  const div = document.createElement("div");
+  div.id = "paypal-button-container";
+  document.getElementById("paypal-container").appendChild(div);
+
+  const script = document.createElement("script");
+  script.src = "https://www.paypal.com/sdk/js?client-id=BAANEM-ym-VkUny86qGnLGSCrXAuYaQlr4XDgcjJtB1A65tn9qFJIAaH61r-Pi5c0kzDKGdfgj5EIKjfuY&currency=USD";
+  script.onload = ()=>{
+    paypal.Buttons({
+      style:{layout:'vertical'},
+      createOrder: (data,actions)=> actions.order.create({purchase_units:[{amount:{value:"5"}}]}),
+      onApprove: (data,actions)=> actions.order.capture().then(()=> alert("Thank you for your donation!"))
+    }).render("#paypal-button-container");
+  };
+  document.body.appendChild(script);
 };
 </script>
-
-<!-- PAYPAL SDK -->
-<script src="https://www.paypal.com/sdk/js?client-id=BAANEM-ym-VkUny86qGnLGSCrXAuYaQlr4XDgcjJtB1A65tn9qFJIAaH61r-Pi5c0kzDKGdfgj5EIKjfuY&components=hosted-buttons&disable-funding=venmo&currency=USD"></script>
-<script>
-  paypal.HostedButtons({ hostedButtonId: "JG97CC8L5EH3W" }).render("#paypal-container");
-</script>
-
 </body>
 </html>
