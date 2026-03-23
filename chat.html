@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chat | Itzsos Labs</title>
+<title>Elite Chat | Itzsos Labs</title>
 
 <style>
 body{
   margin:0;
   font-family:monospace;
-  background:#0f111a;
+  background:#0b0f1a;
   color:#00ffdd;
   display:flex;
   height:100vh;
@@ -20,17 +20,36 @@ body{
   width:260px;
   background:#111422;
   border-right:1px solid #00ffdd;
-  padding:10px;
+  display:flex;
+  flex-direction:column;
+}
+
+#sidebar h3{
+  margin:10px;
+}
+
+#usersList{
+  flex:1;
   overflow-y:auto;
 }
+
 .user{
-  padding:10px;
-  border-radius:6px;
+  padding:12px;
+  border-bottom:1px solid #1a1f35;
   cursor:pointer;
   display:flex;
   justify-content:space-between;
 }
-.user:hover{background:#1a1f35;}
+
+.user:hover{ background:#1a1f35; }
+
+.badge{
+  background:red;
+  color:white;
+  border-radius:50%;
+  padding:2px 6px;
+  font-size:10px;
+}
 
 /* MAIN */
 #main{
@@ -38,34 +57,42 @@ body{
   display:flex;
   flex-direction:column;
 }
+
+/* HEADER */
 #header{
-  padding:10px;
+  padding:15px;
   border-bottom:1px solid #00ffdd;
-}
-#messages{
-  flex:1;
-  overflow-y:auto;
-  padding:10px;
+  display:flex;
+  justify-content:space-between;
 }
 
 /* MESSAGES */
+#messages{
+  flex:1;
+  padding:10px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+/* CHAT BUBBLES */
 .msg{
   max-width:70%;
-  padding:8px;
-  margin-bottom:10px;
-  border-radius:8px;
+  padding:10px;
+  border-radius:10px;
 }
+
 .me{
+  align-self:flex-end;
   background:#00ffdd;
   color:black;
-  margin-left:auto;
 }
+
 .other{
+  align-self:flex-start;
   background:#111422;
-}
-.meta{
-  font-size:10px;
-  opacity:0.7;
+  border:1px solid #00ffdd;
 }
 
 /* INPUT */
@@ -75,16 +102,25 @@ body{
   padding:10px;
   border-top:1px solid #00ffdd;
 }
+
 input{
   flex:1;
-  padding:8px;
+  padding:10px;
+  background:#0b0f1a;
+  color:#00ffdd;
+  border:1px solid #00ffdd;
+  border-radius:6px;
 }
+
 button{
   background:#00ffdd;
+  color:black;
   border:none;
-  padding:8px;
+  padding:10px;
+  border-radius:6px;
   cursor:pointer;
 }
+button:hover{ background:#ff6600; }
 </style>
 </head>
 
@@ -92,16 +128,19 @@ button{
 
 <!-- SIDEBAR -->
 <div id="sidebar">
-  <h3>🟢 Users</h3>
+  <h3>💬 Inbox</h3>
   <div id="usersList"></div>
-  <hr>
-  <button onclick="goGlobal()">🌐 Global Chat</button>
+  <button id="globalBtn">🌐 Global</button>
 </div>
 
 <!-- MAIN -->
 <div id="main">
-  <div id="header">Global Chat</div>
+  <div id="header">
+    <span id="chatTitle">Global Chat</span>
+  </div>
+
   <div id="messages"></div>
+
   <div id="inputBox">
     <input id="msg" placeholder="Type message...">
     <button id="send">Send</button>
@@ -113,85 +152,83 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebas
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, serverTimestamp,
-  query, orderBy, onSnapshot, doc, getDoc, updateDoc
+  query, orderBy, onSnapshot, doc, getDoc
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* FIREBASE */
 const app = initializeApp({
-  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
-  authDomain: "itzsos-labs.firebaseapp.com",
-  projectId: "itzsos-labs",
-  storageBucket: "itzsos-labs.firebasestorage.app",
-  messagingSenderId: "1012826517121",
-  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
+  apiKey:"AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  authDomain:"itzsos-labs.firebaseapp.com",
+  projectId:"itzsos-labs"
 });
 
-const auth = getAuth(app);
-const db = getFirestore(app);
+const auth = getAuth();
+const db = getFirestore();
 
-/* STATE */
 let currentUser, username;
-let currentChat = "global";
-let currentDMUser = null;
-let unsubscribe = null;
+let currentChat="global";
+let currentDMUser=null;
 
-/* ELEMENTS */
 const usersList = document.getElementById("usersList");
 const messagesDiv = document.getElementById("messages");
-const header = document.getElementById("header");
+const chatTitle = document.getElementById("chatTitle");
+const input = document.getElementById("msg");
 
 /* AUTH */
-onAuthStateChanged(auth, async (user)=>{
-  if(!user){
-    alert("Session expired");
-    return location.href="index.html";
-  }
+onAuthStateChanged(auth, async(user)=>{
+  if(!user) return location.href="index.html";
 
-  currentUser = user;
+  currentUser=user;
 
-  const userRef = doc(db,"users",user.uid);
-  const snap = await getDoc(userRef);
+  const snap = await getDoc(doc(db,"users",user.uid));
+  username = snap.exists()?snap.data().username:user.email;
 
-  username = snap.exists()
-    ? snap.data().username
-    : user.email.split("@")[0];
-
-  await updateDoc(userRef,{
-    online:true,
-    lastSeen:serverTimestamp()
-  });
-
-  loadUsers();
-  startGlobal();
+  loadInbox();
+  listenMessages();
 });
 
-/* LOAD USERS */
-function loadUsers(){
-  onSnapshot(collection(db,"users"), snap=>{
+/* GET CHAT ID */
+function getChatId(a,b){
+  return [a,b].sort().join("_");
+}
+
+/* INBOX */
+function loadInbox(){
+  onSnapshot(collection(db,"messages"), snap=>{
+    const map={};
+
+    snap.forEach(docSnap=>{
+      const d=docSnap.data();
+
+      if(d.type!=="dm") return;
+
+      const other = d.sender===currentUser.uid ? d.to : d.sender;
+      if(!other) return;
+
+      if(!map[other]){
+        map[other]={count:0};
+      }
+
+      if(!d.readBy || !d.readBy.includes(currentUser.uid)){
+        map[other].count++;
+      }
+    });
+
     usersList.innerHTML="";
 
-    snap.forEach(d=>{
-      if(d.id===currentUser.uid) return;
-
-      const data=d.data();
-
+    Object.keys(map).forEach(uid=>{
       const div=document.createElement("div");
       div.className="user";
 
-      div.innerHTML=`
-        <span>${data.username}</span>
-        <span>${data.online?"🟢":"⚫"}</span>
+      div.innerHTML = `
+        <span>${uid}</span>
+        ${map[uid].count>0 ? `<span class="badge">${map[uid].count}</span>`:""}
       `;
 
       div.onclick=()=>{
-        console.log("DM click:", d.id); // DEBUG
-
         currentChat="dm";
-        currentDMUser=d.id;
-
-        header.innerText="DM: "+data.username;
-
-        startDM();
+        currentDMUser=uid;
+        chatTitle.innerText="DM: "+uid;
+        listenMessages();
       };
 
       usersList.appendChild(div);
@@ -199,137 +236,81 @@ function loadUsers(){
   });
 }
 
-/* CHAT ID */
-function getChatId(a,b){
-  return [a,b].sort().join("_");
-}
+/* LISTEN MESSAGES */
+function listenMessages(){
+  const q = query(collection(db,"messages"), orderBy("timestamp"));
 
-/* GLOBAL CHAT */
-function startGlobal(){
-  if(unsubscribe) unsubscribe();
-
-  const q=query(collection(db,"messages"),orderBy("timestamp"));
-
-  unsubscribe=onSnapshot(q, snap=>{
+  onSnapshot(q, snap=>{
     messagesDiv.innerHTML="";
 
     snap.forEach(docSnap=>{
       const d=docSnap.data();
-      if(d.type!=="global") return;
 
-      renderMessage(d);
-    });
-  });
-}
+      if(currentChat==="global" && d.type!=="global") return;
 
-/* DM CHAT (FIXED) */
-function startDM(){
-  if(unsubscribe) unsubscribe();
-
-  const chatId = getChatId(currentUser.uid, currentDMUser);
-
-  const q = query(collection(db,"messages"), orderBy("timestamp"));
-
-  unsubscribe = onSnapshot(q, snap=>{
-    messagesDiv.innerHTML="";
-
-    snap.forEach(docSnap=>{
-      const d = docSnap.data();
-
-      if(d.type !== "dm") return;
-      if(d.chatId !== chatId) return;
-
-      renderMessage(d);
-
-      // mark as read
-      if(d.to === currentUser.uid && !d.read){
-        updateDoc(doc(db,"messages",docSnap.id),{read:true});
+      if(currentChat==="dm"){
+        const id=getChatId(currentUser.uid,currentDMUser);
+        if(d.chatId!==id) return;
       }
+
+      const div=document.createElement("div");
+      const isMe=d.sender===currentUser.uid;
+
+      div.className="msg "+(isMe?"me":"other");
+
+      div.innerHTML = `
+        ${!isMe ? `<b>${d.username}</b><br>`:""}
+        ${d.text}
+      `;
+
+      messagesDiv.appendChild(div);
     });
+
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
   });
-}
-
-/* RENDER */
-function renderMessage(d){
-  const div=document.createElement("div");
-  div.className="msg "+(d.sender===currentUser.uid?"me":"other");
-
-  div.innerHTML=`
-    ${d.text}
-    <div class="meta">
-      ${d.sender===currentUser.uid ? (d.read?"Seen":"Sent") : ""}
-    </div>
-  `;
-
-  messagesDiv.appendChild(div);
-  messagesDiv.scrollTop=messagesDiv.scrollHeight;
 }
 
 /* SEND */
-document.getElementById("send").onclick=sendMessage;
-
-function sendMessage(){
-  const input=document.getElementById("msg");
+document.getElementById("send").onclick = async()=>{
   const text=input.value.trim();
+  if(!text) return;
 
-  if(text==="") return;
-
-  // GLOBAL
   if(currentChat==="global"){
-    addDoc(collection(db,"messages"),{
+    await addDoc(collection(db,"messages"),{
       type:"global",
-      text,
-      username,
+      text, username,
       sender:currentUser.uid,
       timestamp:serverTimestamp()
-    }).catch(e=>alert(e.message));
+    });
   }
 
-  // DM
   if(currentChat==="dm"){
-    if(!currentDMUser){
-      alert("Select a user first");
-      return;
-    }
-
-    const chatId=getChatId(currentUser.uid,currentDMUser);
-
-    addDoc(collection(db,"messages"),{
+    await addDoc(collection(db,"messages"),{
       type:"dm",
-      chatId,
-      text,
-      username,
+      chatId:getChatId(currentUser.uid,currentDMUser),
+      text, username,
       sender:currentUser.uid,
       to:currentDMUser,
-      read:false,
-      timestamp:serverTimestamp()
-    }).catch(e=>alert(e.message));
+      timestamp:serverTimestamp(),
+      readBy:[currentUser.uid]
+    });
   }
 
   input.value="";
-}
-
-/* ENTER KEY */
-document.getElementById("msg").addEventListener("keypress",e=>{
-  if(e.key==="Enter") sendMessage();
-});
-
-/* GLOBAL BUTTON */
-window.goGlobal=()=>{
-  currentChat="global";
-  currentDMUser=null;
-  header.innerText="Global Chat";
-  startGlobal();
 };
 
-/* OFFLINE FIX */
-window.addEventListener("beforeunload", async ()=>{
-  if(currentUser){
-    await updateDoc(doc(db,"users",currentUser.uid),{
-      online:false
-    });
-  }
+/* ENTER KEY */
+input.addEventListener("keypress", e=>{
+  if(e.key==="Enter") document.getElementById("send").click();
 });
+
+/* GLOBAL */
+document.getElementById("globalBtn").onclick=()=>{
+  currentChat="global";
+  currentDMUser=null;
+  chatTitle.innerText="Global Chat";
+  listenMessages();
+};
 </script>
 
 </body>
