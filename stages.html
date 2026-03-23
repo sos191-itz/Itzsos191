@@ -15,44 +15,82 @@ body {
   color:#00ffdd;
 }
 
+/* NAV */
 nav {
   display:flex;
   justify-content:space-between;
-  padding:15px;
+  align-items:center;
+  padding:15px 20px;
   background:#111422;
+  border-bottom:1px solid #00ffdd;
 }
-
-button {
-  padding:8px;
+nav h2 { color:#ff6600; }
+nav button {
+  background:#ff6600;
   border:none;
-  background:#00ffdd;
+  padding:8px 12px;
   cursor:pointer;
 }
 
+/* CONTAINER */
 .container {
   padding:20px;
+  max-width:1100px;
+  margin:auto;
 }
 
+/* USER */
+#userBox {
+  background:#111422;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:20px;
+  display:flex;
+  gap:15px;
+  align-items:center;
+}
+.avatar {
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  background:linear-gradient(45deg,#ff6600,#00ffdd);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:black;
+  font-weight:bold;
+}
+
+/* GRID */
 .stage-grid {
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
   gap:20px;
 }
 
+/* CARD */
 .stage-card {
   background:#111422;
   padding:15px;
   border-radius:10px;
   border:1px solid #00ffdd;
 }
+.stage-card img {
+  width:100%;
+  max-height:180px;
+  object-fit:cover;
+  border-radius:8px;
+  margin-top:10px;
+}
 
 .locked { opacity:0.4; }
 
-img {
-  width:100%;
-  max-height:200px;
-  object-fit:cover;
-  border-radius:8px;
+button {
+  margin-top:10px;
+  padding:6px;
+  border:none;
+  background:#00ffdd;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -60,7 +98,7 @@ img {
 <body>
 
 <nav>
-  <h3>Itzsos Labs</h3>
+  <h2>Itzsos Labs</h2>
   <div>
     <button onclick="location.href='profile.html'">Profile</button>
     <button onclick="location.href='leaderboard.html'">Leaderboard</button>
@@ -70,10 +108,15 @@ img {
 
 <div class="container">
 
-<h3 id="username">Loading...</h3>
-<p id="xp">XP: 0</p>
+<div id="userBox">
+  <div class="avatar" id="avatar">U</div>
+  <div>
+    <div id="username">Loading...</div>
+    <div id="xp">XP: 0</div>
+  </div>
+</div>
 
-<h2>🔥 Daily Challenge</h2>
+<h2>🔥 Daily Challenges</h2>
 <div id="dailyContainer" class="stage-grid"></div>
 
 <h2>🎯 Stages</h2>
@@ -86,21 +129,22 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebas
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSy...",
+/* FIREBASE */
+const app = initializeApp({
+  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
   projectId: "itzsos-labs"
-};
+});
 
-const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser;
 
-/* AUTH */
-onAuthStateChanged(auth, async(user)=>{
-  if(!user) return location.href="index.html";
+/* AUTH FIX (NO REDIRECT LOOP) */
+onAuthStateChanged(auth, async (user) => {
+
+  if (user === null) return; // ✅ DO NOT redirect
 
   currentUser = user;
 
@@ -119,8 +163,9 @@ onAuthStateChanged(auth, async(user)=>{
 
   const data = snap.data();
 
-  document.getElementById("username").textContent = data.username;
-  document.getElementById("xp").textContent = "XP: "+(data.xp||0);
+  document.getElementById("username").textContent = data.username || "User";
+  document.getElementById("xp").textContent = "XP: " + (data.xp||0);
+  document.getElementById("avatar").textContent = (data.username||"U")[0].toUpperCase();
 
   loadStages(data);
   loadDaily(data);
@@ -145,10 +190,10 @@ async function loadStages(userData){
     card.className="stage-card "+(locked?"locked":"");
 
     card.innerHTML = `
-      <h4>${s.title}</h4>
+      <h3>${s.title} ${locked?"🔒":""}</h3>
       <p>${s.text}</p>
       <p>XP: ${s.xp}</p>
-      <button ${locked?"disabled":`onclick="openStage('${id}')"`}>
+      <button ${locked?"disabled":""} onclick="openStage('${id}')">
         ${locked?"Locked":"Start"}
       </button>
     `;
@@ -161,7 +206,7 @@ window.openStage = (id)=>{
   location.href="stage.html?id="+id;
 };
 
-/* DAILY */
+/* DAILY (FIXED — NO AUTO XP) */
 async function loadDaily(userData){
   const snap = await getDocs(collection(db,"dailyChallenges"));
   const solved = userData.solvedDaily || [];
@@ -179,7 +224,7 @@ async function loadDaily(userData){
     card.className="stage-card";
 
     card.innerHTML = `
-      <h4>${c.title} ${done?"✅":""}</h4>
+      <h3>${c.title} ${done?"✅":""}</h3>
       <p>${c.text}</p>
 
       ${c.image ? `<img src="${c.image}">` : ""}
@@ -188,9 +233,9 @@ async function loadDaily(userData){
 
       <p>XP: ${c.xp}</p>
 
-      <button onclick="alert('${c.hint}')">Hint</button>
+      <button onclick="alert('${c.hint || "No hint"}')">Hint</button>
 
-      <button ${done?"disabled":`onclick="checkAnswer('${id}','${c.answer}',${c.xp})"`}>
+      <button ${done?"disabled":""} onclick="checkAnswer('${id}','${c.answer}',${c.xp})">
         ${done?"Solved":"Submit"}
       </button>
     `;
@@ -199,8 +244,9 @@ async function loadDaily(userData){
   });
 }
 
-/* CHECK ANSWER */
-window.checkAnswer = async(id, correct, xp)=>{
+/* ANSWER CHECK */
+window.checkAnswer = async (id, correct, xp) => {
+
   const input = document.getElementById("answer-"+id).value.trim();
 
   if(input.toLowerCase() !== correct.toLowerCase()){
@@ -222,7 +268,7 @@ window.checkAnswer = async(id, correct, xp)=>{
       xp:(data.xp||0)+xp
     },{merge:true});
 
-    alert("✅ Correct! XP +"+xp);
+    alert("✅ Correct! XP +" + xp);
     location.reload();
   }
 };
