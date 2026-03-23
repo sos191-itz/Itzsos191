@@ -19,17 +19,16 @@ body {
 nav {
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  padding:15px 20px;
+  padding:15px;
   background:#111422;
-  border-bottom:1px solid #00ffdd;
 }
-nav h2 { color:#ff6600; }
 nav button {
+  margin-left:10px;
   background:#ff6600;
   border:none;
-  padding:8px 12px;
+  padding:8px;
   cursor:pointer;
+  font-weight:bold;
 }
 
 /* CONTAINER */
@@ -41,13 +40,13 @@ nav button {
 
 /* USER */
 #userBox {
+  display:flex;
+  align-items:center;
+  gap:15px;
   background:#111422;
   padding:15px;
   border-radius:10px;
   margin-bottom:20px;
-  display:flex;
-  gap:15px;
-  align-items:center;
 }
 .avatar {
   width:50px;
@@ -60,37 +59,61 @@ nav button {
   color:black;
   font-weight:bold;
 }
+.xp {
+  background:#00ffdd;
+  color:black;
+  padding:4px 10px;
+  border-radius:10px;
+}
 
 /* GRID */
-.stage-grid {
+.grid {
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
   gap:20px;
 }
 
 /* CARD */
-.stage-card {
+.card {
   background:#111422;
   padding:15px;
   border-radius:10px;
   border:1px solid #00ffdd;
 }
-.stage-card img {
+.card img {
   width:100%;
   max-height:180px;
   object-fit:cover;
   border-radius:8px;
   margin-top:10px;
 }
-
 .locked { opacity:0.4; }
 
 button {
-  margin-top:10px;
+  margin-top:8px;
   padding:6px;
   border:none;
-  background:#00ffdd;
   cursor:pointer;
+  background:#00ffdd;
+  font-weight:bold;
+}
+
+/* CHAT BUTTON */
+#chatBtn {
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#ff6600;
+  color:black;
+  padding:14px;
+  border-radius:50%;
+  font-size:18px;
+}
+
+/* PAYPAL */
+#paypal {
+  text-align:center;
+  margin-top:30px;
 }
 </style>
 </head>
@@ -98,7 +121,7 @@ button {
 <body>
 
 <nav>
-  <h2>Itzsos Labs</h2>
+  <h3>Itzsos Labs</h3>
   <div>
     <button onclick="location.href='profile.html'">Profile</button>
     <button onclick="location.href='leaderboard.html'">Leaderboard</button>
@@ -108,30 +131,50 @@ button {
 
 <div class="container">
 
+<!-- USER -->
 <div id="userBox">
   <div class="avatar" id="avatar">U</div>
   <div>
     <div id="username">Loading...</div>
-    <div id="xp">XP: 0</div>
+    <div id="xp" class="xp">XP: 0</div>
   </div>
 </div>
 
-<h2>🔥 Daily Challenges</h2>
-<div id="dailyContainer" class="stage-grid"></div>
+<!-- DAILY -->
+<h2>🔥 Daily Challenge</h2>
+<div id="daily" class="grid"></div>
 
+<!-- STAGES -->
 <h2>🎯 Stages</h2>
-<div id="stageContainer" class="stage-grid"></div>
+<div id="stages" class="grid"></div>
+
+<!-- PAYPAL -->
+<div id="paypal">
+  <h3>💰 Buy XP</h3>
+
+  <script src="https://www.paypal.com/sdk/js?client-id=BAANEM-ym-VkUny86qGnLGSCrXAuYaQlr4XDgcjJtB1A65tn9qFJIAaH61r-Pi5c0kzDKGdfgj5EIKjfuY&components=hosted-buttons&currency=USD"></script>
+
+  <div id="paypal-container-BSAK5P9RZ486S"></div>
+
+  <script>
+    paypal.HostedButtons({
+      hostedButtonId: "BSAK5P9RZ486S"
+    }).render("#paypal-container-BSAK5P9RZ486S");
+  </script>
+</div>
 
 </div>
+
+<!-- CHAT -->
+<button id="chatBtn" onclick="location.href='chat.html'">💬</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* FIREBASE */
 const app = initializeApp({
-  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  apiKey: "AIzaSy...",
   authDomain: "itzsos-labs.firebaseapp.com",
   projectId: "itzsos-labs"
 });
@@ -141,10 +184,9 @@ const db = getFirestore(app);
 
 let currentUser;
 
-/* AUTH FIX (NO REDIRECT LOOP) */
-onAuthStateChanged(auth, async (user) => {
-
-  if (user === null) return; // ✅ DO NOT redirect
+/* AUTH FIX (no redirect bug) */
+onAuthStateChanged(auth, async (user)=>{
+  if(user === null) return;
 
   currentUser = user;
 
@@ -163,9 +205,9 @@ onAuthStateChanged(auth, async (user) => {
 
   const data = snap.data();
 
-  document.getElementById("username").textContent = data.username || "User";
-  document.getElementById("xp").textContent = "XP: " + (data.xp||0);
-  document.getElementById("avatar").textContent = (data.username||"U")[0].toUpperCase();
+  document.getElementById("username").textContent = data.username;
+  document.getElementById("xp").textContent = "XP: "+(data.xp||0);
+  document.getElementById("avatar").textContent = data.username[0].toUpperCase();
 
   loadStages(data);
   loadDaily(data);
@@ -175,8 +217,8 @@ onAuthStateChanged(auth, async (user) => {
 async function loadStages(userData){
   const snap = await getDocs(query(collection(db,"stages"),orderBy("order")));
   const solved = userData.solvedStages || [];
+  const container = document.getElementById("stages");
 
-  const container = document.getElementById("stageContainer");
   container.innerHTML="";
 
   snap.forEach(docSnap=>{
@@ -187,13 +229,13 @@ async function loadStages(userData){
     let locked = s.order>1 && !solved.includes(prev);
 
     const card = document.createElement("div");
-    card.className="stage-card "+(locked?"locked":"");
+    card.className="card "+(locked?"locked":"");
 
     card.innerHTML = `
-      <h3>${s.title} ${locked?"🔒":""}</h3>
+      <h4>${s.title}</h4>
       <p>${s.text}</p>
       <p>XP: ${s.xp}</p>
-      <button ${locked?"disabled":""} onclick="openStage('${id}')">
+      <button ${locked?"disabled":`onclick="openStage('${id}')"`}>
         ${locked?"Locked":"Start"}
       </button>
     `;
@@ -202,40 +244,37 @@ async function loadStages(userData){
   });
 }
 
-window.openStage = (id)=>{
-  location.href="stage.html?id="+id;
-};
+window.openStage = id => location.href="stage.html?id="+id;
 
-/* DAILY (FIXED — NO AUTO XP) */
+/* DAILY WITH ANSWER CHECK */
 async function loadDaily(userData){
   const snap = await getDocs(collection(db,"dailyChallenges"));
   const solved = userData.solvedDaily || [];
+  const container = document.getElementById("daily");
 
-  const container = document.getElementById("dailyContainer");
   container.innerHTML="";
 
   snap.forEach(docSnap=>{
     const c = docSnap.data();
     const id = docSnap.id;
-
     const done = solved.includes(id);
 
     const card = document.createElement("div");
-    card.className="stage-card";
+    card.className="card";
 
     card.innerHTML = `
-      <h3>${c.title} ${done?"✅":""}</h3>
+      <h4>${c.title} ${done?"✅":""}</h4>
       <p>${c.text}</p>
 
       ${c.image ? `<img src="${c.image}">` : ""}
 
-      <input id="answer-${id}" placeholder="Enter answer">
+      <input id="ans-${id}" placeholder="Enter answer">
 
       <p>XP: ${c.xp}</p>
 
-      <button onclick="alert('${c.hint || "No hint"}')">Hint</button>
+      <button onclick="alert('${c.hint}')">Hint</button>
 
-      <button ${done?"disabled":""} onclick="checkAnswer('${id}','${c.answer}',${c.xp})">
+      <button ${done?"disabled":`onclick="check('${id}','${c.answer}',${c.xp})"`}>
         ${done?"Solved":"Submit"}
       </button>
     `;
@@ -244,13 +283,12 @@ async function loadDaily(userData){
   });
 }
 
-/* ANSWER CHECK */
-window.checkAnswer = async (id, correct, xp) => {
+/* VALIDATION */
+window.check = async(id, correct, xp)=>{
+  const val = document.getElementById("ans-"+id).value.trim();
 
-  const input = document.getElementById("answer-"+id).value.trim();
-
-  if(input.toLowerCase() !== correct.toLowerCase()){
-    alert("❌ Wrong answer");
+  if(val.toLowerCase() !== correct.toLowerCase()){
+    alert("❌ Wrong");
     return;
   }
 
@@ -268,7 +306,7 @@ window.checkAnswer = async (id, correct, xp) => {
       xp:(data.xp||0)+xp
     },{merge:true});
 
-    alert("✅ Correct! XP +" + xp);
+    alert("✅ Correct +"+xp+" XP");
     location.reload();
   }
 };
