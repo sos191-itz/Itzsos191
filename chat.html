@@ -115,7 +115,7 @@ import {
   query, orderBy, onSnapshot, doc, getDoc, updateDoc
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* ✅ YOUR REAL CONFIG */
+/* ✅ Firebase Config */
 const app = initializeApp({
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -128,7 +128,7 @@ const app = initializeApp({
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* GLOBAL STATE */
+/* STATE */
 let currentUser, username;
 let currentChat = "global";
 let currentDMUser = null;
@@ -164,7 +164,7 @@ onAuthStateChanged(auth, async (user)=>{
   startGlobal();
 });
 
-/* USERS */
+/* LOAD USERS */
 function loadUsers(){
   onSnapshot(collection(db,"users"), snap=>{
     usersList.innerHTML="";
@@ -211,13 +211,12 @@ function startGlobal(){
     snap.forEach(docSnap=>{
       const d=docSnap.data();
       if(d.type!=="global") return;
-
       renderMessage(d);
     });
   });
 }
 
-/* DM */
+/* DM CHAT */
 function startDM(){
   if(unsubscribe) unsubscribe();
 
@@ -234,6 +233,7 @@ function startDM(){
 
       renderMessage(d);
 
+      // mark as read
       if(d.to===currentUser.uid && !d.read){
         updateDoc(doc(db,"messages",docSnap.id),{read:true});
       }
@@ -257,14 +257,16 @@ function renderMessage(d){
   messagesDiv.scrollTop=messagesDiv.scrollHeight;
 }
 
-/* SEND */
-document.getElementById("send").onclick=sendMessage;
+/* SEND MESSAGE */
+document.getElementById("send").onclick = sendMessage;
 
 function sendMessage(){
   const input=document.getElementById("msg");
   const text=input.value.trim();
-  if(!text) return;
 
+  if(text==="") return;
+
+  // GLOBAL
   if(currentChat==="global"){
     addDoc(collection(db,"messages"),{
       type:"global",
@@ -272,10 +274,17 @@ function sendMessage(){
       username,
       sender:currentUser.uid,
       timestamp:serverTimestamp()
-    });
+    })
+    .catch(err=>alert("Error: "+err.message));
   }
 
+  // DM
   if(currentChat==="dm"){
+    if(!currentDMUser){
+      alert("Select a user first");
+      return;
+    }
+
     const chatId=getChatId(currentUser.uid,currentDMUser);
 
     addDoc(collection(db,"messages"),{
@@ -287,7 +296,8 @@ function sendMessage(){
       to:currentDMUser,
       read:false,
       timestamp:serverTimestamp()
-    });
+    })
+    .catch(err=>alert("Error: "+err.message));
   }
 
   input.value="";
