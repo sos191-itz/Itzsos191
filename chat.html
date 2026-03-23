@@ -3,134 +3,106 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Advanced Chat | Itzsos Labs</title>
+<title>Chat | Itzsos Labs</title>
 
 <style>
-body {
+body{
   margin:0;
   font-family:monospace;
   background:#0f111a;
   color:#00ffdd;
   display:flex;
   height:100vh;
-  overflow:hidden;
 }
 
 /* SIDEBAR */
 #sidebar{
-  width:240px;
+  width:260px;
   background:#111422;
   border-right:1px solid #00ffdd;
   padding:10px;
-  display:flex;
-  flex-direction:column;
 }
-#sidebar h3{margin-top:0;}
 .user{
-  padding:6px;
+  padding:10px;
+  border-radius:6px;
   cursor:pointer;
   display:flex;
   justify-content:space-between;
 }
 .user:hover{background:#1a1f35;}
-.online{color:#00ff99;}
-.offline{color:#555;}
 
-/* MAIN CHAT */
+/* MAIN */
 #main{
   flex:1;
   display:flex;
   flex-direction:column;
 }
-
 #header{
   padding:10px;
   border-bottom:1px solid #00ffdd;
 }
-
 #messages{
   flex:1;
   overflow-y:auto;
   padding:10px;
 }
 
+/* MESSAGES */
 .msg{
-  margin-bottom:8px;
-  padding:6px;
-  border-left:3px solid #00ffdd;
+  max-width:70%;
+  padding:8px;
+  margin-bottom:10px;
+  border-radius:8px;
+}
+.me{
+  background:#00ffdd;
+  color:black;
+  margin-left:auto;
+}
+.other{
   background:#111422;
-  position:relative;
 }
-
-.msg .reactions{
-  display:flex;
-  gap:5px;
-  margin-top:3px;
-}
-
-.reaction{
-  cursor:pointer;
-}
-
-.read{
+.meta{
   font-size:10px;
-  position:absolute;
-  right:5px;
-  bottom:2px;
-  color:#00ff99;
-}
-
-.typing{
-  font-size:12px;
-  color:#aaa;
-  padding-left:10px;
+  opacity:0.7;
 }
 
 /* INPUT */
 #inputBox{
   display:flex;
-  padding:10px;
   gap:10px;
+  padding:10px;
   border-top:1px solid #00ffdd;
 }
-
 input{
   flex:1;
   padding:8px;
-  border:none;
-  border-radius:6px;
 }
-
 button{
   background:#00ffdd;
   border:none;
   padding:8px;
   cursor:pointer;
-  border-radius:6px;
-  font-weight:bold;
 }
-button:hover{background:#ff6600; color:black;}
 </style>
 </head>
+
 <body>
 
-<!-- Sidebar -->
+<!-- SIDEBAR -->
 <div id="sidebar">
-  <h3>🟢 Online Users</h3>
+  <h3>🟢 Users</h3>
   <div id="usersList"></div>
-  <hr style="border-color:#00ffdd;">
-  <button id="globalBtn">🌐 Global Chat</button>
+  <hr>
+  <button onclick="goGlobal()">🌐 Global Chat</button>
 </div>
 
-<!-- Main Chat -->
+<!-- MAIN -->
 <div id="main">
-  <div id="header">
-    <span id="chatTitle">Global Chat</span>
-  </div>
+  <div id="header">Global Chat</div>
   <div id="messages"></div>
-  <div id="typing" class="typing"></div>
   <div id="inputBox">
-    <input id="msg" placeholder="Type a message...">
+    <input id="msg" placeholder="Type message...">
     <button id="send">Send</button>
   </div>
 </div>
@@ -140,10 +112,10 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebas
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, serverTimestamp,
-  query, orderBy, onSnapshot, doc, getDoc, updateDoc, where
+  query, orderBy, onSnapshot, doc, getDoc, updateDoc
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* Firebase config */
+/* ✅ YOUR REAL CONFIG */
 const app = initializeApp({
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -153,177 +125,196 @@ const app = initializeApp({
   appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
 });
 
-const auth = getAuth();
-const db = getFirestore();
+const auth = getAuth(app);
+const db = getFirestore(app);
 
+/* GLOBAL STATE */
 let currentUser, username;
-let currentChat="global";
-let currentDMUser=null;
+let currentChat = "global";
+let currentDMUser = null;
+let unsubscribe = null;
 
-/* Elements */
-const messagesDiv = document.getElementById("messages");
+/* ELEMENTS */
 const usersList = document.getElementById("usersList");
-const typingDiv = document.getElementById("typing");
-const chatTitle = document.getElementById("chatTitle");
-const inputMsg = document.getElementById("msg");
+const messagesDiv = document.getElementById("messages");
+const header = document.getElementById("header");
 
 /* AUTH */
 onAuthStateChanged(auth, async (user)=>{
-  if(!user) return location.href="index.html";
+  if(!user){
+    alert("Session expired. Login again.");
+    return location.href="index.html";
+  }
 
   currentUser = user;
+
   const userRef = doc(db,"users",user.uid);
   const snap = await getDoc(userRef);
 
-  username = snap.exists() ? snap.data().username : user.email.split("@")[0];
+  username = snap.exists()
+    ? snap.data().username
+    : user.email.split("@")[0];
 
-  await updateDoc(userRef,{online:true,lastSeen:serverTimestamp()});
+  await updateDoc(userRef,{
+    online:true,
+    lastSeen:serverTimestamp()
+  });
+
   loadUsers();
-  loadMessages();
+  startGlobal();
 });
 
-/* ONLINE USERS LIST */
+/* USERS */
 function loadUsers(){
-  const q = query(collection(db,"users"), where("online","==",true));
-  onSnapshot(q, snap=>{
+  onSnapshot(collection(db,"users"), snap=>{
     usersList.innerHTML="";
-    snap.forEach(docSnap=>{
-      const data = docSnap.data();
+
+    snap.forEach(d=>{
+      if(d.id===currentUser.uid) return;
+
+      const data=d.data();
+
       const div=document.createElement("div");
-      div.className="user online";
-      div.innerHTML=`<span>${data.username}</span><span>${data.role||""}</span>`;
+      div.className="user";
+
+      div.innerHTML=`
+        <span>${data.username}</span>
+        <span>${data.online?"🟢":"⚫"}</span>
+      `;
+
       div.onclick=()=>{
         currentChat="dm";
-        currentDMUser=docSnap.id;
-        chatTitle.innerText="DM: "+data.username;
-        loadMessages();
+        currentDMUser=d.id;
+        header.innerText="DM: "+data.username;
+        startDM();
       };
+
       usersList.appendChild(div);
     });
   });
 }
 
-/* CHAT ID FOR DMs */
-function getChatId(uid1, uid2){
-  return [uid1,uid2].sort().join("_");
+/* CHAT ID */
+function getChatId(a,b){
+  return [a,b].sort().join("_");
 }
 
-/* LOAD MESSAGES */
-function loadMessages(){
-  const q = query(collection(db,"messages"), orderBy("timestamp"));
-  onSnapshot(q, snap=>{
+/* GLOBAL CHAT */
+function startGlobal(){
+  if(unsubscribe) unsubscribe();
+
+  const q=query(collection(db,"messages"),orderBy("timestamp"));
+
+  unsubscribe=onSnapshot(q, snap=>{
     messagesDiv.innerHTML="";
+
     snap.forEach(docSnap=>{
-      const data=docSnap.data();
+      const d=docSnap.data();
+      if(d.type!=="global") return;
 
-      // FILTER
-      if(currentChat==="global" && data.type!=="global") return;
-      if(currentChat==="dm"){
-        const chatId=getChatId(currentUser.uid,currentDMUser);
-        if(data.chatId!==chatId) return;
-      }
-
-      // Message div
-      const div=document.createElement("div");
-      div.className="msg";
-      div.innerHTML=`<b>${data.username}</b>: ${data.text}`;
-
-      // Reactions
-      const reactionsDiv=document.createElement("div");
-      reactionsDiv.className="reactions";
-      ["👍","❤️","😂"].forEach(r=>{
-        const btn=document.createElement("span");
-        btn.className="reaction";
-        btn.innerText=r;
-        btn.onclick=()=> addReaction(docSnap.id,r);
-        reactionsDiv.appendChild(btn);
-      });
-      div.appendChild(reactionsDiv);
-
-      // Read receipts
-      const read=document.createElement("div");
-      read.className="read";
-      read.innerText=(data.readBy||[]).includes(currentUser.uid)?"✓":"";
-      div.appendChild(read);
-
-      messagesDiv.appendChild(div);
-
-      // Notifications for DMs
-      if(data.to===currentUser.uid && data.sender!==currentUser.uid) alert("New DM from "+data.username);
+      renderMessage(d);
     });
-
-    // Scroll
-    messagesDiv.scroll({top:messagesDiv.scrollHeight,behavior:"smooth"});
   });
 }
 
-/* ADD REACTION */
-async function addReaction(msgId,reaction){
-  const msgRef=doc(db,"messages",msgId);
-  const msgSnap=await getDoc(msgRef);
-  const data=msgSnap.data();
-  const reactions=data.reactions||{};
-  reactions[reaction]=reactions[reaction]||[];
-  if(!reactions[reaction].includes(currentUser.uid)) reactions[reaction].push(currentUser.uid);
-  await updateDoc(msgRef,{reactions});
+/* DM */
+function startDM(){
+  if(unsubscribe) unsubscribe();
+
+  const chatId=getChatId(currentUser.uid,currentDMUser);
+
+  const q=query(collection(db,"messages"),orderBy("timestamp"));
+
+  unsubscribe=onSnapshot(q, snap=>{
+    messagesDiv.innerHTML="";
+
+    snap.forEach(docSnap=>{
+      const d=docSnap.data();
+      if(d.chatId!==chatId) return;
+
+      renderMessage(d);
+
+      if(d.to===currentUser.uid && !d.read){
+        updateDoc(doc(db,"messages",docSnap.id),{read:true});
+      }
+    });
+  });
 }
 
-/* TYPING INDICATOR */
-let typingTimeout;
-inputMsg.addEventListener("input", async ()=>{
-  const chatId = currentChat==="dm"?getChatId(currentUser.uid,currentDMUser):"global";
-  await addDoc(collection(db,"typing"),{chatId,user:username,timestamp:serverTimestamp()});
-  clearTimeout(typingTimeout);
-  typingTimeout=setTimeout(()=>typingDiv.innerText="",2000);
-});
+/* RENDER */
+function renderMessage(d){
+  const div=document.createElement("div");
+  div.className="msg "+(d.sender===currentUser.uid?"me":"other");
 
-onSnapshot(collection(db,"typing"), snap=>{
-  snap.forEach(docSnap=>{
-    const data=docSnap.data();
-    const chatId = currentChat==="dm"?getChatId(currentUser.uid,currentDMUser):"global";
-    if(data.chatId===chatId && data.user!==username) typingDiv.innerText=data.user+" is typing...";
-  });
-});
+  div.innerHTML=`
+    ${d.text}
+    <div class="meta">
+      ${d.sender===currentUser.uid ? (d.read?"Seen":"Sent") : ""}
+    </div>
+  `;
 
-/* SEND MESSAGE */
-document.getElementById("send").onclick=async ()=>{
-  const text=inputMsg.value;
+  messagesDiv.appendChild(div);
+  messagesDiv.scrollTop=messagesDiv.scrollHeight;
+}
+
+/* SEND */
+document.getElementById("send").onclick=sendMessage;
+
+function sendMessage(){
+  const input=document.getElementById("msg");
+  const text=input.value.trim();
   if(!text) return;
 
   if(currentChat==="global"){
-    await addDoc(collection(db,"messages"),{
-      type:"global", username, text,
+    addDoc(collection(db,"messages"),{
+      type:"global",
+      text,
+      username,
       sender:currentUser.uid,
-      timestamp:serverTimestamp(),
-      readBy:[currentUser.uid]
+      timestamp:serverTimestamp()
     });
   }
 
   if(currentChat==="dm"){
     const chatId=getChatId(currentUser.uid,currentDMUser);
-    await addDoc(collection(db,"messages"),{
-      type:"dm", chatId, username, text,
+
+    addDoc(collection(db,"messages"),{
+      type:"dm",
+      chatId,
+      text,
+      username,
       sender:currentUser.uid,
       to:currentDMUser,
-      timestamp:serverTimestamp(),
-      readBy:[currentUser.uid]
+      read:false,
+      timestamp:serverTimestamp()
     });
   }
 
-  inputMsg.value="";
-};
+  input.value="";
+}
 
-inputMsg.addEventListener("keypress", e=>{
-  if(e.key==="Enter") document.getElementById("send").click();
+/* ENTER KEY */
+document.getElementById("msg").addEventListener("keypress",e=>{
+  if(e.key==="Enter") sendMessage();
 });
 
-/* GLOBAL CHAT BUTTON */
-document.getElementById("globalBtn").onclick=()=>{
+/* GLOBAL BUTTON */
+window.goGlobal=()=>{
   currentChat="global";
   currentDMUser=null;
-  chatTitle.innerText="Global Chat";
-  loadMessages();
+  header.innerText="Global Chat";
+  startGlobal();
 };
+
+/* OFFLINE FIX */
+window.addEventListener("beforeunload", async ()=>{
+  if(currentUser){
+    await updateDoc(doc(db,"users",currentUser.uid),{
+      online:false
+    });
+  }
+});
 </script>
+
 </body>
 </html>
