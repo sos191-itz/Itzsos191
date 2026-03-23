@@ -21,6 +21,7 @@ body{
   background:#111422;
   border-right:1px solid #00ffdd;
   padding:10px;
+  overflow-y:auto;
 }
 .user{
   padding:10px;
@@ -115,7 +116,7 @@ import {
   query, orderBy, onSnapshot, doc, getDoc, updateDoc
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* ✅ Firebase Config */
+/* FIREBASE */
 const app = initializeApp({
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -142,7 +143,7 @@ const header = document.getElementById("header");
 /* AUTH */
 onAuthStateChanged(auth, async (user)=>{
   if(!user){
-    alert("Session expired. Login again.");
+    alert("Session expired");
     return location.href="index.html";
   }
 
@@ -183,9 +184,13 @@ function loadUsers(){
       `;
 
       div.onclick=()=>{
+        console.log("DM click:", d.id); // DEBUG
+
         currentChat="dm";
         currentDMUser=d.id;
+
         header.innerText="DM: "+data.username;
+
         startDM();
       };
 
@@ -211,30 +216,33 @@ function startGlobal(){
     snap.forEach(docSnap=>{
       const d=docSnap.data();
       if(d.type!=="global") return;
+
       renderMessage(d);
     });
   });
 }
 
-/* DM CHAT */
+/* DM CHAT (FIXED) */
 function startDM(){
   if(unsubscribe) unsubscribe();
 
-  const chatId=getChatId(currentUser.uid,currentDMUser);
+  const chatId = getChatId(currentUser.uid, currentDMUser);
 
-  const q=query(collection(db,"messages"),orderBy("timestamp"));
+  const q = query(collection(db,"messages"), orderBy("timestamp"));
 
-  unsubscribe=onSnapshot(q, snap=>{
+  unsubscribe = onSnapshot(q, snap=>{
     messagesDiv.innerHTML="";
 
     snap.forEach(docSnap=>{
-      const d=docSnap.data();
-      if(d.chatId!==chatId) return;
+      const d = docSnap.data();
+
+      if(d.type !== "dm") return;
+      if(d.chatId !== chatId) return;
 
       renderMessage(d);
 
       // mark as read
-      if(d.to===currentUser.uid && !d.read){
+      if(d.to === currentUser.uid && !d.read){
         updateDoc(doc(db,"messages",docSnap.id),{read:true});
       }
     });
@@ -257,8 +265,8 @@ function renderMessage(d){
   messagesDiv.scrollTop=messagesDiv.scrollHeight;
 }
 
-/* SEND MESSAGE */
-document.getElementById("send").onclick = sendMessage;
+/* SEND */
+document.getElementById("send").onclick=sendMessage;
 
 function sendMessage(){
   const input=document.getElementById("msg");
@@ -274,8 +282,7 @@ function sendMessage(){
       username,
       sender:currentUser.uid,
       timestamp:serverTimestamp()
-    })
-    .catch(err=>alert("Error: "+err.message));
+    }).catch(e=>alert(e.message));
   }
 
   // DM
@@ -296,8 +303,7 @@ function sendMessage(){
       to:currentDMUser,
       read:false,
       timestamp:serverTimestamp()
-    })
-    .catch(err=>alert("Error: "+err.message));
+    }).catch(e=>alert(e.message));
   }
 
   input.value="";
