@@ -1,55 +1,37 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Elite Chat | Itzsos Labs</title>
+<title>Cyber Chat | Itzsos Labs</title>
 
 <style>
 body{
   margin:0;
   font-family:monospace;
-  background:#0b0f1a;
+  background:#05070d;
   color:#00ffdd;
   display:flex;
   height:100vh;
+  overflow:hidden;
 }
 
 /* SIDEBAR */
 #sidebar{
-  width:260px;
-  background:#111422;
+  width:230px;
+  background:#0b0f1a;
   border-right:1px solid #00ffdd;
-  display:flex;
-  flex-direction:column;
-}
-
-#sidebar h3{
-  margin:10px;
-}
-
-#usersList{
-  flex:1;
+  padding:10px;
   overflow-y:auto;
 }
-
 .user{
-  padding:12px;
-  border-bottom:1px solid #1a1f35;
+  padding:8px;
   cursor:pointer;
-  display:flex;
-  justify-content:space-between;
+  border-bottom:1px solid #111;
 }
-
-.user:hover{ background:#1a1f35; }
-
-.badge{
-  background:red;
-  color:white;
-  border-radius:50%;
-  padding:2px 6px;
-  font-size:10px;
-}
+.user:hover{background:#111;}
+.online{color:#00ff99}
 
 /* MAIN */
 #main{
@@ -60,84 +42,75 @@ body{
 
 /* HEADER */
 #header{
-  padding:15px;
+  padding:10px;
   border-bottom:1px solid #00ffdd;
-  display:flex;
-  justify-content:space-between;
+  background:#0b0f1a;
 }
 
 /* MESSAGES */
 #messages{
   flex:1;
-  padding:10px;
   overflow-y:auto;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-
-/* CHAT BUBBLES */
-.msg{
-  max-width:70%;
   padding:10px;
-  border-radius:10px;
 }
 
-.me{
-  align-self:flex-end;
-  background:#00ffdd;
-  color:black;
-}
-
-.other{
-  align-self:flex-start;
-  background:#111422;
-  border:1px solid #00ffdd;
+.msg{
+  margin-bottom:10px;
+  padding:8px;
+  background:#0b0f1a;
+  border-left:3px solid #00ffdd;
 }
 
 /* INPUT */
 #inputBox{
   display:flex;
-  gap:10px;
+  gap:5px;
   padding:10px;
   border-top:1px solid #00ffdd;
+  background:#0b0f1a;
 }
-
-input{
+#msg{
   flex:1;
   padding:10px;
-  background:#0b0f1a;
+  background:black;
   color:#00ffdd;
   border:1px solid #00ffdd;
-  border-radius:6px;
 }
-
 button{
   background:#00ffdd;
-  color:black;
   border:none;
   padding:10px;
-  border-radius:6px;
   cursor:pointer;
 }
-button:hover{ background:#ff6600; }
+button:hover{
+  background:#ff6600;
+}
+
+/* TERMINAL EFFECT */
+#messages::after{
+  content:"_";
+  animation:blink 1s infinite;
+}
+@keyframes blink{
+  0%{opacity:0}
+  50%{opacity:1}
+  100%{opacity:0}
+}
 </style>
 </head>
 
 <body>
 
-<!-- SIDEBAR -->
 <div id="sidebar">
-  <h3>💬 Inbox</h3>
-  <div id="usersList"></div>
-  <button id="globalBtn">🌐 Global</button>
+  <h3>🟢 Users</h3>
+  <div id="users"></div>
+  <hr>
+  <button id="globalBtn">🌐 Global Chat</button>
 </div>
 
-<!-- MAIN -->
 <div id="main">
-  <div id="header">
-    <span id="chatTitle">Global Chat</span>
-  </div>
+
+  <div id="header">Global Chat</div>
 
   <div id="messages"></div>
 
@@ -145,6 +118,7 @@ button:hover{ background:#ff6600; }
     <input id="msg" placeholder="Type message...">
     <button id="send">Send</button>
   </div>
+
 </div>
 
 <script type="module">
@@ -155,113 +129,100 @@ import {
   query, orderBy, onSnapshot, doc, getDoc
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
+/* FIREBASE */
 const app = initializeApp({
-  apiKey:"AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
-  authDomain:"itzsos-labs.firebaseapp.com",
-  projectId:"itzsos-labs"
+  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  authDomain: "itzsos-labs.firebaseapp.com",
+  projectId: "itzsos-labs",
+  storageBucket: "itzsos-labs.firebasestorage.app",
+  messagingSenderId: "1012826517121",
+  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
 });
 
 const auth = getAuth();
 const db = getFirestore();
 
-let currentUser, username;
-let currentChat="global";
-let currentDMUser=null;
+/* STATE */
+let currentUser;
+let username = "Hacker";
+let currentChat = "global";
+let dmTarget = null;
 
-const usersList = document.getElementById("usersList");
+/* ELEMENTS */
 const messagesDiv = document.getElementById("messages");
-const chatTitle = document.getElementById("chatTitle");
-const input = document.getElementById("msg");
+const usersDiv = document.getElementById("users");
+const header = document.getElementById("header");
 
 /* AUTH */
 onAuthStateChanged(auth, async(user)=>{
   if(!user) return location.href="index.html";
 
-  currentUser=user;
+  currentUser = user;
 
+  // FIX: ALWAYS GET USERNAME FROM FIRESTORE
   const snap = await getDoc(doc(db,"users",user.uid));
-  username = snap.exists()?snap.data().username:user.email;
+  if(snap.exists()){
+    username = snap.data().username || "Hacker";
+  }
 
-  loadInbox();
-  listenMessages();
+  loadUsers();
+  loadMessages();
 });
 
-/* GET CHAT ID */
-function getChatId(a,b){
-  return [a,b].sort().join("_");
-}
-
-/* INBOX */
-function loadInbox(){
-  onSnapshot(collection(db,"messages"), snap=>{
-    const map={};
-
+/* LOAD USERS */
+function loadUsers(){
+  onSnapshot(collection(db,"users"), snap=>{
+    usersDiv.innerHTML="";
     snap.forEach(docSnap=>{
-      const d=docSnap.data();
+      if(docSnap.id === currentUser.uid) return;
 
-      if(d.type!=="dm") return;
+      const data = docSnap.data();
 
-      const other = d.sender===currentUser.uid ? d.to : d.sender;
-      if(!other) return;
+      const div = document.createElement("div");
+      div.className="user online";
+      div.innerText = data.username;
 
-      if(!map[other]){
-        map[other]={count:0};
-      }
-
-      if(!d.readBy || !d.readBy.includes(currentUser.uid)){
-        map[other].count++;
-      }
-    });
-
-    usersList.innerHTML="";
-
-    Object.keys(map).forEach(uid=>{
-      const div=document.createElement("div");
-      div.className="user";
-
-      div.innerHTML = `
-        <span>${uid}</span>
-        ${map[uid].count>0 ? `<span class="badge">${map[uid].count}</span>`:""}
-      `;
-
-      div.onclick=()=>{
+      div.onclick = ()=>{
         currentChat="dm";
-        currentDMUser=uid;
-        chatTitle.innerText="DM: "+uid;
-        listenMessages();
+        dmTarget = docSnap.id;
+        header.innerText = "DM: " + data.username;
+        loadMessages();
       };
 
-      usersList.appendChild(div);
+      usersDiv.appendChild(div);
     });
   });
 }
 
-/* LISTEN MESSAGES */
-function listenMessages(){
+/* CHAT ID */
+function getChatId(a,b){
+  return [a,b].sort().join("_");
+}
+
+/* LOAD MESSAGES */
+let unsubscribe;
+
+function loadMessages(){
+  if(unsubscribe) unsubscribe();
+
   const q = query(collection(db,"messages"), orderBy("timestamp"));
 
-  onSnapshot(q, snap=>{
+  unsubscribe = onSnapshot(q, snap=>{
     messagesDiv.innerHTML="";
 
     snap.forEach(docSnap=>{
-      const d=docSnap.data();
+      const m = docSnap.data();
 
-      if(currentChat==="global" && d.type!=="global") return;
+      if(currentChat==="global" && m.type!=="global") return;
 
       if(currentChat==="dm"){
-        const id=getChatId(currentUser.uid,currentDMUser);
-        if(d.chatId!==id) return;
+        const chatId = getChatId(currentUser.uid, dmTarget);
+        if(m.chatId !== chatId) return;
       }
 
-      const div=document.createElement("div");
-      const isMe=d.sender===currentUser.uid;
-
-      div.className="msg "+(isMe?"me":"other");
-
-      div.innerHTML = `
-        ${!isMe ? `<b>${d.username}</b><br>`:""}
-        ${d.text}
-      `;
+      const div = document.createElement("div");
+      div.className="msg";
+      div.innerHTML = "<b>"+m.username+"</b>: "+m.text;
 
       messagesDiv.appendChild(div);
     });
@@ -270,15 +231,26 @@ function listenMessages(){
   });
 }
 
-/* SEND */
-document.getElementById("send").onclick = async()=>{
-  const text=input.value.trim();
+/* SEND MESSAGE */
+document.getElementById("send").onclick = async ()=>{
+  const text = document.getElementById("msg").value.trim();
   if(!text) return;
+
+  // 🤖 AI BOT
+  if(text.toLowerCase().includes("help")){
+    await addDoc(collection(db,"messages"),{
+      type:"global",
+      username:"🤖 AI",
+      text:"Try solving stages or ask about hacking basics.",
+      timestamp:serverTimestamp()
+    });
+  }
 
   if(currentChat==="global"){
     await addDoc(collection(db,"messages"),{
       type:"global",
-      text, username,
+      username,
+      text,
       sender:currentUser.uid,
       timestamp:serverTimestamp()
     });
@@ -287,29 +259,28 @@ document.getElementById("send").onclick = async()=>{
   if(currentChat==="dm"){
     await addDoc(collection(db,"messages"),{
       type:"dm",
-      chatId:getChatId(currentUser.uid,currentDMUser),
-      text, username,
+      chatId:getChatId(currentUser.uid,dmTarget),
+      username,
+      text,
       sender:currentUser.uid,
-      to:currentDMUser,
-      timestamp:serverTimestamp(),
-      readBy:[currentUser.uid]
+      timestamp:serverTimestamp()
     });
   }
 
-  input.value="";
+  document.getElementById("msg").value="";
 };
 
-/* ENTER KEY */
-input.addEventListener("keypress", e=>{
+/* ENTER SEND */
+document.getElementById("msg").addEventListener("keypress",e=>{
   if(e.key==="Enter") document.getElementById("send").click();
 });
 
-/* GLOBAL */
-document.getElementById("globalBtn").onclick=()=>{
+/* GLOBAL BTN */
+document.getElementById("globalBtn").onclick = ()=>{
   currentChat="global";
-  currentDMUser=null;
-  chatTitle.innerText="Global Chat";
-  listenMessages();
+  dmTarget=null;
+  header.innerText="Global Chat";
+  loadMessages();
 };
 </script>
 
