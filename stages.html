@@ -3,57 +3,53 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Itzsos Labs - Cybersecurity Stages</title>
+<title>Itzsos Labs - Cyber Arena</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
 <style>
-body {
+body{
   margin:0;
   font-family:'Share Tech Mono', monospace;
   background:#0f111a;
   color:#00ffdd;
+  display:none;
 }
 
 /* NAV */
-nav {
+nav{
   display:flex;
   justify-content:space-between;
-  align-items:center;
   padding:15px 30px;
   background:#111422;
   border-bottom:1px solid #00ffdd;
 }
-nav h2 { color:#ff6600; }
-
-nav button {
+nav h2{color:#ff6600;}
+nav button{
   background:#ff6600;
   border:none;
-  padding:8px 15px;
-  font-weight:bold;
-  cursor:pointer;
+  padding:8px 12px;
   margin-left:10px;
+  cursor:pointer;
 }
 
 /* CONTAINER */
-.container {
+.container{
   max-width:1100px;
   margin:40px auto;
   padding:20px;
 }
 
 /* USER */
-#userBox {
+#userBox{
   background:#111422;
   padding:20px;
-  border-radius:10px;
-  margin-bottom:30px;
+  border-radius:12px;
   display:flex;
-  align-items:center;
   gap:15px;
+  margin-bottom:30px;
 }
-
-.avatar {
+.avatar{
   width:60px;
   height:60px;
   border-radius:50%;
@@ -64,79 +60,83 @@ nav button {
   font-size:1.5rem;
   color:#000;
 }
-
-.xp-badge {
+.xp{
   background:#00ffdd;
   color:#000;
   padding:5px 10px;
   border-radius:20px;
+  font-weight:bold;
+}
+#xp-bar{
+  width:100%;
+  height:8px;
+  background:#111;
+  margin-top:5px;
+  border-radius:5px;
+}
+#xp-fill{
+  height:100%;
+  width:0%;
+  background:#ff6600;
+  border-radius:5px;
+  transition:1s;
 }
 
 /* GRID */
-.stage-grid {
+.grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
   gap:20px;
 }
 
 /* CARD */
-.stage-card {
+.card{
   background:#111422;
   padding:20px;
-  border-radius:10px;
+  border-radius:12px;
   border:1px solid #00ffdd;
-  transition:0.3s;
   opacity:0;
   transform:translateY(20px);
+  transition:0.4s;
 }
-
-.stage-card.show {
+.card.show{
   opacity:1;
   transform:translateY(0);
 }
-
-.stage-card:hover {
+.card:hover{
   transform:scale(1.05);
   border-color:#ff6600;
 }
+.locked{opacity:0.4;}
+.solved{border-color:#00ff99 !important;}
 
-.stage-card img {
+.card img{
   width:100%;
-  max-height:160px;
+  max-height:180px;
   object-fit:cover;
-  border-radius:10px;
+  border-radius:8px;
   margin-top:10px;
 }
 
-.locked { opacity:0.4; }
-.solved { border-color:#00ff99 !important; }
-
-button {
+/* BUTTON */
+button{
   margin-top:10px;
   padding:8px;
   border:none;
-  cursor:pointer;
   background:#00ffdd;
+  cursor:pointer;
   font-weight:bold;
 }
 
-/* CHAT BUTTON */
-#chat-btn {
+/* CHAT */
+#chat-btn{
   position:fixed;
   bottom:20px;
   right:20px;
   background:#ff6600;
-  color:black;
-  padding:15px;
+  padding:14px;
   border-radius:50%;
   font-size:18px;
-  box-shadow:0 0 15px #ff6600;
-}
-
-/* PAYPAL */
-#paypal-box {
-  margin:30px 0;
-  text-align:center;
 }
 </style>
 </head>
@@ -159,30 +159,30 @@ button {
     <div class="avatar" id="avatar">U</div>
     <div>
       <div id="username">Loading...</div>
-      <div id="xp" class="xp-badge">XP: 0</div>
+      <div id="xp" class="xp">XP: 0</div>
+      <div id="xp-bar"><div id="xp-fill"></div></div>
     </div>
   </div>
 
   <!-- DAILY -->
-  <h2>🔥 Daily Challenge</h2>
-  <div id="dailyContainer" class="stage-grid"></div>
+  <h2>🔥 Daily Challenges</h2>
+  <div id="dailyContainer" class="grid"></div>
 
   <!-- STAGES -->
   <h2>🎯 Stages</h2>
-  <div id="stageContainer" class="stage-grid"></div>
+  <div id="stageContainer" class="grid"></div>
 
   <!-- PAYPAL -->
-  <div id="paypal-box">
-    <h3>💰 Support / Unlock XP</h3>
+  <div style="margin-top:30px;text-align:center;">
+    <h3>💰 Support</h3>
 
     <script src="https://www.paypal.com/sdk/js?client-id=BAANEM-ym-VkUny86qGnLGSCrXAuYaQlr4XDgcjJtB1A65tn9qFJIAaH61r-Pi5c0kzDKGdfgj5EIKjfuY&components=hosted-buttons&currency=USD"></script>
 
     <div id="paypal-container-BSAK5P9RZ486S"></div>
 
     <script>
-      paypal.HostedButtons({
-        hostedButtonId: "BSAK5P9RZ486S"
-      }).render("#paypal-container-BSAK5P9RZ486S");
+      paypal.HostedButtons({hostedButtonId:"BSAK5P9RZ486S"})
+      .render("#paypal-container-BSAK5P9RZ486S");
     </script>
   </div>
 
@@ -195,31 +195,27 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebas
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSy...",
-  authDomain: "itzsos-labs.firebaseapp.com",
-  projectId: "itzsos-labs"
-};
+const app = initializeApp({
+  apiKey:"AIzaSy...",
+  authDomain:"itzsos-labs.firebaseapp.com",
+  projectId:"itzsos-labs"
+});
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-const usernameEl = document.getElementById("username");
-const xpEl = document.getElementById("xp");
-const avatar = document.getElementById("avatar");
-const stageContainer = document.getElementById("stageContainer");
-const dailyContainer = document.getElementById("dailyContainer");
+const auth=getAuth(app);
+const db=getFirestore(app);
 
 let currentUser;
 
+/* AUTH */
 onAuthStateChanged(auth, async(user)=>{
+  if(user===null) return;
   if(!user) return location.href="index.html";
 
-  currentUser = user;
+  document.body.style.display="block";
+  currentUser=user;
 
-  const ref = doc(db,"users",user.uid);
-  let snap = await getDoc(ref);
+  const ref=doc(db,"users",user.uid);
+  let snap=await getDoc(ref);
 
   if(!snap.exists()){
     await setDoc(ref,{
@@ -228,14 +224,16 @@ onAuthStateChanged(auth, async(user)=>{
       solvedStages:[],
       solvedDaily:[]
     });
-    snap = await getDoc(ref);
+    snap=await getDoc(ref);
   }
 
-  const data = snap.data();
+  const data=snap.data();
 
-  usernameEl.textContent = data.username;
-  xpEl.textContent = "XP: " + data.xp;
-  avatar.textContent = data.username.charAt(0).toUpperCase();
+  document.getElementById("username").textContent=data.username;
+  document.getElementById("xp").textContent="XP: "+data.xp;
+  document.getElementById("avatar").textContent=data.username[0].toUpperCase();
+
+  document.getElementById("xp-fill").style.width=Math.min(data.xp,100)+"%";
 
   loadStages(data);
   loadDaily(data);
@@ -243,94 +241,32 @@ onAuthStateChanged(auth, async(user)=>{
 
 /* STAGES */
 async function loadStages(userData){
-  const snapshot = await getDocs(query(collection(db,"stages"),orderBy("order")));
-  const solved = userData.solvedStages || [];
+  const snap=await getDocs(query(collection(db,"stages"),orderBy("order")));
+  const solved=userData.solvedStages||[];
+  const container=document.getElementById("stageContainer");
+  container.innerHTML="";
 
-  let delay = 0;
-  stageContainer.innerHTML="";
+  let delay=0;
 
-  snapshot.forEach(docSnap=>{
-    const s = docSnap.data();
-    const id = docSnap.id;
+  snap.forEach(docSnap=>{
+    const s=docSnap.data();
+    const id=docSnap.id;
 
-    const locked = s.order>1 && !solved.includes("stage"+(s.order-1));
+    const locked=s.order>1 && !solved.includes("stage"+(s.order-1));
 
-    const card = document.createElement("div");
-    card.className = "stage-card " + (locked?"locked":"");
+    const card=document.createElement("div");
+    card.className="card "+(locked?"locked":"");
 
-    card.innerHTML = `
+    card.innerHTML=`
       <h3>${s.title} ${locked?"🔒":""}</h3>
       <p>${s.text}</p>
-      ${s.image ? `<img src="${s.image}">`:""}
       <p>XP: ${s.xp}</p>
       <button ${locked?"disabled":`onclick="openStage('${id}')"`}>
-        ${locked?"Locked":"Start"}
+      ${locked?"Locked":"Start"}
       </button>
     `;
 
-    stageContainer.appendChild(card);
-    setTimeout(()=>card.classList.add("show"), delay);
+    container.appendChild(card);
+
+    setTimeout(()=>card.classList.add("show"),delay);
     delay+=100;
-  });
-}
-
-/* DAILY */
-async function loadDaily(userData){
-  const snapshot = await getDocs(collection(db,"dailyChallenges"));
-  const solved = userData.solvedDaily || [];
-
-  dailyContainer.innerHTML="";
-
-  snapshot.forEach(docSnap=>{
-    const c = docSnap.data();
-    const id = docSnap.id;
-
-    const done = solved.includes(id);
-
-    const card = document.createElement("div");
-    card.className="stage-card show";
-
-    card.innerHTML = `
-      <h3>${c.title} ${done?"✅":""}</h3>
-      <p>${c.text}</p>
-      ${c.image ? `<img src="${c.image}">`:""}
-      <p>XP: ${c.xp}</p>
-      <button onclick="alert('${c.hint}')">Hint</button>
-      <button ${done?"disabled":`onclick="completeDaily('${id}',${c.xp})"`}>
-        ${done?"Done":"Start"}
-      </button>
-    `;
-
-    dailyContainer.appendChild(card);
-  });
-}
-
-window.openStage = id => location.href="stage.html?id="+id;
-
-window.completeDaily = async(id,xp)=>{
-  const ref = doc(db,"users",currentUser.uid);
-  const snap = await getDoc(ref);
-  const data = snap.data();
-
-  let solved = data.solvedDaily || [];
-
-  if(!solved.includes(id)){
-    solved.push(id);
-
-    await setDoc(ref,{
-      solvedDaily: solved,
-      xp: data.xp + xp
-    },{merge:true});
-
-    alert("XP +" + xp);
-    location.reload();
-  }
-};
-
-document.getElementById("logoutBtn").onclick = ()=>{
-  signOut(auth).then(()=>location.href="index.html");
-};
-</script>
-
-</body>
-</html>
