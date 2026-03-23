@@ -15,39 +15,36 @@ body {
   color:#00ffdd;
 }
 
-/* NAV */
 nav {
   display:flex;
   justify-content:space-between;
   padding:15px;
   background:#111422;
 }
+
 nav button {
   margin-left:10px;
   background:#ff6600;
   border:none;
   padding:8px;
   cursor:pointer;
-  font-weight:bold;
 }
 
-/* CONTAINER */
 .container {
-  padding:20px;
   max-width:1100px;
   margin:auto;
+  padding:20px;
 }
 
-/* USER */
 #userBox {
   display:flex;
-  align-items:center;
-  gap:15px;
+  gap:10px;
   background:#111422;
   padding:15px;
   border-radius:10px;
   margin-bottom:20px;
 }
+
 .avatar {
   width:50px;
   height:50px;
@@ -59,34 +56,26 @@ nav button {
   color:black;
   font-weight:bold;
 }
-.xp {
-  background:#00ffdd;
-  color:black;
-  padding:4px 10px;
-  border-radius:10px;
-}
 
-/* GRID */
 .grid {
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
   gap:20px;
 }
 
-/* CARD */
 .card {
   background:#111422;
   padding:15px;
   border-radius:10px;
   border:1px solid #00ffdd;
 }
+
 .card img {
   width:100%;
   max-height:180px;
   object-fit:cover;
-  border-radius:8px;
-  margin-top:10px;
 }
+
 .locked { opacity:0.4; }
 
 button {
@@ -95,25 +84,15 @@ button {
   border:none;
   cursor:pointer;
   background:#00ffdd;
-  font-weight:bold;
 }
 
-/* CHAT BUTTON */
 #chatBtn {
   position:fixed;
   bottom:20px;
   right:20px;
   background:#ff6600;
-  color:black;
   padding:14px;
   border-radius:50%;
-  font-size:18px;
-}
-
-/* PAYPAL */
-#paypal {
-  text-align:center;
-  margin-top:30px;
 }
 </style>
 </head>
@@ -131,29 +110,24 @@ button {
 
 <div class="container">
 
-<!-- USER -->
 <div id="userBox">
   <div class="avatar" id="avatar">U</div>
   <div>
     <div id="username">Loading...</div>
-    <div id="xp" class="xp">XP: 0</div>
+    <div id="xp">XP: 0</div>
   </div>
 </div>
 
-<!-- DAILY -->
 <h2>🔥 Daily Challenge</h2>
 <div id="daily" class="grid"></div>
 
-<!-- STAGES -->
 <h2>🎯 Stages</h2>
 <div id="stages" class="grid"></div>
 
-<!-- PAYPAL -->
-<div id="paypal">
+<div style="text-align:center;margin-top:30px;">
   <h3>💰 Buy XP</h3>
 
   <script src="https://www.paypal.com/sdk/js?client-id=BAANEM-ym-VkUny86qGnLGSCrXAuYaQlr4XDgcjJtB1A65tn9qFJIAaH61r-Pi5c0kzDKGdfgj5EIKjfuY&components=hosted-buttons&currency=USD"></script>
-
   <div id="paypal-container-BSAK5P9RZ486S"></div>
 
   <script>
@@ -165,7 +139,6 @@ button {
 
 </div>
 
-<!-- CHAT -->
 <button id="chatBtn" onclick="location.href='chat.html'">💬</button>
 
 <script type="module">
@@ -184,9 +157,17 @@ const db = getFirestore(app);
 
 let currentUser;
 
-/* AUTH FIX (no redirect bug) */
-onAuthStateChanged(auth, async (user)=>{
-  if(user === null) return;
+/* TIMEOUT FIX (prevents infinite loading) */
+setTimeout(()=>{
+  if(!auth.currentUser){
+    alert("Session expired. Please login again.");
+    location.href="index.html";
+  }
+}, 4000);
+
+/* AUTH */
+onAuthStateChanged(auth, async(user)=>{
+  if(!user) return;
 
   currentUser = user;
 
@@ -217,8 +198,8 @@ onAuthStateChanged(auth, async (user)=>{
 async function loadStages(userData){
   const snap = await getDocs(query(collection(db,"stages"),orderBy("order")));
   const solved = userData.solvedStages || [];
-  const container = document.getElementById("stages");
 
+  const container = document.getElementById("stages");
   container.innerHTML="";
 
   snap.forEach(docSnap=>{
@@ -246,17 +227,18 @@ async function loadStages(userData){
 
 window.openStage = id => location.href="stage.html?id="+id;
 
-/* DAILY WITH ANSWER CHECK */
+/* DAILY */
 async function loadDaily(userData){
   const snap = await getDocs(collection(db,"dailyChallenges"));
   const solved = userData.solvedDaily || [];
-  const container = document.getElementById("daily");
 
+  const container = document.getElementById("daily");
   container.innerHTML="";
 
   snap.forEach(docSnap=>{
     const c = docSnap.data();
     const id = docSnap.id;
+
     const done = solved.includes(id);
 
     const card = document.createElement("div");
@@ -265,10 +247,9 @@ async function loadDaily(userData){
     card.innerHTML = `
       <h4>${c.title} ${done?"✅":""}</h4>
       <p>${c.text}</p>
+      ${c.image ? `<img src="${c.image}">`:""}
 
-      ${c.image ? `<img src="${c.image}">` : ""}
-
-      <input id="ans-${id}" placeholder="Enter answer">
+      <input id="ans-${id}" placeholder="Answer">
 
       <p>XP: ${c.xp}</p>
 
@@ -288,7 +269,7 @@ window.check = async(id, correct, xp)=>{
   const val = document.getElementById("ans-"+id).value.trim();
 
   if(val.toLowerCase() !== correct.toLowerCase()){
-    alert("❌ Wrong");
+    alert("Wrong answer");
     return;
   }
 
@@ -306,7 +287,7 @@ window.check = async(id, correct, xp)=>{
       xp:(data.xp||0)+xp
     },{merge:true});
 
-    alert("✅ Correct +"+xp+" XP");
+    alert("Correct +"+xp+" XP");
     location.reload();
   }
 };
