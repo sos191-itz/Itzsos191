@@ -181,8 +181,9 @@ button{
     <div id="paypal-container-BSAK5P9RZ486S"></div>
 
     <script>
-      paypal.HostedButtons({hostedButtonId:"BSAK5P9RZ486S"})
-      .render("#paypal-container-BSAK5P9RZ486S");
+      paypal.HostedButtons({
+        hostedButtonId:"BSAK5P9RZ486S"
+      }).render("#paypal-container-BSAK5P9RZ486S");
     </script>
   </div>
 
@@ -195,78 +196,127 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebas
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
+/* FIREBASE CONFIG */
 const app = initializeApp({
-  apiKey:"AIzaSy...",
-  authDomain:"itzsos-labs.firebaseapp.com",
-  projectId:"itzsos-labs"
+  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  authDomain: "itzsos-labs.firebaseapp.com",
+  projectId: "itzsos-labs",
+  storageBucket: "itzsos-labs.firebasestorage.app",
+  messagingSenderId: "1012826517121",
+  appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
 });
 
-const auth=getAuth(app);
-const db=getFirestore(app);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 let currentUser;
 
-/* AUTH */
-onAuthStateChanged(auth, async(user)=>{
-  if(user===null) return;
-  if(!user) return location.href="index.html";
+/* AUTH FIXED */
+onAuthStateChanged(auth, async (user) => {
 
-  document.body.style.display="block";
-  currentUser=user;
-
-  const ref=doc(db,"users",user.uid);
-  let snap=await getDoc(ref);
-
-  if(!snap.exists()){
-    await setDoc(ref,{
-      username:user.email.split("@")[0],
-      xp:0,
-      solvedStages:[],
-      solvedDaily:[]
-    });
-    snap=await getDoc(ref);
+  if (!user) {
+    window.location.href = "index.html";
+    return;
   }
 
-  const data=snap.data();
+  document.body.style.display = "block";
 
-  document.getElementById("username").textContent=data.username;
-  document.getElementById("xp").textContent="XP: "+data.xp;
-  document.getElementById("avatar").textContent=data.username[0].toUpperCase();
+  currentUser = user;
 
-  document.getElementById("xp-fill").style.width=Math.min(data.xp,100)+"%";
+  const ref = doc(db, "users", user.uid);
+  let snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    await setDoc(ref, {
+      username: user.email.split("@")[0],
+      xp: 0,
+      solvedStages: [],
+      solvedDaily: []
+    });
+    snap = await getDoc(ref);
+  }
+
+  const data = snap.data();
+
+  document.getElementById("username").textContent = data.username;
+  document.getElementById("xp").textContent = "XP: " + (data.xp || 0);
+  document.getElementById("avatar").textContent = data.username.charAt(0).toUpperCase();
+
+  document.getElementById("xp-fill").style.width = Math.min(data.xp || 0, 100) + "%";
 
   loadStages(data);
   loadDaily(data);
+
 });
 
 /* STAGES */
 async function loadStages(userData){
-  const snap=await getDocs(query(collection(db,"stages"),orderBy("order")));
-  const solved=userData.solvedStages||[];
-  const container=document.getElementById("stageContainer");
-  container.innerHTML="";
+  const snap = await getDocs(query(collection(db,"stages"),orderBy("order")));
+  const solved = userData.solvedStages || [];
+  const container = document.getElementById("stageContainer");
 
-  let delay=0;
+  container.innerHTML="";
+  let delay = 0;
 
   snap.forEach(docSnap=>{
-    const s=docSnap.data();
-    const id=docSnap.id;
+    const s = docSnap.data();
+    const id = docSnap.id;
 
-    const locked=s.order>1 && !solved.includes("stage"+(s.order-1));
+    const locked = s.order>1 && !solved.includes("stage"+(s.order-1));
 
-    const card=document.createElement("div");
-    card.className="card "+(locked?"locked":"");
+    const card = document.createElement("div");
+    card.className = "card " + (locked?"locked":"");
 
-    card.innerHTML=`
+    card.innerHTML = `
       <h3>${s.title} ${locked?"🔒":""}</h3>
       <p>${s.text}</p>
       <p>XP: ${s.xp}</p>
       <button ${locked?"disabled":`onclick="openStage('${id}')"`}>
-      ${locked?"Locked":"Start"}
+        ${locked?"Locked":"Start"}
       </button>
     `;
 
     container.appendChild(card);
-
-    setTimeout(()=>card.classList.add("show"),delay);
+    setTimeout(()=>card.classList.add("show"), delay);
     delay+=100;
+  });
+}
+
+window.openStage = id => location.href="stage.html?id="+id;
+
+/* DAILY */
+async function loadDaily(userData){
+  const snap = await getDocs(collection(db,"dailyChallenges"));
+  const solved = userData.solvedDaily || [];
+  const container = document.getElementById("dailyContainer");
+
+  container.innerHTML="";
+
+  snap.forEach(docSnap=>{
+    const c = docSnap.data();
+    const id = docSnap.id;
+
+    const done = solved.includes(id);
+
+    const card = document.createElement("div");
+    card.className="card";
+
+    card.innerHTML = `
+      <h3>${c.title} ${done?"✅":""}</h3>
+      <p>${c.text}</p>
+      ${c.image ? `<img src="${c.image}">` : ""}
+      <p>XP: ${c.xp}</p>
+      <button onclick="alert('${c.hint}')">Hint</button>
+      <button ${done?"disabled":`onclick="completeDaily('${id}',${c.xp})"`}>
+        ${done?"Done":"Start"}
+      </button>
+    `;
+
+    container.appendChild(card);
+    setTimeout(()=>card.classList.add("show"),100);
+  });
+}
+
+/* COMPLETE DAILY */
+window.completeDaily = async(id,xp)=>{
+  const ref = doc(db,"users",currentUser.uid);
