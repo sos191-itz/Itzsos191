@@ -3,31 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stage | Itzsos Labs</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<title>Stage 1 | Itzsos Labs</title>
 
 <style>
 body{
   margin:0;
-  font-family:'Share Tech Mono', monospace;
+  font-family:monospace;
   background:#0f111a;
   color:#00ffdd;
-}
-
-/* NAV */
-nav{
-  background:#111422;
-  padding:15px;
-  display:flex;
-  justify-content:space-between;
-}
-button{
-  background:#00ffdd;
-  border:none;
-  padding:8px;
-  cursor:pointer;
-  font-weight:bold;
 }
 
 /* CONTAINER */
@@ -37,20 +20,29 @@ button{
   padding:20px;
 }
 
-/* CARD */
-.card{
+/* INTRO */
+#introBox{
+  background:#111422;
+  padding:20px;
+  border-radius:10px;
+  margin-bottom:30px;
+  border-left:4px solid #ff6600;
+  line-height:1.6;
+}
+
+/* TASK */
+.task{
   background:#111422;
   padding:20px;
   border-radius:10px;
   margin-bottom:20px;
+  border:1px solid #00ffdd;
 }
 
 /* IMAGE */
-.stage-img{
+.task img{
   width:100%;
-  max-height:250px;
-  object-fit:cover;
-  border-radius:8px;
+  border-radius:10px;
   margin-top:10px;
 }
 
@@ -63,56 +55,53 @@ input{
   border-radius:6px;
 }
 
+/* BUTTON */
+button{
+  margin-top:10px;
+  padding:10px;
+  border:none;
+  cursor:pointer;
+  background:#00ffdd;
+  font-weight:bold;
+  border-radius:6px;
+}
+button:hover{
+  background:#ff6600;
+  color:black;
+}
+
 /* RESULT */
-#result{
+.result{
   margin-top:10px;
   font-weight:bold;
 }
+.correct{ color:#00ff99; }
+.wrong{ color:#ff4444; }
 </style>
 </head>
 
 <body>
 
-<nav>
-  <h3>Itzsos Labs</h3>
-  <button onclick="location.href='stages.html'">Back</button>
-</nav>
-
 <div class="container">
 
-  <!-- STAGE TITLE -->
-  <div class="card">
-    <h2 id="title">Loading...</h2>
-    <p id="text"></p>
+  <h2>🧠 Stage 1: Phishing Basics</h2>
 
-    <!-- IMAGE WILL LOAD HERE -->
-    <img id="image" class="stage-img" style="display:none;">
-  </div>
+  <!-- INTRO -->
+  <div id="introBox">Loading intro...</div>
 
-  <!-- EDUCATION / EXPLANATION -->
-  <div class="card">
-    <h3>📘 What is this?</h3>
-    <p id="explanation">
-      Loading explanation...
-    </p>
-  </div>
-
-  <!-- ANSWER -->
-  <div class="card">
-    <h3>🧠 Your Answer</h3>
-    <input id="answer" placeholder="Type your answer here...">
-    <button onclick="submitAnswer()">Submit</button>
-    <div id="result"></div>
-  </div>
+  <!-- TASKS -->
+  <div id="tasks"></div>
 
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore,doc,getDoc,setDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import {
+  getFirestore, collection, getDocs, doc, getDoc, updateDoc
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* 🔑 YOUR FIREBASE CONFIG */
+/* YOUR FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -126,79 +115,139 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentUser;
-let correctAnswer="";
-let xpValue=0;
-let stageId;
+const introBox = document.getElementById("introBox");
+const tasksDiv = document.getElementById("tasks");
 
-/* GET ID FROM URL */
-const params = new URLSearchParams(window.location.search);
-stageId = params.get("id");
+let currentUser;
+let userData;
 
 /* AUTH */
 onAuthStateChanged(auth, async(user)=>{
-  if(!user) return location.href="index.html";
+  if(!user){
+    location.href="index.html";
+    return;
+  }
 
   currentUser = user;
 
-  /* LOAD STAGE FROM FIRESTORE */
-  const stageRef = doc(db,"stages",stageId);
-  const snap = await getDoc(stageRef);
+  const userRef = doc(db,"users",user.uid);
+  const snap = await getDoc(userRef);
 
   if(!snap.exists()){
-    document.getElementById("title").innerText="Stage not found";
+    location.href="index.html";
     return;
   }
 
-  const data = snap.data();
+  userData = snap.data();
 
-  document.getElementById("title").innerText = data.title;
-  document.getElementById("text").innerText = data.text;
-  document.getElementById("explanation").innerText = data.explanation || "No explanation provided.";
-
-  /* IMAGE */
-  if(data.image){
-    const img = document.getElementById("image");
-    img.src = data.image;
-    img.style.display="block";
-  }
-
-  correctAnswer = (data.answer || "").toLowerCase();
-  xpValue = data.xp || 0;
+  loadIntro();
+  loadTasks();
 });
 
-/* SUBMIT ANSWER */
-window.submitAnswer = async ()=>{
-  const userAnswer = document.getElementById("answer").value.toLowerCase().trim();
-  const result = document.getElementById("result");
+/* LOAD INTRO */
+async function loadIntro(){
+  try{
+    const stageRef = doc(db,"stages","stage1");
+    const snap = await getDoc(stageRef);
 
-  if(!userAnswer){
-    result.innerText="❌ Enter answer first";
+    if(!snap.exists()){
+      introBox.innerText = "No intro found.";
+      return;
+    }
+
+    const data = snap.data();
+
+    introBox.innerHTML = "";
+
+    if(Array.isArray(data.intro)){
+      data.intro.forEach(p=>{
+        const el = document.createElement("p");
+        el.innerText = p;
+        introBox.appendChild(el);
+      });
+    }else{
+      introBox.innerText = data.intro || "No intro available.";
+    }
+
+  }catch(e){
+    introBox.innerText = "Error loading intro.";
+    console.error(e);
+  }
+}
+
+/* LOAD TASKS */
+async function loadTasks(){
+  try{
+    const snapshot = await getDocs(collection(db,"tasks"));
+
+    tasksDiv.innerHTML = "";
+
+    snapshot.forEach(docSnap=>{
+      const t = docSnap.data();
+      const id = docSnap.id;
+
+      if(t.stageId !== "stage1") return;
+
+      const div = document.createElement("div");
+      div.className = "task";
+
+      div.innerHTML = `
+        <h3>${t.title}</h3>
+        <p>${t.text}</p>
+
+        ${t.image ? `<img src="${t.image}">` : ""}
+
+        <input id="input-${id}" placeholder="Your answer...">
+
+        <button onclick="submitAnswer('${id}')">Submit</button>
+
+        <div id="result-${id}" class="result"></div>
+      `;
+
+      tasksDiv.appendChild(div);
+    });
+
+  }catch(e){
+    tasksDiv.innerText = "Error loading tasks.";
+    console.error(e);
+  }
+}
+
+/* CHECK ANSWER */
+window.submitAnswer = async(id)=>{
+  const input = document.getElementById("input-"+id).value.toLowerCase().trim();
+  const resultBox = document.getElementById("result-"+id);
+
+  if(!input){
+    resultBox.innerHTML = "⚠️ Enter answer";
     return;
   }
 
-  if(userAnswer === correctAnswer){
+  const taskRef = doc(db,"tasks",id);
+  const snap = await getDoc(taskRef);
+  const task = snap.data();
 
-    result.innerText="✅ Correct! +" + xpValue + " XP";
+  const correctAnswers = task.answers || [];
 
-    const userRef = doc(db,"users",currentUser.uid);
-    const snap = await getDoc(userRef);
-    const data = snap.data();
+  if(correctAnswers.some(a => input.includes(a.toLowerCase()))){
 
-    let solved = data.solvedStages || [];
+    resultBox.innerHTML = "✅ Correct! +" + task.xp + " XP";
+    resultBox.className = "result correct";
 
-    /* PREVENT XP FARMING */
-    if(!solved.includes(stageId)){
-      solved.push(stageId);
+    let solved = userData.solvedTasks || [];
 
-      await setDoc(userRef,{
-        xp:(data.xp||0)+xpValue,
-        solvedStages: solved
-      },{merge:true});
+    if(!solved.includes(id)){
+      solved.push(id);
+
+      await updateDoc(doc(db,"users",currentUser.uid),{
+        solvedTasks: solved,
+        xp: (userData.xp || 0) + task.xp
+      });
     }
 
-  }else{
-    result.innerText="❌ Wrong answer. Try again.";
+  } else {
+    resultBox.innerHTML = "❌ Wrong! " + (task.hint || "");
+    resultBox.className = "result wrong";
   }
 };
 </script>
