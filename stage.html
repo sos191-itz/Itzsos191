@@ -19,14 +19,15 @@ body{
 nav{
   background:#111422;
   padding:15px;
-  border-bottom:1px solid #00ffdd;
+  display:flex;
+  justify-content:space-between;
 }
-nav button{
-  background:#ff6600;
+button{
+  background:#00ffdd;
   border:none;
-  padding:8px 15px;
-  font-weight:bold;
+  padding:8px;
   cursor:pointer;
+  font-weight:bold;
 }
 
 /* CONTAINER */
@@ -42,7 +43,15 @@ nav button{
   padding:20px;
   border-radius:10px;
   margin-bottom:20px;
-  border:1px solid #00ffdd;
+}
+
+/* IMAGE */
+.stage-img{
+  width:100%;
+  max-height:250px;
+  object-fit:cover;
+  border-radius:8px;
+  margin-top:10px;
 }
 
 /* INPUT */
@@ -54,72 +63,56 @@ input{
   border-radius:6px;
 }
 
-/* BUTTON */
-button{
+/* RESULT */
+#result{
   margin-top:10px;
-  padding:10px;
-  border:none;
-  background:#00ffdd;
-  cursor:pointer;
   font-weight:bold;
 }
-button:hover{
-  background:#ff6600;
-}
-
-/* SUCCESS / ERROR */
-.success{color:#00ff99;}
-.error{color:red;}
 </style>
 </head>
 
 <body>
 
 <nav>
-  <button onclick="location.href='stages.html'">⬅ Back</button>
+  <h3>Itzsos Labs</h3>
+  <button onclick="location.href='stages.html'">Back</button>
 </nav>
 
 <div class="container">
 
-  <!-- INTRO -->
-  <div class="card" id="introBox">
-    <h2>🧠 What is this?</h2>
-    <p id="introText">Loading...</p>
+  <!-- STAGE TITLE -->
+  <div class="card">
+    <h2 id="title">Loading...</h2>
+    <p id="text"></p>
+
+    <!-- IMAGE WILL LOAD HERE -->
+    <img id="image" class="stage-img" style="display:none;">
   </div>
 
-  <!-- MISSION -->
+  <!-- EDUCATION / EXPLANATION -->
   <div class="card">
-    <h3>🎬 Mission</h3>
-    <p id="mission"></p>
+    <h3>📘 What is this?</h3>
+    <p id="explanation">
+      Loading explanation...
+    </p>
   </div>
 
-  <!-- LEARN -->
+  <!-- ANSWER -->
   <div class="card">
-    <h3>📘 Learn</h3>
-    <p id="learn"></p>
-  </div>
-
-  <!-- CHALLENGE -->
-  <div class="card">
-    <h3>🎯 Challenge</h3>
-    <pre id="challenge"></pre>
-
-    <input id="answer" placeholder="Enter your answer...">
-    <button onclick="checkAnswer()">Submit</button>
-
-    <p id="result"></p>
+    <h3>🧠 Your Answer</h3>
+    <input id="answer" placeholder="Type your answer here...">
+    <button onclick="submitAnswer()">Submit</button>
+    <div id="result"></div>
   </div>
 
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import {
-  getFirestore, doc, getDoc, updateDoc
-} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore,doc,getDoc,setDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* YOUR FIREBASE KEYS */
+/* 🔑 YOUR FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -130,15 +123,17 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth();
-const db = getFirestore();
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 let currentUser;
-let stageData;
+let correctAnswer="";
+let xpValue=0;
+let stageId;
 
-/* GET STAGE ID */
+/* GET ID FROM URL */
 const params = new URLSearchParams(window.location.search);
-const stageId = params.get("id");
+stageId = params.get("id");
 
 /* AUTH */
 onAuthStateChanged(auth, async(user)=>{
@@ -146,63 +141,64 @@ onAuthStateChanged(auth, async(user)=>{
 
   currentUser = user;
 
+  /* LOAD STAGE FROM FIRESTORE */
   const stageRef = doc(db,"stages",stageId);
   const snap = await getDoc(stageRef);
 
   if(!snap.exists()){
-    document.body.innerHTML = "Stage not found";
+    document.getElementById("title").innerText="Stage not found";
     return;
   }
 
-  stageData = snap.data();
+  const data = snap.data();
 
-  loadStage();
+  document.getElementById("title").innerText = data.title;
+  document.getElementById("text").innerText = data.text;
+  document.getElementById("explanation").innerText = data.explanation || "No explanation provided.";
+
+  /* IMAGE */
+  if(data.image){
+    const img = document.getElementById("image");
+    img.src = data.image;
+    img.style.display="block";
+  }
+
+  correctAnswer = (data.answer || "").toLowerCase();
+  xpValue = data.xp || 0;
 });
 
-/* LOAD STAGE */
-function loadStage(){
-
-  document.getElementById("introText").textContent = stageData.intro;
-
-  document.getElementById("mission").textContent = stageData.mission;
-
-  document.getElementById("learn").textContent = stageData.explanation;
-
-  document.getElementById("challenge").textContent = stageData.text;
-}
-
-/* CHECK ANSWER */
-window.checkAnswer = async ()=>{
+/* SUBMIT ANSWER */
+window.submitAnswer = async ()=>{
   const userAnswer = document.getElementById("answer").value.toLowerCase().trim();
   const result = document.getElementById("result");
 
   if(!userAnswer){
-    result.innerHTML = "<span class='error'>Enter answer</span>";
+    result.innerText="❌ Enter answer first";
     return;
   }
 
-  // compare with hidden answer in firebase
-  if(userAnswer === stageData.answer.toLowerCase()){
-    
-    result.innerHTML = "<span class='success'>✅ Correct! +" + stageData.xp + " XP</span>";
+  if(userAnswer === correctAnswer){
+
+    result.innerText="✅ Correct! +" + xpValue + " XP";
 
     const userRef = doc(db,"users",currentUser.uid);
-    const userSnap = await getDoc(userRef);
-    const data = userSnap.data();
+    const snap = await getDoc(userRef);
+    const data = snap.data();
 
     let solved = data.solvedStages || [];
 
+    /* PREVENT XP FARMING */
     if(!solved.includes(stageId)){
       solved.push(stageId);
 
-      await updateDoc(userRef,{
-        solvedStages: solved,
-        xp: (data.xp || 0) + stageData.xp
-      });
+      await setDoc(userRef,{
+        xp:(data.xp||0)+xpValue,
+        solvedStages: solved
+      },{merge:true});
     }
 
-  } else {
-    result.innerHTML = "<span class='error'>❌ Wrong answer</span>";
+  }else{
+    result.innerText="❌ Wrong answer. Try again.";
   }
 };
 </script>
