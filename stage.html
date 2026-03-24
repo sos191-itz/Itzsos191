@@ -4,142 +4,122 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stage | Itzsos Labs</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
 <style>
-body {
+body{
   margin:0;
-  font-family: monospace;
+  font-family:'Share Tech Mono', monospace;
   background:#0f111a;
   color:#00ffdd;
-  overflow-x:hidden;
-  transition: background 0.3s ease;
 }
-nav {
+
+/* NAV */
+nav{
   background:#111422;
+  padding:15px;
   border-bottom:1px solid #00ffdd;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:15px 30px;
 }
-nav h2 { color:#ff6600; }
-nav button {
+nav button{
   background:#ff6600;
   border:none;
   padding:8px 15px;
   font-weight:bold;
   cursor:pointer;
-  transition:0.3s;
 }
-nav button:hover { background:#00ffdd; color:#111; }
-.container {
-  max-width:800px;
-  margin:40px auto;
+
+/* CONTAINER */
+.container{
+  max-width:900px;
+  margin:30px auto;
   padding:20px;
-  background:#111422;
-  border:1px solid #00ffdd;
-  border-radius:12px;
-  box-shadow:0 0 25px rgba(0,255,221,0.2);
-  position:relative;
-  overflow:hidden;
 }
-input {
+
+/* CARD */
+.card{
+  background:#111422;
+  padding:20px;
+  border-radius:10px;
+  margin-bottom:20px;
+  border:1px solid #00ffdd;
+}
+
+/* INPUT */
+input{
   width:100%;
   padding:10px;
-  margin-top:15px;
-  background:black;
-  border:1px solid #00ffdd;
-  color:white;
-  border-radius:5px;
-}
-button {
   margin-top:10px;
-  padding:8px 12px;
-  font-weight:bold;
+  border:none;
+  border-radius:6px;
+}
+
+/* BUTTON */
+button{
+  margin-top:10px;
+  padding:10px;
+  border:none;
+  background:#00ffdd;
   cursor:pointer;
-  border:none;
-  border-radius:5px;
-  transition:0.3s;
+  font-weight:bold;
 }
-button.submit { background:#00ffdd; color:#111; }
-button.submit:hover { background:#ff6600; color:#111; }
-button.hintBtn { background:#ff6600; }
-#result, #hintBox { margin-top:15px; font-weight:bold; }
-.locked { font-size:1.2rem; color:orange; text-align:center; margin-top:20px; opacity:0.6; }
-#terminalContainer {
-  display:none;
-  background:black;
-  padding:15px;
-  border-radius:8px;
-  border:1px solid #00ffdd;
-  max-height:400px;
-  overflow-y:auto;
-  margin-top:20px;
-  box-shadow:0 0 15px #00ffdd;
+button:hover{
+  background:#ff6600;
 }
-.prompt {
-  color:#ff6600;
-}
-#terminalInput {
-  background:black;
-  color:#00ffdd;
-  border:none;
-  outline:none;
-  flex:1;
-  font-family:monospace;
-}
-#progressBar {
-  height:12px;
-  width:0%;
-  background:linear-gradient(90deg,#00ffdd,#00aa88);
-  transition:width 0.5s ease;
-}
+
+/* SUCCESS / ERROR */
+.success{color:#00ff99;}
+.error{color:red;}
 </style>
 </head>
+
 <body>
 
 <nav>
-  <h2>Itzsos Labs - Stage</h2>
-  <button id="backBtn">Back</button>
+  <button onclick="location.href='stages.html'">⬅ Back</button>
 </nav>
 
 <div class="container">
-  <!-- Progress -->
-  <div id="progressWrapper" style="margin-bottom:20px;">
-    <div id="progressText" style="margin-bottom:5px; font-weight:bold;">Loading progress...</div>
-    <div style="background:#222; border-radius:8px; overflow:hidden;">
-      <div id="progressBar"></div>
-    </div>
+
+  <!-- INTRO -->
+  <div class="card" id="introBox">
+    <h2>🧠 What is this?</h2>
+    <p id="introText">Loading...</p>
   </div>
 
-  <h2 id="stageTitle">Loading...</h2>
-  <p id="stageText"></p>
-
-  <!-- Normal flag input -->
-  <div id="defaultFlagArea">
-    <input type="text" id="flagInput" placeholder="Enter flag">
-    <button class="submit" id="submitBtn">Submit</button>
+  <!-- MISSION -->
+  <div class="card">
+    <h3>🎬 Mission</h3>
+    <p id="mission"></p>
   </div>
 
-  <button class="hintBtn" id="hintBtn">Show Hint</button>
-  <div id="result"></div>
-  <div id="hintBox"></div>
-
-  <button id="nextStageBtn" style="display:none; background:orange;">Go To Next Stage →</button>
-
-  <!-- Terminal container for Stage 4 -->
-  <div id="terminalContainer">
-  <div id="terminalOutput"></div>
-  <div style="display:flex; align-items:center; margin-top:5px;">
-    <span class="prompt">user@itzsos:~$</span>
-    <input id="terminalInput" type="text" placeholder="Enter flag">
+  <!-- LEARN -->
+  <div class="card">
+    <h3>📘 Learn</h3>
+    <p id="learn"></p>
   </div>
+
+  <!-- CHALLENGE -->
+  <div class="card">
+    <h3>🎯 Challenge</h3>
+    <pre id="challenge"></pre>
+
+    <input id="answer" placeholder="Enter your answer...">
+    <button onclick="checkAnswer()">Submit</button>
+
+    <p id="result"></p>
+  </div>
+
 </div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import {
+  getFirestore, doc, getDoc, updateDoc
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-// Firebase config
+/* YOUR FIREBASE KEYS */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -150,263 +130,80 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const auth = getAuth();
+const db = getFirestore();
 
-const stageId = new URLSearchParams(window.location.search).get("id");
-let currentUser = null;
-let correctAnswer = "";
-let stageXP = 0;
-let stageHint = "";
-let currentOrder = 0;
-const nextStageBtn = document.getElementById("nextStageBtn");
-const TOTAL_STAGES = 50;
+let currentUser;
+let stageData;
 
-// Elements
-const stageTitleEl = document.getElementById("stageTitle");
-const stageTextEl = document.getElementById("stageText");
-const defaultFlagArea = document.getElementById("defaultFlagArea");
-const resultEl = document.getElementById("result");
-const hintBoxEl = document.getElementById("hintBox");
-const progressText = document.getElementById("progressText");
-const progressBar = document.getElementById("progressBar");
-const terminalContainer = document.getElementById("terminalContainer");
-const terminalOutput = document.getElementById("terminalOutput");
-const terminalInput = document.getElementById("terminalInput");
+/* GET STAGE ID */
+const params = new URLSearchParams(window.location.search);
+const stageId = params.get("id");
 
-// Back button
-document.getElementById("backBtn").onclick = () => { window.location.href="stages.html"; };
+/* AUTH */
+onAuthStateChanged(auth, async(user)=>{
+  if(!user) return location.href="index.html";
 
-// Terminal typing animation
-function typeTerminal(text, container, speed=30){
-  let i=0;
-  const interval = setInterval(()=>{
-    container.innerHTML += text[i];
-    i++;
-    if(i>=text.length) clearInterval(interval);
-    container.scrollTop = container.scrollHeight;
-  }, speed);
-}
-
-// Auth check
-onAuthStateChanged(auth, async (user)=>{
-  if(!user){ alert("Please login first!"); window.location.href="index.html"; return; }
   currentUser = user;
-  if(!user.emailVerified){ alert("Verify email!"); window.location.href="index.html"; return; }
 
-  const userRef = doc(db,"users",user.uid);
-  const userSnap = await getDoc(userRef);
-  if(!userSnap.exists()){ window.location.href="selection.html"; return; }
-  const userData = userSnap.data();
-  if(userData.selectedField !== "IT"){ alert("🚫 Only Cybersecurity users allowed."); window.location.href="selection.html"; return; }
+  const stageRef = doc(db,"stages",stageId);
+  const snap = await getDoc(stageRef);
 
-  stageXP = 0;
-  correctAnswer = "";
-  stageHint = "";
+  if(!snap.exists()){
+    document.body.innerHTML = "Stage not found";
+    return;
+  }
 
-  await loadStage(userData);
+  stageData = snap.data();
+
+  loadStage();
 });
 
-// Load stage
-async function loadStage(userData){
-  const stageRef = doc(db,"stages",stageId);
-  const stageSnap = await getDoc(stageRef);
-  if(!stageSnap.exists()){ stageTitleEl.textContent="Stage not found"; return; }
-  const stageData = stageSnap.data();
-  currentOrder = stageData.order;
-  const percentage = Math.round((currentOrder/TOTAL_STAGES)*100);
-  progressText.textContent = `Stage ${currentOrder} / ${TOTAL_STAGES} (${percentage}%)`;
-  progressBar.style.width = percentage+"%";
-  stageTitleEl.textContent = stageData.title;
-  stageTextEl.textContent = stageData.text;
+/* LOAD STAGE */
+function loadStage(){
 
-  correctAnswer = stageData.answer || "";
-  stageXP = stageData.xp || 0;
-  stageHint = stageData.hint || "No hint available";
+  document.getElementById("introText").textContent = stageData.intro;
 
-  // Lock stages
-  let solvedStages = userData.solvedStages || [];
-  let highestSolved = 0;
-  solvedStages.forEach(s=>{
-    const num = parseInt(s.replace("stage",""));
-    if(!isNaN(num) && num>highestSolved) highestSolved=num;
-  });
-  if(currentOrder > highestSolved+1){
-    defaultFlagArea.style.display="none";
-    document.getElementById("hintBtn").style.display="none";
-    resultEl.style.display="none";
-    hintBoxEl.style.display="none";
-    stageTextEl.textContent = stageData.title + " 🔒 Locked";
-    return;
-  }
+  document.getElementById("mission").textContent = stageData.mission;
 
-  // Stage 4: Kali Terminal
-  if(stageId==="stage4"){
-    defaultFlagArea.style.display="none";
-    document.getElementById("hintBtn").style.display="none";
-    resultEl.style.display="none";
-    hintBoxEl.style.display="none";
-    terminalContainer.style.display="block";
-    terminalOutput.innerHTML = "";
-    typeTerminal("Welcome to Kali Lab! Type 'help' for commands.\n", terminalOutput);
-    attachTerminalHandler(["help","ls","cat flag.txt","clear"]);
-    return;
-  }
+  document.getElementById("learn").textContent = stageData.explanation;
 
-  // Stage 5: Caesar Cipher Terminal
-  if(stageId==="stage5"){
-    defaultFlagArea.style.display="none";
-    terminalContainer.style.display="block";
-    terminalOutput.innerHTML = "Welcome to the Caesar Cipher Lab!\nType the decoded flag and press Enter.\n";
-    setupStage5Terminal();
-    return;
-  }
-
-  // Stage 6: Advanced File System Terminal
-  if(stageId==="stage6"){
-    defaultFlagArea.style.display="none";
-    terminalContainer.style.display="block";
-    terminalOutput.innerHTML = "Welcome to Stage 6!\nNavigate the virtual file system to find the flag.\nType 'help' for commands.\n";
-    setupStage6Terminal();
-    return;
-  }
+  document.getElementById("challenge").textContent = stageData.text;
 }
 
-// Terminal setup for Stage 5
-function setupStage5Terminal(){
-  const newInput = terminalInput.cloneNode(true);
-  terminalInput.parentNode.replaceChild(newInput, terminalInput);
+/* CHECK ANSWER */
+window.checkAnswer = async ()=>{
+  const userAnswer = document.getElementById("answer").value.toLowerCase().trim();
+  const result = document.getElementById("result");
 
-  newInput.addEventListener("keydown", async (e)=>{
-    if(e.key !== "Enter") return;
-    const input = e.target.value.trim().toLowerCase();
-    terminalOutput.innerHTML += "> " + input + "\n";
-    e.target.value = "";
+  if(!userAnswer){
+    result.innerHTML = "<span class='error'>Enter answer</span>";
+    return;
+  }
 
-    if(input === correctAnswer.toLowerCase()){
-      terminalOutput.innerHTML += `✅ Correct! +${stageXP} XP\n`;
-      const userRef = doc(db,"users",currentUser.uid);
-      await updateDoc(userRef,{
-        solvedStages: arrayUnion(stageId),
-        xp: increment(stageXP)
-      });
-      nextStageBtn.style.display = "block";
-    } else {
-      terminalOutput.innerHTML += "❌ Wrong flag!\n";
-    }
-    terminalOutput.scrollTop = terminalOutput.scrollHeight;
-  });
-}
-
-// Terminal setup for Stage 6
-function setupStage6Terminal(){
-  const fs = {
-    "/": ["home","flag.txt"],
-    "/home": ["user.txt","notes.txt"]
-  };
-  let cwd = "/";
-  const flagFile = correctAnswer;
-
-  const newInput = terminalInput.cloneNode(true);
-  terminalInput.parentNode.replaceChild(newInput, terminalInput);
-
-  newInput.addEventListener("keydown", async (e)=>{
-    if(e.key !== "Enter") return;
-    const cmd = e.target.value.trim();
-    terminalOutput.innerHTML += "user@itzsos:~$ " + cmd + "\n";
-    e.target.value = "";
+  // compare with hidden answer in firebase
+  if(userAnswer === stageData.answer.toLowerCase()){
+    
+    result.innerHTML = "<span class='success'>✅ Correct! +" + stageData.xp + " XP</span>";
 
     const userRef = doc(db,"users",currentUser.uid);
     const userSnap = await getDoc(userRef);
-    const solved = userSnap.exists()?userSnap.data().solvedStages||[]:[];
-    let parts = cmd.split(" ");
+    const data = userSnap.data();
 
-    switch(parts[0]){
-      case "help":
-        typeTerminal("Commands: ls, cd <dir>, cat <file>, clear\n", terminalOutput);
-        break;
-      case "ls":
-        if(fs[cwd]) typeTerminal(fs[cwd].join("  ") + "\n", terminalOutput);
-        else typeTerminal("\n", terminalOutput);
-        break;
-      case "cd":
-        if(parts[1] && fs["/"+parts[1]]) cwd = "/"+parts[1];
-        else typeTerminal("Directory not found\n", terminalOutput);
-        break;
-      case "cat":
-        if(parts[1]==="flag.txt" && cwd==="/"){
-          typeTerminal(flagFile+"\n", terminalOutput);
-          if(!solved.includes(stageId)){
-            await updateDoc(userRef,{
-              solvedStages: arrayUnion(stageId),
-              xp: increment(stageXP)
-            });
-            nextStageBtn.style.display = "block";
-          }
-        } else if(fs[cwd] && fs[cwd].includes(parts[1])){
-          typeTerminal("File content: Lorem Ipsum...\n", terminalOutput);
-        } else {
-          typeTerminal("File not found\n", terminalOutput);
-        }
-        break;
-      case "clear":
-        terminalOutput.innerHTML = "";
-        break;
-      default:
-        typeTerminal(`Command not found: ${cmd}\n`, terminalOutput);
+    let solved = data.solvedStages || [];
+
+    if(!solved.includes(stageId)){
+      solved.push(stageId);
+
+      await updateDoc(userRef,{
+        solvedStages: solved,
+        xp: (data.xp || 0) + stageData.xp
+      });
     }
-    terminalOutput.scrollTop = terminalOutput.scrollHeight;
-  });
-}
 
-// Hint button
-document.getElementById("hintBtn").onclick = () => {
-  hintBoxEl.textContent = "💡 Hint: "+stageHint;
-};
-
-// Normal flag submit (for non-terminal stages)
-document.getElementById("submitBtn").onclick = async ()=>{
-  if(!currentUser) return;
-  const input = document.getElementById("flagInput").value.trim().toLowerCase();
-  if(input !== correctAnswer.trim().toLowerCase()){
-    resultEl.textContent="❌ Wrong flag!";
-    resultEl.style.color="red";
-    return;
+  } else {
+    result.innerHTML = "<span class='error'>❌ Wrong answer</span>";
   }
-
-  const userRef = doc(db,"users",currentUser.uid);
-  const userSnap = await getDoc(userRef);
-  const solved = userSnap.exists()?userSnap.data().solvedStages||[]:[];
-  if(solved.includes(stageId)){
-    resultEl.textContent="⚠️ Already solved!";
-    resultEl.style.color="yellow";
-    return;
-  }
-
-  await updateDoc(userRef,{
-    solvedStages: arrayUnion(stageId),
-    xp: increment(stageXP)
-  });
-  resultEl.textContent="✅ Correct! +"+stageXP+" XP";
-  resultEl.style.color="lightgreen";
-
-  // Next stage
-  const nextStageId = "stage"+(currentOrder+1);
-  const nextStageRef = doc(db,"stages",nextStageId);
-  const nextStageSnap = await getDoc(nextStageRef);
-  if(!nextStageSnap.exists()){
-    nextStageBtn.style.display="block";
-    nextStageBtn.textContent="🏆 Track Completed - Back to Stages";
-    nextStageBtn.onclick = ()=>window.location.href="stages.html";
-    return;
-  }
-
-  nextStageBtn.style.display="block";
-  let timer = setTimeout(()=>window.location.href="stage.html?id="+nextStageId,5000);
-  nextStageBtn.onclick = ()=>{
-    clearTimeout(timer);
-    window.location.href="stage.html?id="+nextStageId;
-  };
 };
 </script>
 
