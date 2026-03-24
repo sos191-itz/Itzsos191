@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Itzsos Labs</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin:0;
+  font-family:'Share Tech Mono', monospace;
+  background:#0f111a;
+  color:#00ffdd;
+}
+
+/* NAV */
+nav {
+  display:flex;
+  justify-content:space-between;
+  padding:15px;
+  background:#111422;
+}
+nav button {
+  margin-left:10px;
+  background:#ff6600;
+  border:none;
+  padding:8px;
+  cursor:pointer;
+}
+
+/* CONTAINER */
+.container {
+  max-width:1100px;
+  margin:auto;
+  padding:20px;
+}
+
+/* USER */
+#userBox {
+  display:flex;
+  gap:10px;
+  background:#111422;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:20px;
+}
+.avatar {
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  background:linear-gradient(45deg,#ff6600,#00ffdd);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:black;
+  font-weight:bold;
+}
+
+/* GRID */
+.grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
+}
+
+/* CARD */
+.card {
+  background:#111422;
+  padding:15px;
+  border-radius:10px;
+  border:1px solid #00ffdd;
+}
+.card img {
+  width:100%;
+  max-height:180px;
+  object-fit:cover;
+}
+
+.locked { opacity:0.4; }
+
+button {
+  margin-top:8px;
+  padding:6px;
+  border:none;
+  cursor:pointer;
+  background:#00ffdd;
+}
+
+/* CHAT */
+#chatBtn {
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#ff6600;
+  padding:14px;
+  border-radius:50%;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <h3>Itzsos Labs</h3>
+  <div>
+    <button onclick="location.href='profile.html'">Profile</button>
+    <button onclick="location.href='leaderboard.html'">Leaderboard</button>
+    <button id="logoutBtn">Logout</button>
+  </div>
+</nav>
+
+<div class="container">
+
+<!-- USER -->
+<div id="userBox">
+  <div class="avatar" id="avatar">U</div>
+  <div>
+    <div id="username">Loading...</div>
+    <div id="xp">XP: 0</div>
+  </div>
+</div>
+
+<!-- DAILY -->
+<h2>🔥 Daily Challenge</h2>
+<div id="daily" class="grid"></div>
+
+<!-- STAGES -->
+<h2>🎯 Stages</h2>
+<div id="stages" class="grid"></div>
+
+<!-- PAYPAL -->
+<div style="text-align:center;margin-top:30px;">
+  <h3>💰 Buy XP</h3>
+
+  <script src="https://www.paypal.com/sdk/js?client-id=BAANEM-ym-VkUny86qGnLGSCrXAuYaQlr4XDgcjJtB1A65tn9qFJIAaH61r-Pi5c0kzDKGdfgj5EIKjfuY&components=hosted-buttons&currency=USD"></script>
+  <div id="paypal-container-BSAK5P9RZ486S"></div>
+
+  <script>
+    paypal.HostedButtons({
+      hostedButtonId: "BSAK5P9RZ486S"
+    }).render("#paypal-container-BSAK5P9RZ486S");
+  </script>
+</div>
+
+</div>
+
+<!-- CHAT BUTTON -->
+<button id="chatBtn" onclick="location.href='chat.html'">💬</button>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+/* CONFIG */
+const app = initializeApp({
+  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  authDomain: "itzsos-labs.firebaseapp.com",
+  projectId: "itzsos-labs"
+});
+
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser;
+
+/* AUTH */
+onAuthStateChanged(auth, async(user)=>{
+  if(!user){
+    window.location.href="index.html";
+    return;
+  }
+
+  currentUser = user;
+
+  const ref = doc(db,"users",user.uid);
+  let snap = await getDoc(ref);
+
+  if(!snap.exists()){
+    await setDoc(ref,{
+      username:"Hacker"+Math.floor(Math.random()*9999),
+      xp:0,
+      solvedStages:[],
+      solvedDaily:[]
+    });
+    snap = await getDoc(ref);
+  }
+
+  const data = snap.data();
+
+  document.getElementById("username").textContent = data.username;
+  document.getElementById("xp").textContent = "XP: "+(data.xp||0);
+  document.getElementById("avatar").textContent = data.username[0].toUpperCase();
+
+  loadStages(data);
+  loadDaily(data);
+});
+
+/* STAGES */
+async function loadStages(userData){
+  const snap = await getDocs(query(collection(db,"stages"),orderBy("order")));
+  const solved = userData.solvedStages || [];
+
+  const container = document.getElementById("stages");
+  container.innerHTML="";
+
+  snap.forEach(docSnap=>{
+    const s = docSnap.data();
+    const id = docSnap.id;
+
+    let prev = "stage"+(s.order-1);
+    let locked = s.order>1 && !solved.includes(prev);
+
+    const card = document.createElement("div");
+    card.className="card "+(locked?"locked":"");
+
+    card.innerHTML = `
+      <h4>${s.title}</h4>
+      <p>${s.text}</p>
+      <p>XP: ${s.xp}</p>
+      <button ${locked?"disabled":`onclick="openStage('${id}')"`}>
+        ${locked?"Locked":"Start"}
+      </button>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+window.openStage = id => location.href="stage.html?id="+id;
+
+/* DAILY */
+async function loadDaily(userData){
+  const snap = await getDocs(collection(db,"dailyChallenges"));
+  const solved = userData.solvedDaily || [];
+
+  const container = document.getElementById("daily");
+  container.innerHTML="";
+
+  snap.forEach(docSnap=>{
+    const c = docSnap.data();
+    const id = docSnap.id;
+
+    const done = solved.includes(id);
+
+    const card = document.createElement("div");
+    card.className="card";
+
+    card.innerHTML = `
+      <h4>${c.title} ${done?"✅":""}</h4>
+      <p>${c.text}</p>
+
+      ${c.image ? `<img src="${c.image}">`:""}
+
+      <input id="ans-${id}" placeholder="Enter answer">
+
+      <p>XP: ${c.xp}</p>
+
+      <button onclick="alert('${c.hint}')">Hint</button>
+
+      <button ${done?"disabled":`onclick="checkAnswer('${id}','${c.answer}',${c.xp})"`}>
+        ${done?"Solved":"Submit"}
+      </button>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+/* VALIDATE ANSWER */
+window.checkAnswer = async(id, correct, xp)=>{
+  const val = document.getElementById("ans-"+id).value.trim();
+
+  if(val.toLowerCase() !== correct.toLowerCase()){
+    alert("❌ Wrong answer");
+    return;
+  }
+
+  const ref = doc(db,"users",currentUser.uid);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+
+  let solved = data.solvedDaily || [];
+
+  if(!solved.includes(id)){
+    solved.push(id);
+
+    await setDoc(ref,{
+      solvedDaily: solved,
+      xp:(data.xp||0)+xp
+    },{merge:true});
+
+    alert("✅ Correct! +" + xp + " XP");
+    location.reload();
+  }
+};
+
+/* LOGOUT */
+document.getElementById("logoutBtn").onclick = ()=>{
+  signOut(auth).then(()=>location.href="index.html");
+};
+</script>
+
+</body>
