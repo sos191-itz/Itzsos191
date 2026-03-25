@@ -11,64 +11,164 @@
 body{
   margin:0;
   font-family:'Share Tech Mono', monospace;
-  background:#0b0f1a;
+  background:radial-gradient(circle,#0b0f1a,#05070d);
   color:#00ffdd;
 }
 
+/* NAV */
+nav{
+  display:flex;
+  justify-content:space-between;
+  padding:15px 20px;
+  background:#111422;
+  border-bottom:1px solid #6a00ff;
+}
+nav button{
+  background:#6a00ff;
+  border:none;
+  padding:8px 12px;
+  color:white;
+  cursor:pointer;
+}
+
+/* CONTAINER */
 .container{
   max-width:900px;
   margin:auto;
   padding:20px;
 }
 
-.task{
+/* MISSION PANEL */
+.mission{
   background:#111422;
-  padding:20px;
+  padding:15px;
+  border-left:4px solid #6a00ff;
   border-radius:10px;
-  margin-bottom:20px;
-  border-left:4px solid #00ffdd;
+  animation:fadeIn 1s ease;
 }
 
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(-10px);}
+  to{opacity:1;}
+}
+
+/* PROGRESS */
+.progress{
+  margin:15px 0;
+}
+.bar{
+  height:10px;
+  background:#222;
+  border-radius:10px;
+}
+.fill{
+  height:10px;
+  width:0%;
+  background:linear-gradient(90deg,#6a00ff,#00ffdd);
+  border-radius:10px;
+  transition:1s;
+}
+
+/* TASK */
+.task{
+  background:#111422;
+  padding:15px;
+  margin-top:15px;
+  border-radius:10px;
+  border-left:4px solid #333;
+  opacity:0.4;
+  pointer-events:none;
+  transition:0.3s;
+}
+
+.task.active{
+  opacity:1;
+  pointer-events:auto;
+  border-left:4px solid #6a00ff;
+}
+
+.task.completed{
+  border-left:4px solid #00ff99;
+  box-shadow:0 0 15px #00ff99;
+}
+
+/* IMAGE */
 .task img{
   width:100%;
-  border-radius:10px;
+  border-radius:8px;
   margin:10px 0;
 }
 
+/* INPUT */
 input{
   width:100%;
   padding:10px;
   border:none;
   border-radius:6px;
   margin-top:10px;
+  background:#000;
+  color:#00ffdd;
 }
 
+/* BUTTON */
 button{
   margin-top:10px;
   padding:10px;
   border:none;
   cursor:pointer;
-  background:#00ffdd;
-  font-weight:bold;
+  background:#6a00ff;
+  color:white;
 }
 
-.hintBox{
+/* XP POP */
+#xpPop{
+  position:fixed;
+  top:20px;
+  right:20px;
+  background:#00ffdd;
+  color:black;
+  padding:10px;
+  border-radius:8px;
   display:none;
-  margin-top:10px;
-  color:#ff6600;
+  animation:pop 0.6s;
+}
+
+@keyframes pop{
+  from{transform:scale(0.5); opacity:0;}
+  to{transform:scale(1);}
+}
+
+/* LOCK */
+.lock{
+  color:#888;
+  font-size:12px;
 }
 </style>
 </head>
 
 <body>
 
+<nav>
+  <button onclick="location.href='stages.html'">⬅ Back</button>
+  <span>🟣 Itzsos Labs</span>
+</nav>
+
 <div class="container">
 
-<h2>🎯 Stage 1: Phishing Detection</h2>
+<div id="missionBox" class="mission"></div>
+
+<div class="progress">
+  <div class="bar"><div id="progressFill" class="fill"></div></div>
+</div>
 
 <div id="tasksContainer"></div>
 
 </div>
+
+<div id="xpPop"></div>
+
+<!-- SOUND -->
+<audio id="successSound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3"></audio>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
@@ -85,73 +185,87 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 let currentUser;
+let currentIndex = 0;
+let tasks = [];
 
 onAuthStateChanged(auth, async(user)=>{
   if(!user) return location.href="index.html";
   currentUser = user;
 
   const snap = await getDoc(doc(db,"stages","stage1"));
-
-  if(!snap.exists()){
-    alert("No stage data");
-    return;
-  }
-
   const data = snap.data();
 
-  if(!data.tasks || data.tasks.length === 0){
-    alert("No tasks found");
-    return;
-  }
+  tasks = data.tasks;
 
-  renderTasks(data.tasks);
+  document.getElementById("missionBox").innerHTML = `
+    <h3>🎯 Mission</h3>
+    <p>${data.mission || ""}</p>
+    <p>${data.intro || ""}</p>
+  `;
+
+  renderTasks();
 });
 
-function renderTasks(tasks){
+function renderTasks(){
   const container = document.getElementById("tasksContainer");
   container.innerHTML = "";
 
-  tasks.forEach((task,i)=>{
-
-    if(!task.title) return; // safety
-
+  tasks.forEach((t,i)=>{
     const div = document.createElement("div");
-    div.className = "task";
+    div.className = "task " + (i===0 ? "active" : "");
 
     div.innerHTML = `
-      <h3>Task ${i+1}: ${task.title}</h3>
-      <p>${task.text}</p>
+      <h3>Task ${i+1}: ${t.title}</h3>
+      <p>${t.text}</p>
 
-      ${task.image ? `<img src="${task.image}">` : ""}
+      ${t.image ? `<img src="${t.image}">` : ""}
 
-      <p><b>XP:</b> ${task.xp}</p>
-
-      <input id="input${i}" placeholder="Enter answer">
+      <input id="input${i}" placeholder="Answer">
 
       <button onclick="submitAnswer(${i})">Submit</button>
-      <button onclick="toggleHint(${i})">🌍 Hint (-${task.hintCost})</button>
 
-      <div id="hint${i}" class="hintBox">${task.hint}</div>
+      <p>XP: ${t.xp}</p>
+
+      ${i>0 ? `<div class="lock">🔒 Locked</div>` : ""}
     `;
 
     container.appendChild(div);
   });
 }
 
-window.toggleHint = (i)=>{
-  const box = document.getElementById("hint"+i);
-  box.style.display = box.style.display === "block" ? "none" : "block";
-};
-
 window.submitAnswer = async(i)=>{
-  const input = document.getElementById("input"+i).value.toLowerCase().trim();
+  if(i !== currentIndex) return;
 
-  const snap = await getDoc(doc(db,"stages","stage1"));
-  const task = snap.data().tasks[i];
+  const input = document.getElementById("input"+i).value.toLowerCase().trim();
+  const task = tasks[i];
 
   if(task.answer.includes(input)){
-    alert("✅ Correct!");
 
+    // XP POP
+    const xpPop = document.getElementById("xpPop");
+    xpPop.innerText = "+"+task.xp+" XP ⚡";
+    xpPop.style.display="block";
+    setTimeout(()=>xpPop.style.display="none",2000);
+
+    // SOUND
+    document.getElementById("successSound").play();
+
+    // GLOW
+    document.querySelectorAll(".task")[i].classList.add("completed");
+
+    // UNLOCK NEXT
+    currentIndex++;
+    if(currentIndex < tasks.length){
+      const next = document.querySelectorAll(".task")[currentIndex];
+      next.classList.add("active");
+      next.querySelector(".lock")?.remove();
+    }
+
+    // PROGRESS
+    const progress = (currentIndex / tasks.length) * 100;
+    document.getElementById("progressFill").style.width = progress + "%";
+
+    // UPDATE XP
     const userRef = doc(db,"users",currentUser.uid);
     const userSnap = await getDoc(userRef);
     const userData = userSnap.data();
@@ -161,7 +275,7 @@ window.submitAnswer = async(i)=>{
     });
 
   } else {
-    alert("❌ Wrong answer");
+    alert("❌ Wrong");
   }
 };
 </script>
