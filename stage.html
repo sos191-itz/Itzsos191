@@ -112,8 +112,8 @@ onAuthStateChanged(auth, async (user) => {
 
   currentUser = user;
 
-  // Load stage1
-  const stageRef = doc(db, "stage1", "stage1");
+  // Correct Firestore path
+  const stageRef = doc(db, "stages", "stage1");
   const snap = await getDoc(stageRef);
 
   if (!snap.exists()) {
