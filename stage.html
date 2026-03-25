@@ -98,10 +98,10 @@ button:hover{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import {
-  getFirestore, collection, getDocs, doc, getDoc, updateDoc
+  getFirestore, collection, getDocs, doc, getDoc, updateDoc, query, where
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* YOUR FIREBASE CONFIG */
+/* FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -156,7 +156,6 @@ async function loadIntro(){
     }
 
     const data = snap.data();
-
     introBox.innerHTML = "";
 
     if(Array.isArray(data.intro)){
@@ -178,15 +177,39 @@ async function loadIntro(){
 /* LOAD TASKS */
 async function loadTasks(){
   try{
-    const snapshot = await getDocs(collection(db,"tasks"));
-
     tasksDiv.innerHTML = "";
+
+    // 🔥 Multi-task ready: query tasks with stageId = "stage1"
+    const q = query(collection(db,"tasks"), where("stageId","==","stage1"));
+    const snapshot = await getDocs(q);
+
+    if(snapshot.empty){
+      // Fallback: single-document stage structure
+      const stageRef = doc(db,"stages","stage1");
+      const snap = await getDoc(stageRef);
+      if(snap.exists()){
+        const t = snap.data();
+        const id = "stage1";
+
+        tasksDiv.innerHTML = `
+          <div class="task">
+            <h3>${t.title}</h3>
+            <p>${t.text}</p>
+            ${t.image ? `<img src="${t.image}">` : ""}
+            <input id="input-${id}" placeholder="Your answer...">
+            <button onclick="submitAnswer('${id}')">Submit</button>
+            <div id="result-${id}" class="result"></div>
+          </div>
+        `;
+      }else{
+        tasksDiv.innerText = "No tasks found.";
+      }
+      return;
+    }
 
     snapshot.forEach(docSnap=>{
       const t = docSnap.data();
       const id = docSnap.id;
-
-      if(t.stageId !== "stage1") return;
 
       const div = document.createElement("div");
       div.className = "task";
@@ -194,13 +217,9 @@ async function loadTasks(){
       div.innerHTML = `
         <h3>${t.title}</h3>
         <p>${t.text}</p>
-
         ${t.image ? `<img src="${t.image}">` : ""}
-
         <input id="input-${id}" placeholder="Your answer...">
-
         <button onclick="submitAnswer('${id}')">Submit</button>
-
         <div id="result-${id}" class="result"></div>
       `;
 
@@ -223,14 +242,22 @@ window.submitAnswer = async(id)=>{
     return;
   }
 
-  const taskRef = doc(db,"tasks",id);
-  const snap = await getDoc(taskRef);
-  const task = snap.data();
+  let taskRef, task;
+
+  // Handle multi-task or single-task structure
+  if(id === "stage1"){
+    taskRef = doc(db,"stages",id);
+    const snap = await getDoc(taskRef);
+    task = snap.data();
+  }else{
+    taskRef = doc(db,"tasks",id);
+    const snap = await getDoc(taskRef);
+    task = snap.data();
+  }
 
   const correctAnswers = task.answers || [];
 
   if(correctAnswers.some(a => input.includes(a.toLowerCase()))){
-
     resultBox.innerHTML = "✅ Correct! +" + task.xp + " XP";
     resultBox.className = "result correct";
 
@@ -243,6 +270,9 @@ window.submitAnswer = async(id)=>{
         solvedTasks: solved,
         xp: (userData.xp || 0) + task.xp
       });
+
+      userData.xp = (userData.xp || 0) + task.xp;
+      userData.solvedTasks = solved;
     }
 
   } else {
