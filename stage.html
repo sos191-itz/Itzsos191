@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stage 1 | Itzsos Labs</title>
+<title>🔒 Premium Lab | Itzsos Labs</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
@@ -11,7 +11,7 @@
 body{
   margin:0;
   font-family:'Share Tech Mono', monospace;
-  background:radial-gradient(circle,#0b0f1a,#05070d);
+  background:radial-gradient(circle,#05070d,#02030a);
   color:#00ffdd;
 }
 
@@ -20,15 +20,18 @@ nav{
   display:flex;
   justify-content:space-between;
   padding:15px 20px;
-  background:#111422;
+  background:rgba(17,20,34,0.8);
+  backdrop-filter:blur(10px);
   border-bottom:1px solid #6a00ff;
 }
+
 nav button{
   background:#6a00ff;
   border:none;
   padding:8px 12px;
   color:white;
   cursor:pointer;
+  border-radius:6px;
 }
 
 /* CONTAINER */
@@ -38,13 +41,20 @@ nav button{
   padding:20px;
 }
 
-/* MISSION PANEL */
+/* PREMIUM BADGE */
+.badge{
+  color:#ffcc00;
+  font-size:12px;
+}
+
+/* MISSION */
 .mission{
-  background:#111422;
-  padding:15px;
+  background:rgba(17,20,34,0.9);
+  padding:20px;
+  border-radius:12px;
   border-left:4px solid #6a00ff;
-  border-radius:10px;
-  animation:fadeIn 1s ease;
+  box-shadow:0 0 20px #6a00ff33;
+  animation:fadeIn 1s;
 }
 
 @keyframes fadeIn{
@@ -53,13 +63,11 @@ nav button{
 }
 
 /* PROGRESS */
-.progress{
-  margin:15px 0;
-}
 .bar{
   height:10px;
   background:#222;
   border-radius:10px;
+  margin:15px 0;
 }
 .fill{
   height:10px;
@@ -71,14 +79,14 @@ nav button{
 
 /* TASK */
 .task{
-  background:#111422;
+  background:rgba(17,20,34,0.9);
   padding:15px;
   margin-top:15px;
   border-radius:10px;
   border-left:4px solid #333;
-  opacity:0.4;
+  opacity:0.3;
   pointer-events:none;
-  transition:0.3s;
+  transition:0.4s;
 }
 
 .task.active{
@@ -95,7 +103,7 @@ nav button{
 /* IMAGE */
 .task img{
   width:100%;
-  border-radius:8px;
+  border-radius:10px;
   margin:10px 0;
 }
 
@@ -103,11 +111,11 @@ nav button{
 input{
   width:100%;
   padding:10px;
+  background:#000;
+  color:#00ffdd;
   border:none;
   border-radius:6px;
   margin-top:10px;
-  background:#000;
-  color:#00ffdd;
 }
 
 /* BUTTON */
@@ -118,6 +126,17 @@ button{
   cursor:pointer;
   background:#6a00ff;
   color:white;
+  border-radius:6px;
+}
+
+/* HINT */
+.hintBox{
+  display:none;
+  margin-top:10px;
+  padding:10px;
+  background:#1a1f35;
+  border-left:4px solid orange;
+  border-radius:6px;
 }
 
 /* XP POP */
@@ -130,18 +149,12 @@ button{
   padding:10px;
   border-radius:8px;
   display:none;
-  animation:pop 0.6s;
 }
 
-@keyframes pop{
-  from{transform:scale(0.5); opacity:0;}
-  to{transform:scale(1);}
-}
-
-/* LOCK */
+/* LOCK TEXT */
 .lock{
-  color:#888;
   font-size:12px;
+  color:#777;
 }
 </style>
 </head>
@@ -150,16 +163,14 @@ button{
 
 <nav>
   <button onclick="location.href='stages.html'">⬅ Back</button>
-  <span>🟣 Itzsos Labs</span>
+  <div>🟣 Itzsos Labs <span class="badge">PREMIUM LAB</span></div>
 </nav>
 
 <div class="container">
 
 <div id="missionBox" class="mission"></div>
 
-<div class="progress">
-  <div class="bar"><div id="progressFill" class="fill"></div></div>
-</div>
+<div class="bar"><div id="progressFill" class="fill"></div></div>
 
 <div id="tasksContainer"></div>
 
@@ -167,8 +178,7 @@ button{
 
 <div id="xpPop"></div>
 
-<!-- SOUND -->
-<audio id="successSound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3"></audio>
+<audio id="sound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3"></audio>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
@@ -190,6 +200,7 @@ let tasks = [];
 
 onAuthStateChanged(auth, async(user)=>{
   if(!user) return location.href="index.html";
+
   currentUser = user;
 
   const snap = await getDoc(doc(db,"stages","stage1"));
@@ -198,7 +209,7 @@ onAuthStateChanged(auth, async(user)=>{
   tasks = data.tasks;
 
   document.getElementById("missionBox").innerHTML = `
-    <h3>🎯 Mission</h3>
+    <h3>🎯 Mission Brief</h3>
     <p>${data.mission || ""}</p>
     <p>${data.intro || ""}</p>
   `;
@@ -208,25 +219,28 @@ onAuthStateChanged(auth, async(user)=>{
 
 function renderTasks(){
   const container = document.getElementById("tasksContainer");
-  container.innerHTML = "";
+  container.innerHTML="";
 
   tasks.forEach((t,i)=>{
     const div = document.createElement("div");
-    div.className = "task " + (i===0 ? "active" : "");
+    div.className="task "+(i===0?"active":"");
 
-    div.innerHTML = `
+    div.innerHTML=`
       <h3>Task ${i+1}: ${t.title}</h3>
       <p>${t.text}</p>
 
       ${t.image ? `<img src="${t.image}">` : ""}
 
-      <input id="input${i}" placeholder="Answer">
+      <input id="input${i}" placeholder="Enter answer">
 
       <button onclick="submitAnswer(${i})">Submit</button>
+      <button onclick="showHint(${i})">🌍 Hint (-${t.hintCost})</button>
+
+      <div id="hint${i}" class="hintBox">${t.hint}</div>
 
       <p>XP: ${t.xp}</p>
 
-      ${i>0 ? `<div class="lock">🔒 Locked</div>` : ""}
+      ${i>0 ? `<div class="lock">🔒 Premium locked</div>` : ""}
     `;
 
     container.appendChild(div);
@@ -234,7 +248,7 @@ function renderTasks(){
 }
 
 window.submitAnswer = async(i)=>{
-  if(i !== currentIndex) return;
+  if(i!==currentIndex) return;
 
   const input = document.getElementById("input"+i).value.toLowerCase().trim();
   const task = tasks[i];
@@ -242,41 +256,68 @@ window.submitAnswer = async(i)=>{
   if(task.answer.includes(input)){
 
     // XP POP
-    const xpPop = document.getElementById("xpPop");
-    xpPop.innerText = "+"+task.xp+" XP ⚡";
+    const xpPop=document.getElementById("xpPop");
+    xpPop.innerText="+"+task.xp+" XP ⚡";
     xpPop.style.display="block";
     setTimeout(()=>xpPop.style.display="none",2000);
 
     // SOUND
-    document.getElementById("successSound").play();
+    document.getElementById("sound").play();
 
-    // GLOW
+    // COMPLETE
     document.querySelectorAll(".task")[i].classList.add("completed");
 
-    // UNLOCK NEXT
     currentIndex++;
+
     if(currentIndex < tasks.length){
-      const next = document.querySelectorAll(".task")[currentIndex];
+      const next=document.querySelectorAll(".task")[currentIndex];
       next.classList.add("active");
       next.querySelector(".lock")?.remove();
     }
 
     // PROGRESS
-    const progress = (currentIndex / tasks.length) * 100;
-    document.getElementById("progressFill").style.width = progress + "%";
+    const progress=(currentIndex/tasks.length)*100;
+    document.getElementById("progressFill").style.width=progress+"%";
 
     // UPDATE XP
-    const userRef = doc(db,"users",currentUser.uid);
-    const userSnap = await getDoc(userRef);
-    const userData = userSnap.data();
+    const userRef=doc(db,"users",currentUser.uid);
+    const userSnap=await getDoc(userRef);
+    const userData=userSnap.data();
 
     await updateDoc(userRef,{
       xp:(userData.xp||0)+task.xp
     });
 
   } else {
-    alert("❌ Wrong");
+    alert("❌ Wrong answer");
   }
+};
+
+window.showHint = async(i)=>{
+  const box=document.getElementById("hint"+i);
+
+  if(box.style.display==="block"){
+    box.style.display="none";
+    return;
+  }
+
+  const task=tasks[i];
+
+  const userRef=doc(db,"users",currentUser.uid);
+  const userSnap=await getDoc(userRef);
+  const userData=userSnap.data();
+
+  let newXP=(userData.xp||0)-(task.hintCost||0);
+  if(newXP<0) newXP=0;
+
+  await updateDoc(userRef,{xp:newXP});
+
+  box.style.display="block";
+
+  const xpPop=document.getElementById("xpPop");
+  xpPop.innerText="-"+task.hintCost+" XP 🧠";
+  xpPop.style.display="block";
+  setTimeout(()=>xpPop.style.display="none",2000);
 };
 </script>
 
