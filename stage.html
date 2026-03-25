@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Itzsos Labs | Stage 1</title>
+<title>Stage 1 | Itzsos Labs</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
@@ -25,48 +25,37 @@ body{
   background:#111422;
   padding:20px;
   border-radius:10px;
-  margin-bottom:15px;
+  margin-bottom:20px;
   border-left:4px solid #00ffdd;
-  opacity:0.4;
-  pointer-events:none;
-  transition:0.3s;
 }
 
-.task.active{
-  opacity:1;
-  pointer-events:auto;
-  border-left:4px solid #ff6600;
-}
-
-.task.completed{
-  border-left:4px solid #00ff99;
-}
-
-img{
+.task img{
   width:100%;
+  border-radius:10px;
   margin:10px 0;
-  border-radius:8px;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:6px;
+  margin-top:10px;
 }
 
 button{
   margin-top:10px;
-  padding:8px;
+  padding:10px;
   border:none;
   cursor:pointer;
   background:#00ffdd;
+  font-weight:bold;
 }
 
-.progress{
-  margin:20px 0;
-}
-.bar{
-  height:10px;
-  background:#222;
-}
-.fill{
-  height:10px;
-  background:#00ffdd;
-  width:0%;
+.hintBox{
+  display:none;
+  margin-top:10px;
+  color:#ff6600;
 }
 </style>
 </head>
@@ -75,12 +64,7 @@ button{
 
 <div class="container">
 
-<h2 id="mission"></h2>
-<p id="intro"></p>
-
-<div class="progress">
-  <div class="bar"><div id="progressFill" class="fill"></div></div>
-</div>
+<h2>🎯 Stage 1: Phishing Detection</h2>
 
 <div id="tasksContainer"></div>
 
@@ -88,8 +72,8 @@ button{
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore,doc,getDoc,updateDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
@@ -97,35 +81,42 @@ const app = initializeApp({
   projectId: "itzsos-labs"
 });
 
-const auth = getAuth();
-const db = getFirestore();
+const db = getFirestore(app);
+const auth = getAuth(app);
 
 let currentUser;
-let currentTaskIndex = 0;
-let tasksData = [];
 
 onAuthStateChanged(auth, async(user)=>{
   if(!user) return location.href="index.html";
   currentUser = user;
 
   const snap = await getDoc(doc(db,"stages","stage1"));
+
+  if(!snap.exists()){
+    alert("No stage data");
+    return;
+  }
+
   const data = snap.data();
 
-  document.getElementById("mission").innerText = data.mission;
-  document.getElementById("intro").innerText = data.intro;
+  if(!data.tasks || data.tasks.length === 0){
+    alert("No tasks found");
+    return;
+  }
 
-  tasksData = data.tasks;
-
-  renderTasks();
+  renderTasks(data.tasks);
 });
 
-function renderTasks(){
+function renderTasks(tasks){
   const container = document.getElementById("tasksContainer");
   container.innerHTML = "";
 
-  tasksData.forEach((task,i)=>{
+  tasks.forEach((task,i)=>{
+
+    if(!task.title) return; // safety
+
     const div = document.createElement("div");
-    div.className = "task " + (i===0 ? "active" : "");
+    div.className = "task";
 
     div.innerHTML = `
       <h3>Task ${i+1}: ${task.title}</h3>
@@ -133,35 +124,34 @@ function renderTasks(){
 
       ${task.image ? `<img src="${task.image}">` : ""}
 
-      <input id="input${i}" placeholder="Answer">
-      <button onclick="checkAnswer(${i})">Submit</button>
-      <p>XP: ${task.xp}</p>
+      <p><b>XP:</b> ${task.xp}</p>
+
+      <input id="input${i}" placeholder="Enter answer">
+
+      <button onclick="submitAnswer(${i})">Submit</button>
+      <button onclick="toggleHint(${i})">🌍 Hint (-${task.hintCost})</button>
+
+      <div id="hint${i}" class="hintBox">${task.hint}</div>
     `;
 
     container.appendChild(div);
   });
 }
 
-window.checkAnswer = async(i)=>{
-  const val = document.getElementById("input"+i).value.toLowerCase();
-  const task = tasksData[i];
+window.toggleHint = (i)=>{
+  const box = document.getElementById("hint"+i);
+  box.style.display = box.style.display === "block" ? "none" : "block";
+};
 
-  if(task.answer.includes(val)){
+window.submitAnswer = async(i)=>{
+  const input = document.getElementById("input"+i).value.toLowerCase().trim();
+
+  const snap = await getDoc(doc(db,"stages","stage1"));
+  const task = snap.data().tasks[i];
+
+  if(task.answer.includes(input)){
     alert("✅ Correct!");
 
-    document.querySelectorAll(".task")[i].classList.add("completed");
-
-    // Unlock next
-    if(i+1 < tasksData.length){
-      document.querySelectorAll(".task")[i+1].classList.add("active");
-    }
-
-    // Update progress
-    currentTaskIndex++;
-    const progress = (currentTaskIndex / tasksData.length) * 100;
-    document.getElementById("progressFill").style.width = progress+"%";
-
-    // Give XP
     const userRef = doc(db,"users",currentUser.uid);
     const userSnap = await getDoc(userRef);
     const userData = userSnap.data();
@@ -171,9 +161,9 @@ window.checkAnswer = async(i)=>{
     });
 
   } else {
-    alert("❌ Wrong");
+    alert("❌ Wrong answer");
   }
-}
+};
 </script>
 
 </body>
