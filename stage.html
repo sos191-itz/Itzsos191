@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Itzsos Labs | Stage 1</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
 <style>
 body {
   margin:0;
@@ -12,152 +14,213 @@ body {
   background:#0f111a;
   color:#00ffdd;
 }
+
 nav {
   display:flex;
-  align-items:center;
   justify-content:space-between;
   padding:15px 30px;
   background:#111422;
   border-bottom:1px solid #00ffdd;
 }
+
 nav h2 { color:#ff6600; }
+
 nav button {
   background:#ff6600;
   border:none;
   padding:8px 15px;
-  font-weight:bold;
   cursor:pointer;
+  font-weight:bold;
 }
+
 .container {
   max-width:900px;
   margin:30px auto;
   padding:20px;
 }
-#introBox {
-  background:#111422;
-  padding:20px;
-  border-radius:10px;
-  margin-bottom:30px;
-}
+
 .task-card {
   background:#111422;
   padding:20px;
   border-radius:10px;
-  margin-bottom:20px;
   border:1px solid #00ffdd;
 }
+
 .task-card img {
-  max-width:100%;
+  width:100%;
   border-radius:8px;
-  margin:10px 0;
+  margin:15px 0;
+  border:1px solid #00ffdd;
 }
-button.submitBtn {
+
+/* XP */
+.xp {
+  background:#00ffdd;
+  color:#000;
+  padding:5px 10px;
+  border-radius:20px;
+  display:inline-block;
+  margin-bottom:10px;
+}
+
+/* INPUT */
+input {
+  width:100%;
+  padding:8px;
   margin-top:10px;
-  padding:8px 12px;
+  border-radius:6px;
+  border:none;
+}
+
+/* BUTTONS */
+.actions {
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+
+button {
+  padding:8px;
   border:none;
   cursor:pointer;
-  background:#00ffdd;
   font-weight:bold;
   border-radius:6px;
 }
+
+.submitBtn {
+  background:#00ffdd;
+}
+
+.hintBtn {
+  background:#ff6600;
+  color:black;
+}
+
+/* HINT BOX */
+.hintBox {
+  display:none;
+  margin-top:10px;
+  background:#1a1f35;
+  padding:10px;
+  border-radius:6px;
+  color:#ff6600;
+}
+
+/* EXPLANATION */
+.explanation {
+  display:none;
+  margin-top:10px;
+  background:#111;
+  padding:10px;
+  border-radius:6px;
+  color:#00ff99;
+}
 </style>
 </head>
+
 <body>
 
 <nav>
   <h2>Itzsos Labs</h2>
-  <button onclick="location.href='stages.html'">Back to Stages</button>
+  <button onclick="location.href='stages.html'">Back</button>
 </nav>
 
 <div class="container">
 
-  <div id="introBox">
-    <h3>Stage Introduction</h3>
-    <p id="introText">Loading stage intro...</p>
-  </div>
+<h2>Stage Introduction</h2>
+<p id="intro">Loading...</p>
 
-  <div id="tasksContainer">
-    <!-- Tasks will load here dynamically -->
-  </div>
+<div id="task"></div>
 
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore,doc,getDoc,updateDoc,arrayUnion } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* Firebase config */
-const firebaseConfig = {
+const app = initializeApp({
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
   projectId: "itzsos-labs",
   storageBucket: "itzsos-labs.firebasestorage.app",
   messagingSenderId: "1012826517121",
   appId: "1:1012826517121:web:abaf58ebce7f15cfc86780"
-};
+});
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-const introText = document.getElementById("introText");
-const tasksContainer = document.getElementById("tasksContainer");
+const auth = getAuth();
+const db = getFirestore();
 
 let currentUser;
 
-/* AUTH */
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return location.href="index.html";
+onAuthStateChanged(auth, async(user)=>{
+  if(!user) return location.href="index.html";
 
   currentUser = user;
 
-  // Correct Firestore path
-  const stageRef = doc(db, "stages", "stage1");
-  const snap = await getDoc(stageRef);
+  const ref = doc(db,"stages","stage1");
+  const snap = await getDoc(ref);
 
-  if (!snap.exists()) {
-    introText.textContent = "No stage data found.";
+  if(!snap.exists()){
+    document.getElementById("intro").innerText = "No stage data found.";
     return;
   }
 
   const data = snap.data();
 
-  // Display intro
-  introText.textContent = data.intro || "No intro provided.";
+  document.getElementById("intro").innerText = data.intro;
 
-  // Create task card
-  const div = document.createElement("div");
-  div.className = "task-card";
-  div.innerHTML = `
-    <h3>${data.title}</h3>
-    <p>${data.text}</p>
-    ${data.image ? `<img src="${data.image}" alt="Stage Image">` : ""}
-    <p>XP: ${data.xp}</p>
-    <input type="text" id="answerInput" placeholder="Enter your answer" style="width:100%; padding:6px; margin-top:8px; border-radius:5px; border:none;">
-    <button class="submitBtn">Submit Answer</button>
-    <p style="color:#ff6600;" id="hintText">Hint: ${data.hint || "No hint available"}</p>
+  // TASK UI
+  document.getElementById("task").innerHTML = `
+    <div class="task-card">
+      <h3>${data.title}</h3>
+      <p>${data.text}</p>
+
+      ${data.image ? `<img src="${data.image}" />` : "<p style='color:red'>⚠️ No image found</p>"}
+
+      <div class="xp">XP: ${data.xp}</div>
+
+      <input id="answer" placeholder="Enter answer">
+
+      <div class="actions">
+        <button class="submitBtn" onclick="submitAnswer()">Submit</button>
+        <button class="hintBtn" onclick="toggleHint()">🌍 Hint</button>
+      </div>
+
+      <div id="hintBox" class="hintBox">
+        ${data.hint}
+      </div>
+
+      <div id="explanation" class="explanation">
+        ${data.description}
+      </div>
+    </div>
   `;
-  tasksContainer.appendChild(div);
 
-  // Handle submit
-  const submitBtn = div.querySelector(".submitBtn");
-  submitBtn.onclick = async () => {
-    const answer = div.querySelector("#answerInput").value.trim().toLowerCase();
-    const correct = data.answer.map(a => a.toLowerCase());
-    if (correct.includes(answer)) {
-      alert("✅ Correct! You earned " + data.xp + " XP");
-      // Update user XP and solved stages
-      const userRef = doc(db, "users", currentUser.uid);
-      await updateDoc(userRef, {
+  window.submitAnswer = async()=>{
+    const val = document.getElementById("answer").value.toLowerCase().trim();
+    const correct = data.answer.map(a=>a.toLowerCase());
+
+    if(correct.includes(val)){
+      alert("✅ Correct!");
+
+      document.getElementById("explanation").style.display="block";
+
+      const userRef = doc(db,"users",currentUser.uid);
+      await updateDoc(userRef,{
         xp: arrayUnion(data.xp),
         solvedStages: arrayUnion("stage1")
       });
-      submitBtn.disabled = true;
+
     } else {
-      alert("❌ Wrong answer, try again!");
+      alert("❌ Wrong");
     }
-  };
+  }
+
+  window.toggleHint = ()=>{
+    const box = document.getElementById("hintBox");
+    box.style.display = box.style.display==="block"?"none":"block";
+  }
 });
 </script>
 
