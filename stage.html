@@ -13,6 +13,32 @@ body{
   color:#00ffdd;
 }
 
+/* HEADER / STAGE NAV */
+header{
+  background:#111422;
+  padding:10px 20px;
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  border-bottom:1px solid #00ffdd;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+
+header button{
+  background:#00ffdd;
+  border:none;
+  padding:8px 12px;
+  border-radius:5px;
+  font-weight:bold;
+  cursor:pointer;
+}
+header button:hover{
+  background:#ff6600;
+  color:black;
+}
+
 /* CONTAINER */
 .container{
   max-width:900px;
@@ -56,7 +82,7 @@ input{
 }
 
 /* BUTTON */
-button{
+button.submitBtn{
   margin-top:10px;
   padding:10px;
   border:none;
@@ -65,7 +91,7 @@ button{
   font-weight:bold;
   border-radius:6px;
 }
-button:hover{
+button.submitBtn:hover{
   background:#ff6600;
   color:black;
 }
@@ -77,10 +103,20 @@ button:hover{
 }
 .correct{ color:#00ff99; }
 .wrong{ color:#ff4444; }
+
 </style>
 </head>
 
 <body>
+
+<header>
+  <button onclick="goToStage(1)">Stage 1</button>
+  <button onclick="goToStage(2)">Stage 2</button>
+  <button onclick="goToStage(3)">Stage 3</button>
+  <button onclick="goToStage(4)">Stage 4</button>
+  <button onclick="goToStage(5)">Stage 5</button>
+  <button onclick="goToStage(6)">Stage 6</button>
+</header>
 
 <div class="container">
 
@@ -98,7 +134,7 @@ button:hover{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import {
-  getFirestore, collection, getDocs, doc, getDoc, updateDoc, query, where
+  getFirestore, collection, getDocs, doc, getDoc, updateDoc
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 /* FIREBASE CONFIG */
@@ -144,6 +180,11 @@ onAuthStateChanged(auth, async(user)=>{
   loadTasks();
 });
 
+/* NAVIGATION */
+function goToStage(n){
+  location.href = "stage" + n + ".html";
+}
+
 /* LOAD INTRO */
 async function loadIntro(){
   try{
@@ -158,14 +199,12 @@ async function loadIntro(){
     const data = snap.data();
     introBox.innerHTML = "";
 
-    if(Array.isArray(data.intro)){
-      data.intro.forEach(p=>{
-        const el = document.createElement("p");
-        el.innerText = p;
-        introBox.appendChild(el);
-      });
-    }else{
-      introBox.innerText = data.intro || "No intro available.";
+    if(data.intro){
+      const p = document.createElement("p");
+      p.innerText = data.intro;
+      introBox.appendChild(p);
+    } else {
+      introBox.innerText = "No intro available.";
     }
 
   }catch(e){
@@ -179,52 +218,28 @@ async function loadTasks(){
   try{
     tasksDiv.innerHTML = "";
 
-    // 🔥 Multi-task ready: query tasks with stageId = "stage1"
-    const q = query(collection(db,"tasks"), where("stageId","==","stage1"));
-    const snapshot = await getDocs(q);
+    // Only one task per stage (current structure)
+    const stageRef = doc(db,"stages","stage1");
+    const snap = await getDoc(stageRef);
 
-    if(snapshot.empty){
-      // Fallback: single-document stage structure
-      const stageRef = doc(db,"stages","stage1");
-      const snap = await getDoc(stageRef);
-      if(snap.exists()){
-        const t = snap.data();
-        const id = "stage1";
-
-        tasksDiv.innerHTML = `
-          <div class="task">
-            <h3>${t.title}</h3>
-            <p>${t.text}</p>
-            ${t.image ? `<img src="${t.image}">` : ""}
-            <input id="input-${id}" placeholder="Your answer...">
-            <button onclick="submitAnswer('${id}')">Submit</button>
-            <div id="result-${id}" class="result"></div>
-          </div>
-        `;
-      }else{
-        tasksDiv.innerText = "No tasks found.";
-      }
+    if(!snap.exists()){
+      tasksDiv.innerText = "No tasks found.";
       return;
     }
 
-    snapshot.forEach(docSnap=>{
-      const t = docSnap.data();
-      const id = docSnap.id;
+    const t = snap.data();
+    const id = "stage1";
 
-      const div = document.createElement("div");
-      div.className = "task";
-
-      div.innerHTML = `
+    tasksDiv.innerHTML = `
+      <div class="task">
         <h3>${t.title}</h3>
         <p>${t.text}</p>
         ${t.image ? `<img src="${t.image}">` : ""}
         <input id="input-${id}" placeholder="Your answer...">
-        <button onclick="submitAnswer('${id}')">Submit</button>
+        <button class="submitBtn" onclick="submitAnswer('${id}')">Submit</button>
         <div id="result-${id}" class="result"></div>
-      `;
-
-      tasksDiv.appendChild(div);
-    });
+      </div>
+    `;
 
   }catch(e){
     tasksDiv.innerText = "Error loading tasks.";
@@ -242,20 +257,11 @@ window.submitAnswer = async(id)=>{
     return;
   }
 
-  let taskRef, task;
+  const taskRef = doc(db,"stages",id);
+  const snap = await getDoc(taskRef);
+  const task = snap.data();
 
-  // Handle multi-task or single-task structure
-  if(id === "stage1"){
-    taskRef = doc(db,"stages",id);
-    const snap = await getDoc(taskRef);
-    task = snap.data();
-  }else{
-    taskRef = doc(db,"tasks",id);
-    const snap = await getDoc(taskRef);
-    task = snap.data();
-  }
-
-  const correctAnswers = task.answers || [];
+  const correctAnswers = task.answer || []; // note: your Firestore field is 'answer'
 
   if(correctAnswers.some(a => input.includes(a.toLowerCase()))){
     resultBox.innerHTML = "✅ Correct! +" + task.xp + " XP";
