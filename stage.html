@@ -3,148 +3,91 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Itzsos Labs | Stage</title>
-
+<title>Itzsos Labs | Stage 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-body{
+body {
   margin:0;
-  font-family:monospace;
+  font-family:'Share Tech Mono', monospace;
   background:#0f111a;
   color:#00ffdd;
 }
-
-/* HEADER / NAV */
-header{
-  background:#111422;
-  padding:10px 20px;
+nav {
   display:flex;
-  justify-content:center;
-  gap:10px;
+  align-items:center;
+  justify-content:space-between;
+  padding:15px 30px;
+  background:#111422;
   border-bottom:1px solid #00ffdd;
-  position:sticky;
-  top:0;
-  z-index:100;
 }
-header button{
-  background:#00ffdd;
+nav h2 { color:#ff6600; }
+nav button {
+  background:#ff6600;
   border:none;
-  padding:8px 12px;
-  border-radius:5px;
+  padding:8px 15px;
   font-weight:bold;
   cursor:pointer;
 }
-header button:hover{
-  background:#ff6600;
-  color:black;
-}
-
-/* BACK BUTTON */
-#backBtn{
-  display:block;
-  margin:20px auto;
-  padding:8px 12px;
-  background:#00ffdd;
-  border:none;
-  border-radius:6px;
-  font-weight:bold;
-  cursor:pointer;
-  width:fit-content;
-}
-#backBtn:hover{
-  background:#ff6600;
-  color:black;
-}
-
-/* CONTAINER */
-.container{
+.container {
   max-width:900px;
   margin:30px auto;
   padding:20px;
 }
-
-/* INTRO */
-#introBox{
+#introBox {
   background:#111422;
   padding:20px;
   border-radius:10px;
   margin-bottom:30px;
-  border-left:4px solid #ff6600;
-  line-height:1.6;
 }
-
-/* TASK */
-.task{
+.task-card {
   background:#111422;
   padding:20px;
   border-radius:10px;
   margin-bottom:20px;
   border:1px solid #00ffdd;
 }
-.task img{
-  width:100%;
-  border-radius:10px;
-  margin-top:10px;
+.task-card img {
+  max-width:100%;
+  border-radius:8px;
+  margin:10px 0;
 }
-
-/* INPUT */
-input{
-  width:100%;
-  padding:10px;
+button.submitBtn {
   margin-top:10px;
-  border:none;
-  border-radius:6px;
-}
-
-/* SUBMIT BUTTON */
-button.submitBtn{
-  margin-top:10px;
-  padding:10px;
+  padding:8px 12px;
   border:none;
   cursor:pointer;
   background:#00ffdd;
   font-weight:bold;
   border-radius:6px;
 }
-button.submitBtn:hover{
-  background:#ff6600;
-  color:black;
-}
-
-/* RESULT */
-.result{
-  margin-top:10px;
-  font-weight:bold;
-}
-.correct{ color:#00ff99; }
-.wrong{ color:#ff4444; }
 </style>
 </head>
-
 <body>
 
-<header>
-  <button onclick="goToStage(1)">Stage 1</button>
-  <button onclick="goToStage(2)">Stage 2</button>
-  <button onclick="goToStage(3)">Stage 3</button>
-  <button onclick="goToStage(4)">Stage 4</button>
-  <button onclick="goToStage(5)">Stage 5</button>
-  <button onclick="goToStage(6)">Stage 6</button>
-</header>
-
-<button id="backBtn" onclick="location.href='stages.html'">⬅️ Back to Stages</button>
+<nav>
+  <h2>Itzsos Labs</h2>
+  <button onclick="location.href='stages.html'">Back to Stages</button>
+</nav>
 
 <div class="container">
-  <h2 id="stageTitle">🧠 Stage</h2>
-  <div id="introBox">Loading intro...</div>
-  <div id="tasks"></div>
+
+  <div id="introBox">
+    <h3>Stage Introduction</h3>
+    <p id="introText">Loading stage intro...</p>
+  </div>
+
+  <div id="tasksContainer">
+    <!-- Tasks will load here dynamically -->
+  </div>
+
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* FIREBASE CONFIG */
+/* Firebase config */
 const firebaseConfig = {
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -158,120 +101,64 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const introBox = document.getElementById("introBox");
-const tasksDiv = document.getElementById("tasks");
-const stageTitle = document.getElementById("stageTitle");
+const introText = document.getElementById("introText");
+const tasksContainer = document.getElementById("tasksContainer");
 
 let currentUser;
-let userData;
 
-// GET stage number from URL
-const urlParams = new URLSearchParams(window.location.search);
-const stageNum = urlParams.get("stage") || "1"; // default to 1
-const stageId = "stage" + stageNum;
-
-// AUTH CHECK
-onAuthStateChanged(auth, async(user)=>{
-  if(!user){ location.href="index.html"; return; }
+/* AUTH */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return location.href="index.html";
 
   currentUser = user;
 
-  const userRef = doc(db,"users",user.uid);
-  const snap = await getDoc(userRef);
+  // Load stage1
+  const stageRef = doc(db, "stage1", "stage1");
+  const snap = await getDoc(stageRef);
 
-  if(!snap.exists()){ location.href="index.html"; return; }
-
-  userData = snap.data();
-
-  loadStage();
-});
-
-// NAVIGATION FUNCTION
-function goToStage(n){
-  location.href = "stages.html?stage=" + n;
-}
-
-// LOAD STAGE
-async function loadStage(){
-  try{
-    const stageRef = doc(db,"stages",stageId);
-    const snap = await getDoc(stageRef);
-
-    if(!snap.exists()){
-      stageTitle.innerText = "Stage " + stageNum;
-      introBox.innerText = "No stage data found.";
-      tasksDiv.innerText = "No tasks found.";
-      return;
-    }
-
-    const data = snap.data();
-
-    // Stage title
-    stageTitle.innerText = `🧠 Stage ${stageNum}: ${data.title || "Untitled"}`;
-
-    // Intro
-    introBox.innerHTML = "";
-    if(data.intro){
-      const p = document.createElement("p");
-      p.innerText = data.intro;
-      introBox.appendChild(p);
-    } else { introBox.innerText = "No intro available."; }
-
-    // Tasks
-    tasksDiv.innerHTML = `
-      <div class="task">
-        <h3>${data.title}</h3>
-        <p>${data.text}</p>
-        ${data.image ? `<img src="${data.image}">` : ""}
-        <input id="input-${stageId}" placeholder="Your answer...">
-        <button class="submitBtn" onclick="submitAnswer('${stageId}')">Submit</button>
-        <div id="result-${stageId}" class="result"></div>
-      </div>
-    `;
-
-  }catch(e){
-    introBox.innerText = "Error loading stage.";
-    tasksDiv.innerText = "Error loading tasks.";
-    console.error(e);
-  }
-}
-
-// SUBMIT ANSWER
-window.submitAnswer = async(id)=>{
-  const input = document.getElementById("input-"+id).value.toLowerCase().trim();
-  const resultBox = document.getElementById("result-"+id);
-
-  if(!input){
-    resultBox.innerText = "⚠️ Enter answer";
+  if (!snap.exists()) {
+    introText.textContent = "No stage data found.";
     return;
   }
 
-  const taskRef = doc(db,"stages",id);
-  const snap = await getDoc(taskRef);
-  const task = snap.data();
+  const data = snap.data();
 
-  const correctAnswers = task.answer || [];
+  // Display intro
+  introText.textContent = data.intro || "No intro provided.";
 
-  if(correctAnswers.some(a => input.includes(a.toLowerCase()))){
-    resultBox.innerText = "✅ Correct! +" + task.xp + " XP";
-    resultBox.className = "result correct";
+  // Create task card
+  const div = document.createElement("div");
+  div.className = "task-card";
+  div.innerHTML = `
+    <h3>${data.title}</h3>
+    <p>${data.text}</p>
+    ${data.image ? `<img src="${data.image}" alt="Stage Image">` : ""}
+    <p>XP: ${data.xp}</p>
+    <input type="text" id="answerInput" placeholder="Enter your answer" style="width:100%; padding:6px; margin-top:8px; border-radius:5px; border:none;">
+    <button class="submitBtn">Submit Answer</button>
+    <p style="color:#ff6600;" id="hintText">Hint: ${data.hint || "No hint available"}</p>
+  `;
+  tasksContainer.appendChild(div);
 
-    let solved = userData.solvedTasks || [];
-    if(!solved.includes(id)){
-      solved.push(id);
-      await updateDoc(doc(db,"users",currentUser.uid),{
-        solvedTasks: solved,
-        xp: (userData.xp || 0) + task.xp
+  // Handle submit
+  const submitBtn = div.querySelector(".submitBtn");
+  submitBtn.onclick = async () => {
+    const answer = div.querySelector("#answerInput").value.trim().toLowerCase();
+    const correct = data.answer.map(a => a.toLowerCase());
+    if (correct.includes(answer)) {
+      alert("✅ Correct! You earned " + data.xp + " XP");
+      // Update user XP and solved stages
+      const userRef = doc(db, "users", currentUser.uid);
+      await updateDoc(userRef, {
+        xp: arrayUnion(data.xp),
+        solvedStages: arrayUnion("stage1")
       });
-      userData.xp = (userData.xp || 0) + task.xp;
-      userData.solvedTasks = solved;
+      submitBtn.disabled = true;
+    } else {
+      alert("❌ Wrong answer, try again!");
     }
-
-  } else {
-    resultBox.innerText = "❌ Wrong! " + (task.hint || "");
-    resultBox.className = "result wrong";
-  }
-};
+  };
+});
 </script>
 
 </body>
