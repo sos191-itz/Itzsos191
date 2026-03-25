@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
 <style>
-body {
+body{
   margin:0;
   font-family:'Share Tech Mono', monospace;
   background:#0b0f1a;
@@ -16,7 +16,7 @@ body {
 }
 
 /* NAV */
-nav {
+nav{
   display:flex;
   justify-content:space-between;
   padding:15px;
@@ -24,24 +24,23 @@ nav {
   border-bottom:1px solid #6a00ff;
 }
 
-nav button {
-  margin-left:10px;
+nav button{
   background:#6a00ff;
   border:none;
   padding:8px;
-  cursor:pointer;
   color:white;
+  cursor:pointer;
 }
 
 /* CONTAINER */
-.container {
+.container{
   max-width:1100px;
   margin:auto;
   padding:20px;
 }
 
 /* USER */
-#userBox {
+#userBox{
   display:flex;
   gap:10px;
   background:#111422;
@@ -50,7 +49,7 @@ nav button {
   margin-bottom:20px;
 }
 
-.avatar {
+.avatar{
   width:50px;
   height:50px;
   border-radius:50%;
@@ -63,39 +62,66 @@ nav button {
 }
 
 /* GRID */
-.grid {
+.grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
   gap:20px;
 }
 
 /* CARD */
-.card {
+.card{
   background:#111422;
   padding:15px;
   border-radius:10px;
   border:1px solid #6a00ff;
   transition:0.3s;
+  position:relative;
 }
 
-.card:hover {
+.card:hover{
   transform:translateY(-5px);
   box-shadow:0 0 15px #6a00ff;
 }
 
-.card img {
+.card img{
   width:100%;
-  max-height:160px;
+  max-height:150px;
   object-fit:cover;
   border-radius:8px;
 }
 
-.locked {
+/* LOCKED */
+.locked{
   opacity:0.4;
 }
 
+/* BADGE */
+.badge{
+  position:absolute;
+  top:10px;
+  right:10px;
+  background:#00ff99;
+  color:black;
+  padding:5px;
+  border-radius:6px;
+  font-size:12px;
+}
+
+/* PROGRESS */
+.progressBar{
+  height:8px;
+  background:#222;
+  border-radius:10px;
+  margin:10px 0;
+}
+.progressFill{
+  height:8px;
+  background:linear-gradient(90deg,#6a00ff,#00ffdd);
+  border-radius:10px;
+}
+
 /* BUTTON */
-button {
+button{
   margin-top:8px;
   padding:8px;
   border:none;
@@ -106,27 +132,25 @@ button {
   font-weight:bold;
 }
 
-button:disabled {
+button:disabled{
   background:#444;
   color:#888;
-  cursor:not-allowed;
+}
+
+/* PAYPAL */
+.paypalBox{
+  margin-top:40px;
+  text-align:center;
 }
 
 /* CHAT */
-#chatBtn {
+#chatBtn{
   position:fixed;
   bottom:20px;
   right:20px;
   background:#ff6600;
   padding:14px;
   border-radius:50%;
-  font-weight:bold;
-}
-
-/* SECTION TITLE */
-h2 {
-  border-left:4px solid #6a00ff;
-  padding-left:10px;
 }
 </style>
 </head>
@@ -157,9 +181,24 @@ h2 {
 <h2>🎯 Stages</h2>
 <div id="stages" class="grid"></div>
 
+<!-- PAYPAL -->
+<div class="paypalBox">
+  <h2>💎 Upgrade Power</h2>
+  <p>Buy XP and unlock faster progression ⚡</p>
+
+  <script src="https://www.paypal.com/sdk/js?client-id=BAANEM-ym-VkUny86qGnLGSCrXAuYaQlr4XDgcjJtB1A65tn9qFJIAaH61r-Pi5c0kzDKGdfgj5EIKjfuY&components=hosted-buttons&currency=USD"></script>
+
+  <div id="paypal-container-BSAK5P9RZ486S"></div>
+
+  <script>
+    paypal.HostedButtons({
+      hostedButtonId: "BSAK5P9RZ486S"
+    }).render("#paypal-container-BSAK5P9RZ486S");
+  </script>
 </div>
 
-<!-- CHAT BUTTON -->
+</div>
+
 <button id="chatBtn" onclick="location.href='chat.html'">💬</button>
 
 <script type="module">
@@ -184,56 +223,71 @@ onAuthStateChanged(auth, async(user)=>{
     return;
   }
 
-  currentUser = user;
+  currentUser=user;
 
-  const ref = doc(db,"users",user.uid);
-  let snap = await getDoc(ref);
+  const ref=doc(db,"users",user.uid);
+  let snap=await getDoc(ref);
 
   if(!snap.exists()){
     await setDoc(ref,{
       username:"Hacker"+Math.floor(Math.random()*9999),
       xp:0,
-      solvedStages:[]
+      solvedStages:[],
+      stageProgress:{}
     });
-    snap = await getDoc(ref);
+    snap=await getDoc(ref);
   }
 
-  const data = snap.data();
+  const data=snap.data();
 
-  document.getElementById("username").textContent = data.username;
-  document.getElementById("xp").textContent = "XP: "+(data.xp||0);
-  document.getElementById("avatar").textContent = data.username[0].toUpperCase();
+  document.getElementById("username").innerText=data.username;
+  document.getElementById("xp").innerText="XP: "+(data.xp||0);
+  document.getElementById("avatar").innerText=data.username[0].toUpperCase();
 
   loadStages(data);
 });
 
 /* LOAD STAGES */
 async function loadStages(userData){
-  const snap = await getDocs(collection(db,"stages"));
-  const solved = userData.solvedStages || [];
+  const snap=await getDocs(collection(db,"stages"));
 
-  const container = document.getElementById("stages");
+  const container=document.getElementById("stages");
   container.innerHTML="";
 
-  let index = 1;
+  let index=1;
 
   snap.forEach(docSnap=>{
-    const s = docSnap.data();
-    const id = docSnap.id;
+    const s=docSnap.data();
+    const id=docSnap.id;
 
-    const locked = index > 1 && !solved.includes("stage"+(index-1));
+    const solved=userData.solvedStages||[];
+    const progressData=userData.stageProgress||{};
 
-    const card = document.createElement("div");
+    const locked=index>1 && !solved.includes("stage"+(index-1));
+
+    const progress=progressData[id]||0;
+
+    const totalXP=(s.tasks||[]).reduce((sum,t)=>sum+(t.xp||0),0);
+
+    const card=document.createElement("div");
     card.className="card "+(locked?"locked":"");
 
-    card.innerHTML = `
-      <h4>${s.title || id}</h4>
-      <p>${s.description || "Cybersecurity challenge stage"}</p>
+    card.innerHTML=`
+      ${solved.includes(id)?'<div class="badge">🏆 Completed</div>':''}
 
-      ${s.image ? `<img src="${s.image}">` : ""}
+      <h4>${s.title || id}</h4>
+      <p>${s.description || "Cybersecurity stage"}</p>
+
+      ${s.image?`<img src="${s.image}">`:""}
+
+      <div class="progressBar">
+        <div class="progressFill" style="width:${progress}%"></div>
+      </div>
+
+      <p>⚡ Total XP: ${totalXP}</p>
 
       <button ${locked?"disabled":`onclick="openStage('${id}')"`}>
-        ${locked?"🔒 Locked":"🚀 Start"}
+        ${locked?"🔒 Locked":"🚀 Enter"}
       </button>
     `;
 
@@ -242,12 +296,12 @@ async function loadStages(userData){
   });
 }
 
-window.openStage = id=>{
+window.openStage=id=>{
   location.href="stage.html?id="+id;
 };
 
 /* LOGOUT */
-document.getElementById("logoutBtn").onclick = ()=>{
+document.getElementById("logoutBtn").onclick=()=>{
   signOut(auth).then(()=>location.href="index.html");
 };
 </script>
