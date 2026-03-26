@@ -44,7 +44,6 @@ nav{
   padding:15px;
   border-left:4px solid #6a00ff;
   border-radius:10px;
-  animation:fadeIn 0.5s ease;
 }
 
 /* TASK */
@@ -53,24 +52,14 @@ nav{
   padding:15px;
   margin-top:15px;
   border-radius:10px;
-  transition:0.3s;
 }
+.task.locked{opacity:0.3;pointer-events:none;}
+.task.completed{border-left:4px solid #00ff99;}
 
-.task.locked{
-  opacity:0.3;
-  pointer-events:none;
-}
-
-.task.completed{
-  border-left:4px solid #00ff99;
-}
-
-/* IMAGE */
 .task img{
   width:100%;
   margin-top:10px;
   border-radius:8px;
-  box-shadow:0 0 10px #000;
 }
 
 /* INPUT */
@@ -81,7 +70,6 @@ input{
   background:#000;
   color:#00ffdd;
   border:none;
-  border-radius:6px;
 }
 
 /* BUTTON */
@@ -92,20 +80,13 @@ button{
   background:#6a00ff;
   color:white;
   cursor:pointer;
-  border-radius:6px;
 }
 
 /* PROGRESS */
-.progressBar{
-  height:10px;
-  background:#222;
-  border-radius:10px;
-}
+.progressBar{height:10px;background:#222;}
 .progressFill{
   height:10px;
   background:linear-gradient(90deg,#6a00ff,#00ffdd);
-  border-radius:10px;
-  transition:0.5s;
 }
 
 /* TOAST */
@@ -114,13 +95,9 @@ button{
   top:50%;
   left:50%;
   transform:translate(-50%,-50%);
-  padding:20px 40px;
-  border-radius:12px;
-  font-size:22px;
+  padding:20px;
   display:none;
-  z-index:9999;
 }
-
 .success{background:#00ff99;color:black;}
 .error{background:#ff0033;color:white;}
 .info{background:#6a00ff;color:white;}
@@ -133,7 +110,6 @@ button{
   background:#00ffdd;
   color:black;
   padding:10px;
-  border-radius:8px;
   display:none;
 }
 
@@ -144,12 +120,6 @@ button{
   background:#1a1f35;
   padding:10px;
   border-left:4px solid orange;
-}
-
-/* ANIM */
-@keyframes fadeIn{
-  from{opacity:0;transform:translateY(10px);}
-  to{opacity:1;transform:translateY(0);}
 }
 </style>
 </head>
@@ -164,7 +134,6 @@ button{
 <div class="container">
 
 <div id="terminal" class="terminal"></div>
-
 <div id="missionBox" class="mission"></div>
 
 <p id="progressText"></p>
@@ -183,9 +152,9 @@ import { getFirestore, doc, getDoc, updateDoc, getDocs, collection } from "https
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 const app = initializeApp({
-  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
-  authDomain: "itzsos-labs.firebaseapp.com",
-  projectId: "itzsos-labs"
+  apiKey:"AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
+  authDomain:"itzsos-labs.firebaseapp.com",
+  projectId:"itzsos-labs"
 });
 
 const db = getFirestore(app);
@@ -194,6 +163,7 @@ const auth = getAuth(app);
 let stageId = new URLSearchParams(location.search).get("id") || "stage1";
 let stageData, tasks, userData;
 let completedTasks = [];
+let usedHints = {};
 
 onAuthStateChanged(auth, async(user)=>{
   if(!user) return location.href="index.html";
@@ -209,6 +179,7 @@ onAuthStateChanged(auth, async(user)=>{
   }
 
   completedTasks = userData.completedTasks?.[stageId] || [];
+  usedHints = userData.usedHints?.[stageId] || {};
 
   const stageSnap = await getDoc(doc(db,"stages",stageId));
   stageData = stageSnap.data();
@@ -234,28 +205,28 @@ function renderTasks(){
     const done = completedTasks.includes(i);
     const locked = i>0 && !completedTasks.includes(i-1);
 
-    const div = document.createElement("div");
-    div.className = "task "+(done?"completed":"")+(locked?" locked":"");
+    box.innerHTML += `
+      <div class="task ${done?"completed":""} ${locked?"locked":""}">
+        <h3>Task ${i+1}: ${t.title}</h3>
+        <p>${t.text}</p>
 
-    div.innerHTML = `
-      <h3>Task ${i+1}: ${t.title}</h3>
-      <p>${t.text}</p>
+        ${t.image ? `<img src="${t.image}">` : ""}
 
-      ${t.image ? `<img src="${t.image}">` : ""}
+        <input id="ans${i}" ${done||locked?"disabled":""} placeholder="Enter answer">
 
-      <input id="ans${i}" ${done||locked?"disabled":""} placeholder="Enter answer">
+        <button onclick="submitTask(${i})" ${done||locked?"disabled":""}>
+          ${done?"Solved":"Submit"}
+        </button>
 
-      <button onclick="submitTask(${i})" ${done||locked?"disabled":""}>
-        ${done?"Solved":"Submit"}
-      </button>
+        <button onclick="toggleHint(${i})">
+          🌍 Hint (-${t.hintCost || 10})
+        </button>
 
-      <button onclick="toggleHint(${i})">🌍 Hint</button>
-      <div id="hint${i}" class="hint">${t.hint}</div>
+        <div id="hint${i}" class="hint">${t.hint}</div>
 
-      <p>XP: ${t.xp}</p>
+        <p>XP: ${t.xp}</p>
+      </div>
     `;
-
-    box.appendChild(div);
   });
 
   updateProgress();
@@ -266,9 +237,8 @@ window.submitTask = async(i)=>{
 
   const val = document.getElementById("ans"+i).value.toLowerCase().trim();
   const task = tasks[i];
-  const correct = task.answer.map(a=>a.toLowerCase());
 
-  if(!correct.some(a=>val.includes(a))){
+  if(!task.answer.some(a=>val.includes(a.toLowerCase()))){
     showToast("❌ Access Denied","error");
     return;
   }
@@ -295,6 +265,43 @@ window.submitTask = async(i)=>{
   if(completedTasks.length === tasks.length){
     completeStage();
   }
+};
+
+/* 🔥 FIXED HINT SYSTEM */
+window.toggleHint = async(i)=>{
+  const h = document.getElementById("hint"+i);
+  const task = tasks[i];
+
+  if(usedHints[i]){
+    h.style.display = h.style.display==="block"?"none":"block";
+    return;
+  }
+
+  const userRef = doc(db,"users",auth.currentUser.uid);
+  const snap = await getDoc(userRef);
+  const data = snap.data();
+
+  let xp = data.xp || 0;
+
+  if(xp < task.hintCost){
+    showToast("❌ Not enough XP","error");
+    return;
+  }
+
+  xp -= task.hintCost;
+  usedHints[i] = true;
+
+  let hints = data.usedHints || {};
+  hints[stageId] = usedHints;
+
+  await updateDoc(userRef,{
+    xp: xp,
+    usedHints: hints
+  });
+
+  showToast("💡 Hint unlocked (-"+task.hintCost+" XP)","info");
+
+  h.style.display = "block";
 };
 
 async function completeStage(){
@@ -349,11 +356,6 @@ function showXP(xp){
   x.style.display="block";
   setTimeout(()=>x.style.display="none",2000);
 }
-
-window.toggleHint = (i)=>{
-  const h = document.getElementById("hint"+i);
-  h.style.display = h.style.display==="block"?"none":"block";
-};
 </script>
 
 </body>
