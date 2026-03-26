@@ -1,72 +1,42 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Itzsos Labs | Stage</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<title>Stage</title>
 
 <style>
 body{
-  margin:0;
-  font-family:'Share Tech Mono', monospace;
   background:#05070d;
   color:#00ffdd;
-}
-
-nav{
-  display:flex;
-  justify-content:space-between;
-  padding:15px;
-  background:#111422;
-  border-bottom:1px solid #6a00ff;
-}
-nav button{
-  background:#6a00ff;
-  border:none;
-  padding:8px;
-  color:white;
-  cursor:pointer;
+  font-family:monospace;
 }
 
 .container{
-  max-width:900px;
+  max-width:800px;
   margin:auto;
   padding:20px;
 }
 
-.terminal{
-  background:#000;
-  padding:10px;
-  font-size:12px;
-  margin-bottom:10px;
-}
-
-.mission{
-  background:#111422;
-  padding:15px;
-  border-left:4px solid #6a00ff;
-  border-radius:10px;
-}
-
 .task{
-  background:#111422;
+  background:#111;
   padding:15px;
   margin-top:15px;
   border-radius:10px;
 }
 
-.task.completed{
+.completed{
   border-left:4px solid #00ff99;
-  box-shadow:0 0 15px #00ff99;
+  opacity:0.6;
 }
 
-.task img{
-  width:100%;
-  margin:10px 0;
-  border-radius:8px;
+button{
+  padding:10px;
+  margin-top:10px;
+  background:#6a00ff;
+  border:none;
+  color:white;
+  cursor:pointer;
 }
 
 input{
@@ -76,83 +46,23 @@ input{
   background:#000;
   color:#00ffdd;
   border:none;
-  border-radius:6px;
-}
-
-button{
-  margin-top:10px;
-  padding:10px;
-  border:none;
-  cursor:pointer;
-  background:#6a00ff;
-  color:white;
-  border-radius:6px;
-}
-
-.progressBar{
-  height:10px;
-  background:#222;
-  border-radius:10px;
-}
-.progressFill{
-  height:10px;
-  background:linear-gradient(90deg,#6a00ff,#00ffdd);
-  border-radius:10px;
-  transition:1s;
-}
-
-.hint{
-  display:none;
-  margin-top:10px;
-  background:#1a1f35;
-  padding:10px;
-  border-left:4px solid orange;
-}
-
-#message{
-  margin-top:10px;
-  padding:10px;
-  border-radius:6px;
-}
-.success{background:#003300;}
-.error{background:#330000;}
-
-#xpPop{
-  position:fixed;
-  top:20px;
-  right:20px;
-  background:#00ffdd;
-  color:black;
-  padding:10px;
-  border-radius:8px;
-  display:none;
 }
 </style>
 </head>
 
 <body>
 
-<nav>
-  <button onclick="location.href='stages.html'">⬅ Back</button>
-  <div>🟣 Itzsos Labs PREMIUM LAB</div>
-</nav>
-
 <div class="container">
 
-<div id="terminal" class="terminal"></div>
+<button onclick="location.href='stages.html'">⬅ Back</button>
 
-<div id="missionBox" class="mission"></div>
+<h2 id="title"></h2>
+<div id="mission"></div>
+<p id="progress"></p>
 
-<p id="progressText"></p>
-<div class="progressBar"><div id="progressFill" class="progressFill"></div></div>
-
-<div id="tasksContainer"></div>
-
-<div id="message"></div>
+<div id="tasks"></div>
 
 </div>
-
-<div id="xpPop"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
@@ -169,34 +79,37 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let stageData, tasks, currentUser, stageId;
+/* STATE */
+let stageId = new URLSearchParams(location.search).get("id") || "stage1";
+let stageData, tasks;
 let completedTasks = [];
-
-/* GET STAGE ID */
-const params = new URLSearchParams(window.location.search);
-stageId = params.get("id") || "stage1";
+let userData;
 
 /* AUTH */
 onAuthStateChanged(auth, async(user)=>{
   if(!user) return location.href="index.html";
-  currentUser = user;
 
   const userRef = doc(db,"users",user.uid);
   const userSnap = await getDoc(userRef);
-  const userData = userSnap.data();
+  userData = userSnap.data();
+
+  /* 🔒 HARD BLOCK (NO REPLAY) */
+  if(userData.solvedStages && userData.solvedStages.includes(stageId)){
+    alert("⚠️ You already completed this stage!");
+    location.href = "stages.html";
+    return;
+  }
 
   completedTasks = userData.completedTasks?.[stageId] || [];
 
-  /* LOAD STAGE */
-  const snap = await getDoc(doc(db,"stages",stageId));
-  stageData = snap.data();
+  const stageSnap = await getDoc(doc(db,"stages",stageId));
+  stageData = stageSnap.data();
   tasks = stageData.tasks || [];
 
-  document.getElementById("terminal").innerText =
-    "root@itzsos:~# run " + stageId;
+  document.getElementById("title").innerText = stageData.title;
 
-  document.getElementById("missionBox").innerHTML = `
-    <h3>🎯 Mission Brief</h3>
+  document.getElementById("mission").innerHTML = `
+    <h3>🎯 Mission</h3>
     <p>${stageData.mission}</p>
     <p>${stageData.intro}</p>
   `;
@@ -204,10 +117,10 @@ onAuthStateChanged(auth, async(user)=>{
   renderTasks();
 });
 
-/* RENDER TASKS */
+/* RENDER */
 function renderTasks(){
-  const container = document.getElementById("tasksContainer");
-  container.innerHTML="";
+  const box = document.getElementById("tasks");
+  box.innerHTML="";
 
   tasks.forEach((t,i)=>{
     const done = completedTasks.includes(i);
@@ -216,127 +129,110 @@ function renderTasks(){
     div.className = "task " + (done?"completed":"");
 
     div.innerHTML = `
-      <h3>Task ${i+1}: ${t.title}</h3>
+      <h4>Task ${i+1}: ${t.title}</h4>
       <p>${t.text}</p>
 
-      ${t.image ? `<img src="${t.image}">` : ""}
+      ${t.image ? `<img src="${t.image}" width="100%">` : ""}
 
-      <input id="input${i}" placeholder="Enter answer" ${done?"disabled":""}>
+      <input id="ans${i}" ${done?"disabled":""} placeholder="Answer">
 
-      <button onclick="submitAnswer(${i})" ${done?"disabled":""}>
+      <button onclick="submitTask(${i})" ${done?"disabled":""}>
         ${done?"Solved":"Submit"}
       </button>
 
-      <button onclick="toggleHint(${i})">🌍 Hint (-${t.hintCost||0})</button>
-
-      <div id="hint${i}" class="hint">${t.hint||""}</div>
+      <button onclick="alert('${t.hint || "No hint"}')">🌍 Hint</button>
 
       <p>XP: ${t.xp}</p>
     `;
 
-    container.appendChild(div);
+    box.appendChild(div);
   });
 
   updateProgress();
 }
 
 /* SUBMIT */
-window.submitAnswer = async(i)=>{
+window.submitTask = async(i)=>{
   if(completedTasks.includes(i)) return;
 
-  const val = document.getElementById("input"+i).value.toLowerCase().trim();
+  const val = document.getElementById("ans"+i).value.toLowerCase().trim();
   const task = tasks[i];
 
   const correct = task.answer.map(a=>a.toLowerCase());
 
-  const keywords = ["fake","password","weak","phishing","domain","spoof"];
+  if(!correct.some(a=>val.includes(a))){
+    alert("❌ Wrong answer");
+    return;
+  }
 
-  if(correct.some(a=>val.includes(a)) || keywords.some(k=>val.includes(k))){
+  completedTasks.push(i);
 
-    completedTasks.push(i);
+  const userRef = doc(db,"users",auth.currentUser.uid);
+  const snap = await getDoc(userRef);
+  const data = snap.data();
 
-    showMessage("🔥 Correct!","success");
+  let completed = data.completedTasks || {};
+  completed[stageId] = completedTasks;
 
-    showXP(task.xp);
+  await updateDoc(userRef,{
+    completedTasks: completed,
+    xp:(data.xp||0)+task.xp
+  });
 
-    document.getElementById("input"+i).disabled = true;
+  renderTasks();
 
-    /* SAVE */
-    const userRef = doc(db,"users",currentUser.uid);
-    const snap = await getDoc(userRef);
-    const data = snap.data();
-
-    let all = data.completedTasks || {};
-    all[stageId] = completedTasks;
-
-    await updateDoc(userRef,{
-      completedTasks: all,
-      xp:(data.xp||0)+task.xp
-    });
-
-    renderTasks();
-
-    /* CHECK COMPLETE */
-    if(completedTasks.length === tasks.length){
-      showMessage("🏆 Stage Completed! Loading next...","success");
-      goNextStage();
-    }
-
-  } else {
-    showMessage("❌ Not quite. Try again.","error");
+  /* 🎯 ALL TASKS DONE */
+  if(completedTasks.length === tasks.length){
+    completeStage();
   }
 };
 
-/* PROGRESS */
-function updateProgress(){
-  document.getElementById("progressText").innerText =
-    "Progress: "+completedTasks.length+" / "+tasks.length;
+/* COMPLETE STAGE */
+async function completeStage(){
+  const userRef = doc(db,"users",auth.currentUser.uid);
+  const snap = await getDoc(userRef);
+  const data = snap.data();
 
-  document.getElementById("progressFill").style.width =
-    (completedTasks.length/tasks.length)*100+"%";
+  let solved = data.solvedStages || [];
+
+  /* 🚫 PREVENT DUPLICATE */
+  if(!solved.includes(stageId)){
+    solved.push(stageId);
+  }
+
+  await updateDoc(userRef,{
+    solvedStages: solved
+  });
+
+  alert("🏆 Stage Completed!");
+
+  goNextStage();
 }
 
-/* HINT */
-window.toggleHint = (i)=>{
-  const h = document.getElementById("hint"+i);
-  h.style.display = h.style.display==="block"?"none":"block";
-};
-
-/* XP POP */
-function showXP(xp){
-  const pop = document.getElementById("xpPop");
-  pop.innerText = "+"+xp+" XP ⚡";
-  pop.style.display="block";
-  setTimeout(()=>pop.style.display="none",2000);
-}
-
-/* MESSAGE */
-function showMessage(text,type){
-  const m = document.getElementById("message");
-  m.className = type;
-  m.innerText = text;
-}
-
-/* NEXT STAGE */
+/* AUTO NEXT */
 async function goNextStage(){
   const snap = await getDocs(collection(db,"stages"));
-
   let next = null;
 
-  snap.forEach(docSnap=>{
-    const d = docSnap.data();
-    if(d.order === stageData.order + 1){
-      next = docSnap.id;
+  snap.forEach(d=>{
+    if(d.data().order === stageData.order + 1){
+      next = d.id;
     }
   });
 
   setTimeout(()=>{
     if(next){
-      location.href = "stage.html?id="+next;
+      location.href = "stage.html?id=" + next;
     } else {
       location.href = "stages.html";
     }
-  },2000);
+  },1500);
+}
+
+/* PROGRESS */
+function updateProgress(){
+  document.getElementById("progress").innerText =
+    "Progress: " + completedTasks.length + " / " + tasks.length;
 }
 </script>
 
