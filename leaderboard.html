@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Itzsos Labs | Leaderboard</title>
+<title>Itzsos Labs | GOD Leaderboard</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
@@ -11,9 +11,20 @@
 body{
   margin:0;
   font-family:'Share Tech Mono', monospace;
-  background:#05070d;
+  background:#02030a;
   color:#00ffdd;
-  overflow-x:hidden;
+  overflow:hidden;
+}
+
+/* SCANLINES */
+body::after{
+  content:"";
+  position:fixed;
+  width:100%;
+  height:100%;
+  background:linear-gradient(rgba(0,255,221,0.03) 1px, transparent 1px);
+  background-size:100% 3px;
+  pointer-events:none;
 }
 
 /* NAV */
@@ -23,76 +34,48 @@ nav{
   padding:15px;
   background:#0a0d18;
   border-bottom:1px solid #6a00ff;
-  box-shadow:0 0 20px #6a00ff33;
+  box-shadow:0 0 25px #6a00ff44;
 }
 
-/* TERMINAL HEADER */
+/* TERMINAL */
 .terminal{
   background:black;
-  padding:10px;
-  color:#00ffdd;
+  padding:15px;
+  height:120px;
+  overflow:auto;
+  font-size:12px;
   border-bottom:1px solid #111;
-}
-
-/* SCAN LINE */
-.scan{
-  position:fixed;
-  width:100%;
-  height:2px;
-  background:#00ffdd;
-  top:0;
-  animation:scan 3s linear infinite;
-}
-@keyframes scan{
-  0%{top:0}
-  100%{top:100%}
 }
 
 /* CONTAINER */
 .container{
-  max-width:1100px;
+  max-width:900px;
   margin:auto;
   padding:20px;
 }
 
-/* YOUR CARD */
-#meCard{
-  background:#111422;
-  padding:20px;
-  border-left:5px solid #00ffdd;
-  margin-bottom:20px;
-  box-shadow:0 0 15px #00ffdd44;
-}
-
-/* PODIUM */
-.podium{
-  display:flex;
-  justify-content:center;
-  gap:20px;
-  margin:40px 0;
-}
-
-.podium div{
-  padding:15px;
+/* GOD CARD */
+.god{
+  background:linear-gradient(45deg,#6a00ff,#00ffdd);
+  color:black;
   text-align:center;
+  padding:20px;
   border-radius:10px;
-  font-weight:bold;
+  margin-bottom:20px;
+  animation:glow 2s infinite alternate;
+}
+@keyframes glow{
+  from{box-shadow:0 0 20px #6a00ff}
+  to{box-shadow:0 0 30px #00ffdd}
 }
 
-.gold{
-  background:#6a00ff;
-  box-shadow:0 0 25px #6a00ff;
-  transform:scale(1.2);
-  animation:glitch 2s infinite;
-}
-
-.silver{ background:#333; }
-.bronze{ background:#222; }
-
-@keyframes glitch{
-  0%{filter:hue-rotate(0)}
-  50%{filter:hue-rotate(120deg)}
-  100%{filter:hue-rotate(0)}
+/* FOCUS */
+.focus{
+  background:#000;
+  padding:15px;
+  border:1px solid #00ffdd;
+  box-shadow:0 0 15px #00ffdd44;
+  margin-bottom:20px;
 }
 
 /* TABLE */
@@ -103,12 +86,12 @@ table{
 
 tr{
   border-bottom:1px solid #111;
-  transition:0.2s;
+  transition:0.3s;
 }
 
 tr:hover{
   background:#111422;
-  transform:scale(1.01);
+  transform:scale(1.02);
 }
 
 td{
@@ -128,45 +111,44 @@ td{
 }
 .fill{
   height:8px;
-  background:#00ffdd;
-  animation:grow 1s;
-}
-@keyframes grow{
-  from{width:0}
+  background:linear-gradient(90deg,#6a00ff,#00ffdd);
+  transition:0.5s;
 }
 
-/* GLITCH TEXT */
-.glitch{
-  animation:glitchText 1s infinite;
+/* ALERT */
+.alert{
+  color:#ff0033;
+  animation:blink 1s infinite;
 }
-@keyframes glitchText{
-  0%{opacity:1}
-  50%{opacity:0.6}
-  100%{opacity:1}
+@keyframes blink{
+  50%{opacity:0.3}
+}
+
+/* RANK PASS EFFECT */
+.pass{
+  animation:passAnim 0.5s;
+}
+@keyframes passAnim{
+  0%{transform:scale(1.2); background:#00ffdd}
+  100%{transform:scale(1)}
 }
 </style>
 </head>
 
 <body>
 
-<div class="scan"></div>
-
 <nav>
-  <div>🟣 Itzsos Labs // Leaderboard</div>
+  <div>🟣 Itzsos Labs // GOD SYSTEM</div>
   <button onclick="location.href='stages.html'">⬅ Back</button>
 </nav>
 
-<div class="terminal" id="terminalLog"></div>
+<div class="terminal" id="terminal"></div>
 
 <div class="container">
 
-<div id="meCard"></div>
+<div id="godCard" class="god"></div>
 
-<div class="podium">
-  <div id="p2" class="silver"></div>
-  <div id="p1" class="gold"></div>
-  <div id="p3" class="bronze"></div>
-</div>
+<div id="focusZone" class="focus"></div>
 
 <table>
 <tbody id="board"></tbody>
@@ -188,23 +170,25 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+const terminal = document.getElementById("terminal");
 const board = document.getElementById("board");
-const log = document.getElementById("terminalLog");
-const meCard = document.getElementById("meCard");
+const focus = document.getElementById("focusZone");
+const godCard = document.getElementById("godCard");
 
-function logLine(text){
-  log.innerHTML += text + "<br>";
-  log.scrollTop = log.scrollHeight;
+function log(msg){
+  terminal.innerHTML += msg + "<br>";
+  terminal.scrollTop = terminal.scrollHeight;
 }
+
+let players=[];
 
 onAuthStateChanged(auth, async(user)=>{
 
-  logLine("Scanning network...");
-  logLine("Collecting hacker profiles...");
+  log("> Connecting...");
+  log("> Loading hackers...");
 
   const snap = await getDocs(collection(db,"users"));
 
-  const players=[];
   snap.forEach(doc=>{
     const d=doc.data();
     players.push({
@@ -216,40 +200,64 @@ onAuthStateChanged(auth, async(user)=>{
 
   players.sort((a,b)=>b.xp-a.xp);
 
-  logLine("Ranking players...");
-  logLine("Access granted ✔");
+  render(user);
 
-  // PODIUM
-  if(players[0]) p1.innerHTML = "👑 "+players[0].name+"<br>"+players[0].xp+" XP";
-  if(players[1]) p2.innerHTML = players[1].name+"<br>"+players[1].xp+" XP";
-  if(players[2]) p3.innerHTML = players[2].name+"<br>"+players[2].xp+" XP";
+  // ⚡ FAKE LIVE SYSTEM
+  setInterval(()=>{
+    players.forEach(p=>{
+      if(Math.random() < 0.3){
+        p.xp += Math.floor(Math.random()*5);
+      }
+    });
+
+    players.sort((a,b)=>b.xp-a.xp);
+    render(user,true);
+
+  },3000);
+
+});
+
+function render(user,animate=false){
+
+  board.innerHTML="";
 
   const maxXP = Math.max(...players.map(p=>p.xp),100);
 
-  let myIndex = players.findIndex(p=>user && p.id===user.uid);
+  const myIndex = players.findIndex(p=>user && p.id===user.uid);
+  const me = players[myIndex];
+  const above = players[myIndex-1];
+  const below = players[myIndex+1];
 
-  // YOU CARD
-  if(myIndex !== -1){
-    const me = players[myIndex];
-    const target = players[myIndex-1];
+  // 👑 GOD
+  godCard.innerHTML = `
+    👑 DOMINATOR<br>
+    ${players[0].name}<br>
+    ${players[0].xp} XP
+  `;
 
-    meCard.innerHTML = `
-      <h3 class="glitch">YOU // Rank #${myIndex+1}</h3>
-      <p>XP: ${me.xp}</p>
-      ${target ? `<p>🎯 Target: ${target.name} (${target.xp - me.xp} XP ahead)</p>` : "<p>🔥 You are #1</p>"}
-    `;
-  }
+  // 🎯 FOCUS
+  focus.innerHTML = `
+    > USER: ${me.name}<br>
+    > RANK: #${myIndex+1}<br>
+    > XP: ${me.xp}<br><br>
 
-  // TABLE
-  players.forEach((p,i)=>{
+    ${above ? `🎯 TARGET: ${above.name} (+${above.xp - me.xp} XP)` : "👑 YOU ARE #1"}<br>
+    ${below ? `<span class="alert">⚠️ THREAT: ${below.name} (-${me.xp - below.xp} XP)</span>` : ""}
+  `;
+
+  const visible = players.slice(Math.max(0,myIndex-2), myIndex+3);
+
+  visible.forEach(p=>{
     const tr=document.createElement("tr");
 
     if(user && p.id===user.uid) tr.classList.add("me");
 
+    if(animate) tr.classList.add("pass");
+
     const width=(p.xp/maxXP)*100;
 
     tr.innerHTML = `
-      <td>#${i+1}</td>
+      <td>#${players.indexOf(p)+1}</td>
       <td>${p.name}</td>
       <td>${p.xp} XP</td>
       <td>
@@ -262,13 +270,7 @@ onAuthStateChanged(auth, async(user)=>{
     board.appendChild(tr);
   });
 
-  // AUTO SCROLL TO YOU
-  setTimeout(()=>{
-    const me = document.querySelector(".me");
-    if(me) me.scrollIntoView({behavior:"smooth",block:"center"});
-  },500);
-
-});
+}
 </script>
 
 </body>
