@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,7 +14,6 @@ body{
   font-family:'Share Tech Mono', monospace;
   background:#05070d;
   color:#00ffdd;
-  overflow-x:hidden;
 }
 
 /* NAV */
@@ -45,6 +45,7 @@ nav{
   padding:15px;
   border-left:4px solid #6a00ff;
   border-radius:10px;
+  animation:fadeIn 0.5s ease;
 }
 
 /* TASK */
@@ -53,11 +54,24 @@ nav{
   padding:15px;
   margin-top:15px;
   border-radius:10px;
+  transition:0.3s;
 }
 
-.completed{
+.task.locked{
+  opacity:0.3;
+  pointer-events:none;
+}
+
+.task.completed{
   border-left:4px solid #00ff99;
-  opacity:0.7;
+}
+
+/* IMAGE */
+.task img{
+  width:100%;
+  margin-top:10px;
+  border-radius:8px;
+  box-shadow:0 0 10px #000;
 }
 
 /* INPUT */
@@ -95,56 +109,22 @@ button{
   transition:0.5s;
 }
 
-/* TOAST CENTER */
+/* TOAST */
 #toast{
   position:fixed;
   top:50%;
   left:50%;
-  transform:translate(-50%,-50%) scale(0.8);
+  transform:translate(-50%,-50%);
   padding:20px 40px;
   border-radius:12px;
   font-size:22px;
-  font-weight:bold;
   display:none;
   z-index:9999;
-  animation:pop 0.3s ease;
 }
 
-.toast-success{
-  background:#00ff99;
-  color:black;
-  box-shadow:0 0 25px #00ff99;
-}
-
-.toast-error{
-  background:#ff0033;
-  color:white;
-  box-shadow:0 0 25px #ff0033;
-}
-
-.toast-info{
-  background:#6a00ff;
-  color:white;
-  box-shadow:0 0 25px #6a00ff;
-}
-
-/* FLASH EFFECT */
-.flash{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  opacity:0;
-  pointer-events:none;
-}
-
-.flash.red{
-  background:#ff0033;
-}
-.flash.green{
-  background:#00ff99;
-}
+.success{background:#00ff99;color:black;}
+.error{background:#ff0033;color:white;}
+.info{background:#6a00ff;color:white;}
 
 /* XP POP */
 #xpPop{
@@ -167,10 +147,10 @@ button{
   border-left:4px solid orange;
 }
 
-/* ANIMATION */
-@keyframes pop{
-  from{transform:translate(-50%,-50%) scale(0.5);opacity:0;}
-  to{transform:translate(-50%,-50%) scale(1);opacity:1;}
+/* ANIM */
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:translateY(0);}
 }
 </style>
 </head>
@@ -197,12 +177,6 @@ button{
 
 <div id="toast"></div>
 <div id="xpPop"></div>
-<div id="flash" class="flash"></div>
-
-<!-- 🔊 SOUND -->
-<audio id="soundSuccess" src="https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3"></audio>
-<audio id="soundError" src="https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2042.mp3"></audio>
-<audio id="soundComplete" src="https://assets.mixkit.co/sfx/preview/mixkit-game-level-completed-2059.mp3"></audio>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
@@ -222,7 +196,6 @@ let stageId = new URLSearchParams(location.search).get("id") || "stage1";
 let stageData, tasks, userData;
 let completedTasks = [];
 
-/* AUTH */
 onAuthStateChanged(auth, async(user)=>{
   if(!user) return location.href="index.html";
 
@@ -231,7 +204,7 @@ onAuthStateChanged(auth, async(user)=>{
   userData = snap.data();
 
   if(userData.solvedStages?.includes(stageId)){
-    showToast("⚠️ ALREADY COMPLETED","info");
+    showToast("⚠️ Already completed","info");
     setTimeout(()=>location.href="stages.html",1500);
     return;
   }
@@ -254,31 +227,30 @@ onAuthStateChanged(auth, async(user)=>{
   renderTasks();
 });
 
-/* RENDER */
 function renderTasks(){
   const box = document.getElementById("tasksContainer");
   box.innerHTML="";
 
   tasks.forEach((t,i)=>{
     const done = completedTasks.includes(i);
+    const locked = i>0 && !completedTasks.includes(i-1);
 
     const div = document.createElement("div");
-    div.className = "task "+(done?"completed":"");
+    div.className = "task "+(done?"completed":"")+(locked?" locked":"");
 
     div.innerHTML = `
       <h3>Task ${i+1}: ${t.title}</h3>
       <p>${t.text}</p>
 
-      ${t.image ? `<img src="${t.image}" width="100%">` : ""}
+      ${t.image ? `<img src="${t.image}">` : ""}
 
-      <input id="ans${i}" ${done?"disabled":""} placeholder="Enter answer">
+      <input id="ans${i}" ${done||locked?"disabled":""} placeholder="Enter answer">
 
-      <button onclick="submitTask(${i})" ${done?"disabled":""}>
+      <button onclick="submitTask(${i})" ${done||locked?"disabled":""}>
         ${done?"Solved":"Submit"}
       </button>
 
       <button onclick="toggleHint(${i})">🌍 Hint</button>
-
       <div id="hint${i}" class="hint">${t.hint}</div>
 
       <p>XP: ${t.xp}</p>
@@ -290,7 +262,6 @@ function renderTasks(){
   updateProgress();
 }
 
-/* SUBMIT */
 window.submitTask = async(i)=>{
   if(completedTasks.includes(i)) return;
 
@@ -299,17 +270,13 @@ window.submitTask = async(i)=>{
   const correct = task.answer.map(a=>a.toLowerCase());
 
   if(!correct.some(a=>val.includes(a))){
-    showToast("❌ ACCESS DENIED","error");
-    flash("red");
-    document.getElementById("soundError").play();
+    showToast("❌ Access Denied","error");
     return;
   }
 
   completedTasks.push(i);
 
-  showToast("✔ ACCESS GRANTED","success");
-  flash("green");
-  document.getElementById("soundSuccess").play();
+  showToast("✔ Access Granted","success");
   showXP(task.xp);
 
   const userRef = doc(db,"users",auth.currentUser.uid);
@@ -331,7 +298,6 @@ window.submitTask = async(i)=>{
   }
 };
 
-/* COMPLETE */
 async function completeStage(){
   const userRef = doc(db,"users",auth.currentUser.uid);
   const snap = await getDoc(userRef);
@@ -342,13 +308,11 @@ async function completeStage(){
 
   await updateDoc(userRef,{solvedStages: solved});
 
-  showToast("🏆 STAGE COMPLETE","success");
-  document.getElementById("soundComplete").play();
+  showToast("🏆 Stage Complete","success");
 
   goNext();
 }
 
-/* NEXT */
 async function goNext(){
   const snap = await getDocs(collection(db,"stages"));
   let next=null;
@@ -360,15 +324,10 @@ async function goNext(){
   });
 
   setTimeout(()=>{
-    if(next){
-      location.href = "stage.html?id="+next;
-    }else{
-      location.href = "stages.html";
-    }
+    location.href = next ? "stage.html?id="+next : "stages.html";
   },2000);
 }
 
-/* PROGRESS */
 function updateProgress(){
   document.getElementById("progressText").innerText =
     "Progress: "+completedTasks.length+" / "+tasks.length;
@@ -377,17 +336,14 @@ function updateProgress(){
     (completedTasks.length/tasks.length)*100+"%";
 }
 
-/* TOAST */
 function showToast(msg,type){
   const t = document.getElementById("toast");
-  t.className = "toast-"+type;
+  t.className = type;
   t.innerText = msg;
   t.style.display="block";
-
-  setTimeout(()=>t.style.display="none",1800);
+  setTimeout(()=>t.style.display="none",1500);
 }
 
-/* XP */
 function showXP(xp){
   const x = document.getElementById("xpPop");
   x.innerText = "+"+xp+" XP ⚡";
@@ -395,18 +351,6 @@ function showXP(xp){
   setTimeout(()=>x.style.display="none",2000);
 }
 
-/* FLASH */
-function flash(color){
-  const f = document.getElementById("flash");
-  f.className = "flash "+color;
-  f.style.opacity = "0.2";
-
-  setTimeout(()=>{
-    f.style.opacity = "0";
-  },300);
-}
-
-/* HINT */
 window.toggleHint = (i)=>{
   const h = document.getElementById("hint"+i);
   h.style.display = h.style.display==="block"?"none":"block";
