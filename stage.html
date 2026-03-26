@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🔒 Premium Lab | Itzsos Labs</title>
+<title>Itzsos Labs | Stage</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
@@ -15,7 +15,6 @@ body{
   color:#00ffdd;
 }
 
-/* NAV */
 nav{
   display:flex;
   justify-content:space-between;
@@ -23,7 +22,6 @@ nav{
   background:#111422;
   border-bottom:1px solid #6a00ff;
 }
-
 nav button{
   background:#6a00ff;
   border:none;
@@ -32,14 +30,12 @@ nav button{
   cursor:pointer;
 }
 
-/* CONTAINER */
 .container{
   max-width:900px;
   margin:auto;
   padding:20px;
 }
 
-/* TERMINAL */
 .terminal{
   background:#000;
   padding:10px;
@@ -47,7 +43,6 @@ nav button{
   margin-bottom:10px;
 }
 
-/* MISSION */
 .mission{
   background:#111422;
   padding:15px;
@@ -55,7 +50,6 @@ nav button{
   border-radius:10px;
 }
 
-/* OBJECTIVE */
 .objective{
   background:#0d111f;
   padding:10px;
@@ -63,21 +57,6 @@ nav button{
   margin:10px 0;
 }
 
-/* PROGRESS */
-.progressBar{
-  height:10px;
-  background:#222;
-  border-radius:10px;
-  margin:10px 0;
-}
-.progressFill{
-  height:10px;
-  background:linear-gradient(90deg,#6a00ff,#00ffdd);
-  border-radius:10px;
-  transition:1s;
-}
-
-/* TASK */
 .task{
   background:#111422;
   padding:15px;
@@ -86,26 +65,15 @@ nav button{
   opacity:0.3;
   pointer-events:none;
 }
-
 .task.active{
   opacity:1;
   pointer-events:auto;
 }
-
 .task.completed{
   border-left:4px solid #00ff99;
   box-shadow:0 0 15px #00ff99;
 }
 
-/* IMAGE */
-.task img{
-  width:100%;
-  border-radius:10px;
-  margin:10px 0;
-  border:2px solid #6a00ff;
-}
-
-/* INPUT */
 input{
   width:100%;
   padding:10px;
@@ -113,10 +81,8 @@ input{
   color:#00ffdd;
   border:none;
   border-radius:6px;
-  margin-top:10px;
 }
 
-/* BUTTON */
 button{
   margin-top:10px;
   padding:10px;
@@ -127,7 +93,6 @@ button{
   border-radius:6px;
 }
 
-/* HINT */
 .hintBox{
   display:none;
   margin-top:10px;
@@ -136,19 +101,18 @@ button{
   border-left:4px solid orange;
 }
 
-/* XP POP */
-#xpPop{
-  position:fixed;
-  top:20px;
-  right:20px;
-  background:#00ffdd;
-  color:black;
-  padding:10px;
-  border-radius:8px;
-  display:none;
+.progressBar{
+  height:10px;
+  background:#222;
+  border-radius:10px;
+}
+.progressFill{
+  height:10px;
+  background:linear-gradient(90deg,#6a00ff,#00ffdd);
+  border-radius:10px;
+  transition:1s;
 }
 
-/* MESSAGE */
 #message{
   margin-top:10px;
   padding:10px;
@@ -157,6 +121,13 @@ button{
 .success{ background:#003300; }
 .error{ background:#330000; }
 
+.lockScreen{
+  background:#111422;
+  padding:30px;
+  border-radius:10px;
+  text-align:center;
+  box-shadow:0 0 20px #00ff99;
+}
 </style>
 </head>
 
@@ -169,14 +140,12 @@ button{
 
 <div class="container">
 
-<div class="terminal">
-root@itzsos:~# phishing-simulation --stage=1
-</div>
+<div class="terminal" id="terminal"></div>
 
 <div id="missionBox" class="mission"></div>
 
 <div class="objective">
-⚠️ Objective: Analyze the email below and identify the phishing trick.
+⚠️ Objective: Analyze and identify the security issue.
 </div>
 
 <p id="progressText"></p>
@@ -187,9 +156,6 @@ root@itzsos:~# phishing-simulation --stage=1
 <div id="message"></div>
 
 </div>
-
-<div id="xpPop"></div>
-<audio id="sound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3"></audio>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
@@ -209,14 +175,35 @@ let tasks=[];
 let currentIndex=0;
 let currentUser;
 
+/* GET STAGE ID FROM URL */
+const params = new URLSearchParams(window.location.search);
+const stageId = params.get("id") || "stage1";
+
+/* AUTH */
 onAuthStateChanged(auth, async(user)=>{
   if(!user) return location.href="index.html";
   currentUser=user;
 
-  const snap=await getDoc(doc(db,"stages","stage1"));
+  const userRef=doc(db,"users",user.uid);
+  const userSnap=await getDoc(userRef);
+  const userData=userSnap.data();
+
+  const solved=userData.solvedStages || [];
+
+  /* 🔒 BLOCK COMPLETED */
+  if(solved.includes(stageId)){
+    lockStageScreen();
+    return;
+  }
+
+  /* LOAD STAGE */
+  const snap=await getDoc(doc(db,"stages",stageId));
   const data=snap.data();
 
-  tasks=data.tasks||[];
+  tasks=data.tasks || [];
+
+  document.getElementById("terminal").innerText=
+    "root@itzsos:~# run "+stageId;
 
   document.getElementById("missionBox").innerHTML=`
     <h3>🎯 Mission Brief</h3>
@@ -227,7 +214,19 @@ onAuthStateChanged(auth, async(user)=>{
   renderTasks();
 });
 
-/* RENDER TASKS */
+/* LOCK SCREEN */
+function lockStageScreen(){
+  document.getElementById("tasksContainer").innerHTML=`
+    <div class="lockScreen">
+      <h2>🏆 Stage Completed</h2>
+      <p>This mission has already been completed.</p>
+      <p>🔒 You cannot attempt it again.</p>
+      <button onclick="location.href='stages.html'">⬅ Back</button>
+    </div>
+  `;
+}
+
+/* RENDER */
 function renderTasks(){
   const container=document.getElementById("tasksContainer");
   container.innerHTML="";
@@ -240,7 +239,11 @@ function renderTasks(){
       <h3>Task ${i+1}: ${t.title}</h3>
       <p>${t.text}</p>
 
-      ${t.image?`<img src="${t.image}">`:""}
+      <div style="background:#000;padding:10px;border-radius:8px;">
+        From: PayPal Support &lt;support@paypaI.com&gt;<br>
+        Subject: Urgent Verification<br><br>
+        Click: http://paypaI-login-security.com
+      </div>
 
       <input id="input${i}" placeholder="Enter answer">
 
@@ -281,16 +284,12 @@ window.submitAnswer=async(i)=>{
   const val=document.getElementById("input"+i).value.toLowerCase().trim();
   const task=tasks[i];
 
-  if(task.answer.includes(val)){
+  const correct=task.answer.map(a=>a.toLowerCase());
+  const keywords=["fake","phishing","domain","paypal","spoof"];
 
-    showMessage("✅ Access Granted. Threat identified.","success");
+  if(correct.some(a=>val.includes(a)) || keywords.some(k=>val.includes(k))){
 
-    document.getElementById("sound").play();
-
-    const xpPop=document.getElementById("xpPop");
-    xpPop.innerText="+"+task.xp+" XP ⚡";
-    xpPop.style.display="block";
-    setTimeout(()=>xpPop.style.display="none",2000);
+    showMessage("🔥 Access Granted!","success");
 
     document.querySelectorAll(".task")[i].classList.add("completed");
 
@@ -299,34 +298,36 @@ window.submitAnswer=async(i)=>{
     if(currentIndex < tasks.length){
       document.querySelectorAll(".task")[currentIndex].classList.add("active");
     } else {
-      showMessage("🏆 Stage Completed! Badge Unlocked!","success");
+
+      showMessage("🏆 Stage Completed! Locked 🔒","success");
+
+      const userRef=doc(db,"users",currentUser.uid);
+      const snap=await getDoc(userRef);
+      const data=snap.data();
+
+      let solved=data.solvedStages || [];
+
+      if(!solved.includes(stageId)){
+        solved.push(stageId);
+
+        await updateDoc(userRef,{
+          solvedStages: solved,
+          xp:(data.xp||0)+task.xp
+        });
+      }
     }
 
     updateProgress();
 
-    const userRef=doc(db,"users",currentUser.uid);
-    const snap=await getDoc(userRef);
-    const data=snap.data();
-
-    await updateDoc(userRef,{
-      xp:(data.xp||0)+task.xp
-    });
-
   } else {
-    showMessage("❌ Access Denied. Try again.","error");
+    showMessage("❌ Not quite. Check sender or link.","error");
   }
 };
 
 /* HINT */
-window.showHint=async(i)=>{
+window.showHint=(i)=>{
   const box=document.getElementById("hint"+i);
-
-  if(box.style.display==="block"){
-    box.style.display="none";
-    return;
-  }
-
-  box.style.display="block";
+  box.style.display = box.style.display==="block" ? "none":"block";
 };
 </script>
 
