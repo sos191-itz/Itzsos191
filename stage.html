@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -50,33 +51,28 @@ nav button{
   border-radius:10px;
 }
 
-.objective{
-  background:#0d111f;
-  padding:10px;
-  border-left:4px solid #00ffdd;
-  margin:10px 0;
-}
-
 .task{
   background:#111422;
   padding:15px;
   margin-top:15px;
   border-radius:10px;
-  opacity:0.3;
-  pointer-events:none;
 }
-.task.active{
-  opacity:1;
-  pointer-events:auto;
-}
+
 .task.completed{
   border-left:4px solid #00ff99;
   box-shadow:0 0 15px #00ff99;
 }
 
+.task img{
+  width:100%;
+  margin:10px 0;
+  border-radius:8px;
+}
+
 input{
   width:100%;
   padding:10px;
+  margin-top:10px;
   background:#000;
   color:#00ffdd;
   border:none;
@@ -93,14 +89,6 @@ button{
   border-radius:6px;
 }
 
-.hintBox{
-  display:none;
-  margin-top:10px;
-  padding:10px;
-  background:#1a1f35;
-  border-left:4px solid orange;
-}
-
 .progressBar{
   height:10px;
   background:#222;
@@ -113,20 +101,31 @@ button{
   transition:1s;
 }
 
+.hint{
+  display:none;
+  margin-top:10px;
+  background:#1a1f35;
+  padding:10px;
+  border-left:4px solid orange;
+}
+
 #message{
   margin-top:10px;
   padding:10px;
   border-radius:6px;
 }
-.success{ background:#003300; }
-.error{ background:#330000; }
+.success{background:#003300;}
+.error{background:#330000;}
 
-.lockScreen{
-  background:#111422;
-  padding:30px;
-  border-radius:10px;
-  text-align:center;
-  box-shadow:0 0 20px #00ff99;
+#xpPop{
+  position:fixed;
+  top:20px;
+  right:20px;
+  background:#00ffdd;
+  color:black;
+  padding:10px;
+  border-radius:8px;
+  display:none;
 }
 </style>
 </head>
@@ -140,13 +139,9 @@ button{
 
 <div class="container">
 
-<div class="terminal" id="terminal"></div>
+<div id="terminal" class="terminal"></div>
 
 <div id="missionBox" class="mission"></div>
-
-<div class="objective">
-⚠️ Objective: Analyze and identify the security issue.
-</div>
 
 <p id="progressText"></p>
 <div class="progressBar"><div id="progressFill" class="progressFill"></div></div>
@@ -157,11 +152,14 @@ button{
 
 </div>
 
+<div id="xpPop"></div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
+/* FIREBASE */
 const app = initializeApp({
   apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
@@ -171,88 +169,69 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let tasks=[];
-let currentIndex=0;
-let currentUser;
+let stageData, tasks, currentUser, stageId;
+let completedTasks = [];
 
-/* GET STAGE ID FROM URL */
+/* GET STAGE ID */
 const params = new URLSearchParams(window.location.search);
-const stageId = params.get("id") || "stage1";
+stageId = params.get("id") || "stage1";
 
 /* AUTH */
 onAuthStateChanged(auth, async(user)=>{
   if(!user) return location.href="index.html";
-  currentUser=user;
+  currentUser = user;
 
-  const userRef=doc(db,"users",user.uid);
-  const userSnap=await getDoc(userRef);
-  const userData=userSnap.data();
+  const userRef = doc(db,"users",user.uid);
+  const userSnap = await getDoc(userRef);
+  const userData = userSnap.data();
 
-  const solved=userData.solvedStages || [];
-
-  /* 🔒 BLOCK COMPLETED */
-  if(solved.includes(stageId)){
-    lockStageScreen();
-    return;
-  }
+  completedTasks = userData.completedTasks?.[stageId] || [];
 
   /* LOAD STAGE */
-  const snap=await getDoc(doc(db,"stages",stageId));
-  const data=snap.data();
+  const snap = await getDoc(doc(db,"stages",stageId));
+  stageData = snap.data();
+  tasks = stageData.tasks || [];
 
-  tasks=data.tasks || [];
+  document.getElementById("terminal").innerText =
+    "root@itzsos:~# run " + stageId;
 
-  document.getElementById("terminal").innerText=
-    "root@itzsos:~# run "+stageId;
-
-  document.getElementById("missionBox").innerHTML=`
+  document.getElementById("missionBox").innerHTML = `
     <h3>🎯 Mission Brief</h3>
-    <p>${data.mission||""}</p>
-    <p>${data.intro||""}</p>
+    <p>${stageData.mission}</p>
+    <p>${stageData.intro}</p>
   `;
 
   renderTasks();
 });
 
-/* LOCK SCREEN */
-function lockStageScreen(){
-  document.getElementById("tasksContainer").innerHTML=`
-    <div class="lockScreen">
-      <h2>🏆 Stage Completed</h2>
-      <p>This mission has already been completed.</p>
-      <p>🔒 You cannot attempt it again.</p>
-      <button onclick="location.href='stages.html'">⬅ Back</button>
-    </div>
-  `;
-}
-
-/* RENDER */
+/* RENDER TASKS */
 function renderTasks(){
-  const container=document.getElementById("tasksContainer");
+  const container = document.getElementById("tasksContainer");
   container.innerHTML="";
 
   tasks.forEach((t,i)=>{
-    const div=document.createElement("div");
-    div.className="task "+(i===0?"active":"");
+    const done = completedTasks.includes(i);
 
-    div.innerHTML=`
+    const div = document.createElement("div");
+    div.className = "task " + (done?"completed":"");
+
+    div.innerHTML = `
       <h3>Task ${i+1}: ${t.title}</h3>
       <p>${t.text}</p>
 
-      <div style="background:#000;padding:10px;border-radius:8px;">
-        From: PayPal Support &lt;support@paypaI.com&gt;<br>
-        Subject: Urgent Verification<br><br>
-        Click: http://paypaI-login-security.com
-      </div>
+      ${t.image ? `<img src="${t.image}">` : ""}
 
-      <input id="input${i}" placeholder="Enter answer">
+      <input id="input${i}" placeholder="Enter answer" ${done?"disabled":""}>
 
-      <button onclick="submitAnswer(${i})">Submit</button>
-      <button onclick="showHint(${i})">🌍 Hint (-${t.hintCost||0})</button>
+      <button onclick="submitAnswer(${i})" ${done?"disabled":""}>
+        ${done?"Solved":"Submit"}
+      </button>
 
-      <div id="hint${i}" class="hintBox">${t.hint||""}</div>
+      <button onclick="toggleHint(${i})">🌍 Hint (-${t.hintCost||0})</button>
 
-      <p>XP: ${t.xp||0}</p>
+      <div id="hint${i}" class="hint">${t.hint||""}</div>
+
+      <p>XP: ${t.xp}</p>
     `;
 
     container.appendChild(div);
@@ -261,74 +240,104 @@ function renderTasks(){
   updateProgress();
 }
 
+/* SUBMIT */
+window.submitAnswer = async(i)=>{
+  if(completedTasks.includes(i)) return;
+
+  const val = document.getElementById("input"+i).value.toLowerCase().trim();
+  const task = tasks[i];
+
+  const correct = task.answer.map(a=>a.toLowerCase());
+
+  const keywords = ["fake","password","weak","phishing","domain","spoof"];
+
+  if(correct.some(a=>val.includes(a)) || keywords.some(k=>val.includes(k))){
+
+    completedTasks.push(i);
+
+    showMessage("🔥 Correct!","success");
+
+    showXP(task.xp);
+
+    document.getElementById("input"+i).disabled = true;
+
+    /* SAVE */
+    const userRef = doc(db,"users",currentUser.uid);
+    const snap = await getDoc(userRef);
+    const data = snap.data();
+
+    let all = data.completedTasks || {};
+    all[stageId] = completedTasks;
+
+    await updateDoc(userRef,{
+      completedTasks: all,
+      xp:(data.xp||0)+task.xp
+    });
+
+    renderTasks();
+
+    /* CHECK COMPLETE */
+    if(completedTasks.length === tasks.length){
+      showMessage("🏆 Stage Completed! Loading next...","success");
+      goNextStage();
+    }
+
+  } else {
+    showMessage("❌ Not quite. Try again.","error");
+  }
+};
+
 /* PROGRESS */
 function updateProgress(){
-  document.getElementById("progressText").innerText=
-    "Progress: "+currentIndex+" / "+tasks.length;
+  document.getElementById("progressText").innerText =
+    "Progress: "+completedTasks.length+" / "+tasks.length;
 
-  document.getElementById("progressFill").style.width=
-    (currentIndex/tasks.length)*100+"%";
+  document.getElementById("progressFill").style.width =
+    (completedTasks.length/tasks.length)*100+"%";
+}
+
+/* HINT */
+window.toggleHint = (i)=>{
+  const h = document.getElementById("hint"+i);
+  h.style.display = h.style.display==="block"?"none":"block";
+};
+
+/* XP POP */
+function showXP(xp){
+  const pop = document.getElementById("xpPop");
+  pop.innerText = "+"+xp+" XP ⚡";
+  pop.style.display="block";
+  setTimeout(()=>pop.style.display="none",2000);
 }
 
 /* MESSAGE */
 function showMessage(text,type){
-  const msg=document.getElementById("message");
-  msg.className=type;
-  msg.innerText=text;
+  const m = document.getElementById("message");
+  m.className = type;
+  m.innerText = text;
 }
 
-/* SUBMIT */
-window.submitAnswer=async(i)=>{
-  if(i!==currentIndex) return;
+/* NEXT STAGE */
+async function goNextStage(){
+  const snap = await getDocs(collection(db,"stages"));
 
-  const val=document.getElementById("input"+i).value.toLowerCase().trim();
-  const task=tasks[i];
+  let next = null;
 
-  const correct=task.answer.map(a=>a.toLowerCase());
-  const keywords=["fake","phishing","domain","paypal","spoof"];
-
-  if(correct.some(a=>val.includes(a)) || keywords.some(k=>val.includes(k))){
-
-    showMessage("🔥 Access Granted!","success");
-
-    document.querySelectorAll(".task")[i].classList.add("completed");
-
-    currentIndex++;
-
-    if(currentIndex < tasks.length){
-      document.querySelectorAll(".task")[currentIndex].classList.add("active");
-    } else {
-
-      showMessage("🏆 Stage Completed! Locked 🔒","success");
-
-      const userRef=doc(db,"users",currentUser.uid);
-      const snap=await getDoc(userRef);
-      const data=snap.data();
-
-      let solved=data.solvedStages || [];
-
-      if(!solved.includes(stageId)){
-        solved.push(stageId);
-
-        await updateDoc(userRef,{
-          solvedStages: solved,
-          xp:(data.xp||0)+task.xp
-        });
-      }
+  snap.forEach(docSnap=>{
+    const d = docSnap.data();
+    if(d.order === stageData.order + 1){
+      next = docSnap.id;
     }
+  });
 
-    updateProgress();
-
-  } else {
-    showMessage("❌ Not quite. Check sender or link.","error");
-  }
-};
-
-/* HINT */
-window.showHint=(i)=>{
-  const box=document.getElementById("hint"+i);
-  box.style.display = box.style.display==="block" ? "none":"block";
-};
+  setTimeout(()=>{
+    if(next){
+      location.href = "stage.html?id="+next;
+    } else {
+      location.href = "stages.html";
+    }
+  },2000);
+}
 </script>
 
 </body>
