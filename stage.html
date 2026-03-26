@@ -44,6 +44,7 @@ nav{
   padding:15px;
   border-left:4px solid #6a00ff;
   border-radius:10px;
+  animation:fadeIn 0.5s ease;
 }
 
 /* TASK */
@@ -65,12 +66,11 @@ nav{
 }
 
 /* IMAGE */
-.media{
-  margin-top:10px;
-}
-.media img, .media iframe{
+.task img{
   width:100%;
+  margin-top:10px;
   border-radius:8px;
+  box-shadow:0 0 10px #000;
 }
 
 /* INPUT */
@@ -125,7 +125,7 @@ button{
 .error{background:#ff0033;color:white;}
 .info{background:#6a00ff;color:white;}
 
-/* XP */
+/* XP POP */
 #xpPop{
   position:fixed;
   top:20px;
@@ -144,6 +144,12 @@ button{
   background:#1a1f35;
   padding:10px;
   border-left:4px solid orange;
+}
+
+/* ANIM */
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:translateY(0);}
 }
 </style>
 </head>
@@ -177,7 +183,7 @@ import { getFirestore, doc, getDoc, updateDoc, getDocs, collection } from "https
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 const app = initializeApp({
-  apiKey: "AIzaSy...",
+  apiKey: "AIzaSyAViNqylDfCnXd6iyzChJiTgZaI18cU9zw",
   authDomain: "itzsos-labs.firebaseapp.com",
   projectId: "itzsos-labs"
 });
@@ -228,15 +234,6 @@ function renderTasks(){
     const done = completedTasks.includes(i);
     const locked = i>0 && !completedTasks.includes(i-1);
 
-    let media = "";
-    if(t.image){
-      if(t.image.endsWith(".html")){
-        media = `<iframe src="${t.image}" style="height:300px;border:none;"></iframe>`;
-      } else {
-        media = `<img src="${t.image}">`;
-      }
-    }
-
     const div = document.createElement("div");
     div.className = "task "+(done?"completed":"")+(locked?" locked":"");
 
@@ -244,7 +241,7 @@ function renderTasks(){
       <h3>Task ${i+1}: ${t.title}</h3>
       <p>${t.text}</p>
 
-      <div class="media">${media}</div>
+      ${t.image ? `<img src="${t.image}">` : ""}
 
       <input id="ans${i}" ${done||locked?"disabled":""} placeholder="Enter answer">
 
@@ -277,6 +274,7 @@ window.submitTask = async(i)=>{
   }
 
   completedTasks.push(i);
+
   showToast("✔ Access Granted","success");
   showXP(task.xp);
 
@@ -310,6 +308,7 @@ async function completeStage(){
   await updateDoc(userRef,{solvedStages: solved});
 
   showToast("🏆 Stage Complete","success");
+
   goNext();
 }
 
