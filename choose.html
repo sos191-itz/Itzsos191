@@ -146,7 +146,6 @@ onAuthStateChanged(auth, async (user) => {
 
   currentUser = user;
 
-  // 🔎 CHECK IF USER SELECTED CYBERSECURITY
   const userRef = doc(db, "users", user.uid);
   const snap = await getDoc(userRef);
 
@@ -180,12 +179,13 @@ window.chooseRole = async function(role){
       role: role
     }, { merge:true });
 
-    alert("Role saved ✅");
-
-    if(role === "Purple Team"){
-        window.location.href = "stages.html";
-    }else{
-        alert("This path is coming soon 🚧");
+    // ✅ Redirect based on role
+    if(role === "Red Team"){
+      window.location.href = "redteam.html";
+    } else if(role === "Blue Team"){
+      window.location.href = "blueteam.html";
+    } else if(role === "Purple Team"){
+      window.location.href = "stages.html";
     }
 
   }catch(error){
@@ -194,7 +194,6 @@ window.chooseRole = async function(role){
   }
 
 };
-
 </script>
 
 </body>
