@@ -95,10 +95,6 @@ h1{
     🖥 IT / Cybersecurity
   </button>
 
-  <button class="btn" onclick="chooseField('pentesting')">
-    🕵 Pentesting
-  </button>
-
   <div class="particles"></div>
 </div>
 
@@ -123,7 +119,8 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser = null;
-/*✅ Check localStorage first to skip selection page*/
+
+/*✅ Check login + skip if already selected field */
 onAuthStateChanged(auth, async (user) => {
 
   if (!user || !user.emailVerified) {
@@ -136,24 +133,21 @@ onAuthStateChanged(auth, async (user) => {
   const userRef = doc(db, "users", user.uid);
   const snap = await getDoc(userRef);
 
-  // If field already selected → go to choose page
   if (snap.exists()) {
+    const data = snap.data();
 
-  const data = snap.data();
+    if (data.selectedField === "IT" && data.role) {
+      // Already chose field AND role → go to stages
+      window.location.href = "stages.html";
+      return;
+    }
 
-  if (data.selectedField === "IT" && data.role) {
-    // Already chose field AND role → go to stages
-    window.location.href = "stages.html";
-    return;
+    if (data.selectedField) {
+      // Field chosen but role not chosen → go to choose page
+      window.location.href = "choose.html";
+      return;
+    }
   }
-
-  if (data.selectedField) {
-    // Field chosen but role not chosen → go to choose page
-    window.location.href = "choose.html";
-    return;
-  }
-
-}
 
 });
 
@@ -168,12 +162,11 @@ window.chooseField = async function(field) {
 
   try {
     await setDoc(userRef, {
-  email: currentUser.email,
-  selectedField: field
-}, { merge: true });
+      email: currentUser.email,
+      selectedField: field
+    }, { merge: true });
 
-
-    // 🔥 IMPORTANT: Redirect to choose.html
+    // 🔥 Redirect to choose.html
     window.location.href = "choose.html";
 
   } catch(err) {
@@ -181,6 +174,7 @@ window.chooseField = async function(field) {
     alert("Error saving selection.");
   }
 };
+
 /* ✨ PARTICLES */
 const particleContainer=document.querySelector('.particles');
 for(let i=0;i<70;i++){
