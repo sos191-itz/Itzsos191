@@ -5,29 +5,59 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Elite Hacker Chat</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
 <style>
-body{
+/* BASE */
+body,html{
   margin:0;
-  font-family:monospace;
+  padding:0;
+  height:100%;
+  font-family:'Share Tech Mono', monospace;
   background:#05070d;
   color:#00ffdd;
+  overflow:hidden;
   display:flex;
-  height:100vh;
+  flex-direction:column;
+}
+
+/* CONTAINER */
+#app{
+  flex:1;
+  display:flex;
+  overflow:hidden;
 }
 
 /* SIDEBAR */
 #sidebar{
-  width:230px;
+  width:250px;
   background:#0b0f1a;
-  border-right:1px solid #00ffdd;
+  border-right:2px solid #00ffdd;
+  display:flex;
+  flex-direction:column;
+  transition:0.3s;
+}
+
+#sidebar h3{
+  text-align:center;
+  margin:10px 0;
+  color:#ff6600;
+  text-shadow:0 0 5px #ff6600;
+}
+#users{
+  flex:1;
   overflow-y:auto;
 }
 .user{
-  padding:10px;
+  padding:12px 15px;
   cursor:pointer;
   border-bottom:1px solid #111;
+  transition:0.2s;
 }
-.user:hover{background:#111}
+.user:hover{
+  background:#111422;
+  transform:scale(1.02);
+}
 
 /* MAIN */
 #main{
@@ -39,110 +69,148 @@ body{
 
 /* HEADER */
 #header{
-  padding:10px;
-  border-bottom:1px solid #00ffdd;
+  padding:15px;
+  border-bottom:2px solid #00ffdd;
+  background:#111422;
+  font-size:1.1rem;
+  font-weight:bold;
+  color:#ff6600;
+  text-shadow:0 0 5px #ff6600;
 }
 
 /* MESSAGES */
 #messages{
   flex:1;
   overflow-y:auto;
-  padding:10px;
-  padding-bottom:120px;
+  padding:15px;
   display:flex;
   flex-direction:column;
-  gap:10px;
-}
-
-/* CHAT BUBBLES */
-.msg{
-  max-width:70%;
-  padding:10px;
-  border-radius:10px;
-  animation:fadeIn 0.3s ease;
-}
-
-.me{
-  align-self:flex-end;
-  background:#00ffdd;
-  color:black;
-}
-
-.other{
-  align-self:flex-start;
-  background:#111422;
-  border:1px solid #00ffdd;
-}
-
-/* IMAGE */
-.msg img{
-  max-width:200px;
-  border-radius:8px;
-}
-
-/* INPUT FIX */
-#inputBox{
-  position:fixed;
-  bottom:15px;
-  left:240px;
-  right:10px;
-  display:flex;
-  gap:5px;
-  background:#0b0f1a;
-  padding:10px;
-  border-radius:10px;
-  border:1px solid #00ffdd;
-}
-
-input{
-  flex:1;
-  padding:10px;
-  background:black;
-  color:#00ffdd;
-  border:1px solid #00ffdd;
-}
-
-/* BUTTON */
-button{
-  background:#00ffdd;
-  border:none;
-  padding:10px;
-  cursor:pointer;
-}
-button:hover{background:#ff6600}
-
-/* ANIMATION */
-@keyframes fadeIn{
-  from{opacity:0; transform:translateY(10px)}
-  to{opacity:1; transform:translateY(0)}
+  gap:12px;
+  scroll-behavior:smooth;
 }
 
 /* TYPING */
 #typing{
   font-size:12px;
-  padding-left:10px;
   color:#aaa;
+  padding-left:15px;
+  margin-bottom:5px;
+  font-style:italic;
+}
+
+/* CHAT BUBBLES */
+.msg{
+  max-width:70%;
+  padding:12px 15px;
+  border-radius:15px;
+  animation:fadeIn 0.3s ease;
+  position:relative;
+  word-wrap:break-word;
+}
+.me{
+  align-self:flex-end;
+  background:linear-gradient(145deg,#00ffdd,#00aa88);
+  color:black;
+  box-shadow:0 0 10px #00ffdd;
+}
+.other{
+  align-self:flex-start;
+  background:#111422;
+  border:1px solid #00ffdd;
+  box-shadow:0 0 5px #00ffdd inset;
+}
+
+/* CHAT MEDIA */
+.msg img{
+  max-width:200px;
+  border-radius:8px;
+  margin-top:5px;
+}
+.msg audio{
+  width:100%;
+  margin-top:5px;
+}
+
+/* INPUT BOX */
+#inputBox{
+  display:flex;
+  gap:8px;
+  padding:10px;
+  background:#0b0f1a;
+  border-top:2px solid #00ffdd;
+  position:sticky;
+  bottom:0;
+  z-index:10;
+}
+#inputBox input[type=text]{
+  flex:1;
+  padding:10px;
+  border-radius:8px;
+  background:black;
+  border:1px solid #00ffdd;
+  color:#00ffdd;
+}
+#inputBox input[type=file]{
+  padding:6px;
+}
+#inputBox button{
+  padding:10px 15px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  background:linear-gradient(145deg,#00ffdd,#00aa88);
+  color:black;
+  font-weight:bold;
+  transition:0.2s;
+}
+#inputBox button:hover{
+  background:linear-gradient(145deg,#ff6600,#ffcc00);
+  transform:scale(1.05);
+}
+
+/* ANIMATIONS */
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(10px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  #sidebar{
+    width:200px;
+  }
+  #messages .msg{
+    max-width:85%;
+  }
+  #inputBox{
+    flex-direction:column;
+  }
+  #inputBox button{
+    width:100%;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<div id="sidebar">
-  <h3>💬 Users</h3>
-  <div id="users"></div>
-</div>
+<div id="app">
+  <div id="sidebar">
+    <h3>💬 Users</h3>
+    <div id="users"></div>
+  </div>
 
-<div id="main">
-  <div id="header">Global Chat</div>
-  <div id="messages"></div>
-  <div id="typing"></div>
+  <div id="main">
+    <div id="header">Global Hacker Chat</div>
+    <div id="messages"></div>
+    <div id="typing"></div>
 
-  <div id="inputBox">
-    <input id="msg" placeholder="Type message...">
-    <input type="file" id="imgInput">
-    <button id="voice">🎤</button>
-    <button id="send">Send</button>
+    <div id="inputBox">
+      <input type="text" id="msg" placeholder="Type message...">
+      <input type="file" id="imgInput">
+      <button id="voice">🎤</button>
+      <button id="send">Send</button>
+    </div>
   </div>
 </div>
 
@@ -160,7 +228,6 @@ const app = initializeApp({
   authDomain:"itzsos-labs.firebaseapp.com",
   projectId:"itzsos-labs"
 });
-
 const auth = getAuth();
 const db = getFirestore();
 
@@ -168,6 +235,7 @@ let currentUser, username;
 
 /* AUTH */
 onAuthStateChanged(auth, async(user)=>{
+  if(!user) location.href="index.html";
   currentUser=user;
   const snap=await getDoc(doc(db,"users",user.uid));
   username=snap.data().username;
@@ -177,50 +245,38 @@ onAuthStateChanged(auth, async(user)=>{
 /* LOAD MESSAGES */
 function loadMessages(){
   const q=query(collection(db,"messages"),orderBy("timestamp"));
-
   onSnapshot(q,snap=>{
     const messages=document.getElementById("messages");
     messages.innerHTML="";
 
     snap.forEach(docSnap=>{
       const d=docSnap.data();
-
       const div=document.createElement("div");
       const isMe=d.sender===currentUser.uid;
 
       div.className="msg "+(isMe?"me":"other");
 
       let content = `<b>${d.username}</b><br>${d.text||""}`;
-
-      if(d.image){
-        content += `<br><img src="${d.image}">`;
-      }
-
-      if(d.voice){
-        content += `<br><audio controls src="${d.voice}"></audio>`;
-      }
-
-      content += `<div>${(d.readBy||[]).length>1?"✓✓":"✓"}</div>`;
-
-      div.innerHTML=content;
+      if(d.image) content += `<br><img src="${d.image}">`;
+      if(d.voice) content += `<br><audio controls src="${d.voice}"></audio>`;
+      div.innerHTML = content;
       messages.appendChild(div);
 
-      // mark seen
+      // mark read
       if(!d.readBy || !d.readBy.includes(currentUser.uid)){
         updateDoc(doc(db,"messages",docSnap.id),{
           readBy:[...(d.readBy||[]),currentUser.uid]
         });
       }
     });
-
     messages.scrollTop=messages.scrollHeight;
   });
 }
 
-/* SEND */
+/* SEND TEXT */
 document.getElementById("send").onclick=async()=>{
-  const text=document.getElementById("msg").value;
-
+  const text=document.getElementById("msg").value.trim();
+  if(!text) return;
   await addDoc(collection(db,"messages"),{
     text,
     username,
@@ -228,15 +284,13 @@ document.getElementById("send").onclick=async()=>{
     timestamp:serverTimestamp(),
     readBy:[currentUser.uid]
   });
-
   document.getElementById("msg").value="";
 };
 
-/* IMAGE */
+/* SEND IMAGE */
 document.getElementById("imgInput").onchange=async(e)=>{
   const file=e.target.files[0];
   const url=URL.createObjectURL(file);
-
   await addDoc(collection(db,"messages"),{
     image:url,
     username,
@@ -246,19 +300,15 @@ document.getElementById("imgInput").onchange=async(e)=>{
   });
 };
 
-/* VOICE */
+/* VOICE RECORD */
 let recorder, audioChunks=[];
-
 document.getElementById("voice").onclick=async()=>{
   const stream=await navigator.mediaDevices.getUserMedia({audio:true});
   recorder=new MediaRecorder(stream);
-
   recorder.ondataavailable=e=>audioChunks.push(e.data);
-
   recorder.onstop=async()=>{
     const blob=new Blob(audioChunks);
     const url=URL.createObjectURL(blob);
-
     await addDoc(collection(db,"messages"),{
       voice:url,
       username,
@@ -266,20 +316,19 @@ document.getElementById("voice").onclick=async()=>{
       timestamp:serverTimestamp(),
       readBy:[currentUser.uid]
     });
-
     audioChunks=[];
   };
-
   recorder.start();
   setTimeout(()=>recorder.stop(),3000);
 };
 
-/* TYPING */
+/* TYPING EFFECT */
+let typingTimer;
 document.getElementById("msg").addEventListener("input",()=>{
   document.getElementById("typing").innerText="Typing...";
-  setTimeout(()=>document.getElementById("typing").innerText="",1000);
+  clearTimeout(typingTimer);
+  typingTimer=setTimeout(()=>document.getElementById("typing").innerText="",1000);
 });
 </script>
-
 </body>
 </html>
